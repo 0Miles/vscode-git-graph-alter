@@ -1,7 +1,7 @@
 {
   "name": "neo-git-graph",
   "displayName": "(neo) Git Graph",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A clean MIT fork of Git Graph. Visual history, branch actions, and devcontainer support.",
   "categories": [
     "SCM Providers",
