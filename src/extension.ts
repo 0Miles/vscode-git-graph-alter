@@ -7,8 +7,8 @@ import { getConfig } from "./config";
 import { DataSource } from "./dataSource";
 import { DiffDocProvider } from "./diffDocProvider";
 import { WebviewBridge, webviewBridgeFactory } from "./extension/webviewBridge";
+import { createWebviewPanel, WebviewPanel } from "./extension/webviewPanel";
 import { ExtensionState } from "./extensionState";
-import { GitGraphView } from "./gitGraphView";
 import { RepoFileWatcher } from "./repoFileWatcher";
 import { RepoManager } from "./repoManager";
 import { StatusBarItem } from "./statusBarItem";
@@ -25,12 +25,14 @@ export function activate(context: vscode.ExtensionContext) {
     getConfig().gitPath()
   );
 
+  let currentPanel: WebviewPanel | undefined;
+
   context.subscriptions.push(
     outputChannel,
     vscode.commands.registerCommand("neo-git-graph.view", () => {
       const column = vscode.window.activeTextEditor?.viewColumn;
-      if (GitGraphView.currentPanel) {
-        GitGraphView.currentPanel.reveal(column);
+      if (currentPanel) {
+        currentPanel.reveal(column);
         return;
       }
       const panel = vscode.window.createWebviewPanel(
@@ -51,17 +53,20 @@ export function activate(context: vscode.ExtensionContext) {
       });
       bridge = webviewBridgeFactory(panel.webview, repoFileWatcher);
       avatarManager.registerBridge(bridge.post.bind(bridge));
-      new GitGraphView(
+      currentPanel = createWebviewPanel({
         panel,
         bridge,
         repoFileWatcher,
-        context.extensionPath,
+        extensionPath: context.extensionPath,
         dataSource,
         extensionState,
         avatarManager,
         repoManager,
-        gitManager
-      );
+        gitManager,
+        onDispose: () => {
+          currentPanel = undefined;
+        }
+      });
     }),
     vscode.commands.registerCommand("neo-git-graph.clearAvatarCache", () => {
       avatarManager.clearCache();
