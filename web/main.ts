@@ -3,6 +3,7 @@ import { Graph } from "./graph";
 import {
   addListenerToClass,
   arraysEqual,
+  blinkHeadRow,
   ELLIPSIS,
   escapeHtml,
   getVSCodeStyle,
@@ -13,8 +14,7 @@ import {
   sendMessage,
   svgIcons,
   unescapeHtml,
-  vscode,
-  blinkHeadRow
+  vscode
 } from "./utils";
 
 class GitGraphView {
