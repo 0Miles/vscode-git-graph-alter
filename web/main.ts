@@ -13,7 +13,8 @@ import {
   sendMessage,
   svgIcons,
   unescapeHtml,
-  vscode
+  vscode,
+  blinkHeadRow
 } from "./utils";
 
 class GitGraphView {
@@ -85,6 +86,12 @@ class GitGraphView {
     document.getElementById("refreshBtn")!.addEventListener("click", () => {
       this.refresh(true);
     });
+    const blinkBtn = document.getElementById("blinkHeadBtn");
+    if (blinkBtn) {
+      blinkBtn.addEventListener("click", () => {
+        blinkHeadRow(this.commitHead);
+      });
+    }
     this.observeWindowSizeChanges();
     this.observeWebviewStyleChanges();
     this.observeWebviewScroll();
