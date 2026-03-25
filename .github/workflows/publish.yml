@@ -35,3 +35,4 @@ jobs:
         with:
           pat: ${{ secrets[matrix.pat] }}
           registryUrl: ${{ matrix.registryUrl || '' }}
+          dependencies: false
