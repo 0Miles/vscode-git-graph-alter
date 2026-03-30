@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { AvatarManager } from "./avatarManager";
 import { gitBranchFactory } from "./backend/features/gitBranch";
 import { gitClientFactory } from "./backend/features/gitClient";
+import { gitCommitFactory } from "./backend/features/gitCommit";
 import { gitTagFactory } from "./backend/features/gitTag";
 import { buildExtensionUri } from "./backend/utils";
 import { getConfig } from "./config";
@@ -27,6 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     getConfig().gitPath()
   );
   const gitBranch = gitBranchFactory(gitClient.getInstance);
+  const gitCommits = gitCommitFactory(gitClient.getInstance);
   const gitTag = gitTagFactory(gitClient.getInstance);
 
   let currentPanel: WebviewPanel | undefined;
@@ -68,6 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
         repoManager,
         gitClient,
         gitBranch,
+        gitCommits,
         gitTag,
         onDispose: () => {
           currentPanel = undefined;
@@ -79,13 +82,11 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.workspace.registerTextDocumentContentProvider(
       DiffDocProvider.scheme,
-      new DiffDocProvider(dataSource)
+      new DiffDocProvider(gitClient.getInstance)
     ),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("neo-git-graph.showStatusBarItem")) {
         statusBarItem.refresh();
-      } else if (e.affectsConfiguration("neo-git-graph.dateType")) {
-        dataSource.generateGitCommandFormats();
       } else if (e.affectsConfiguration("neo-git-graph.maxDepthOfRepoSearch")) {
         repoManager.maxDepthOfRepoSearchChanged();
       } else if (e.affectsConfiguration("git.path")) {

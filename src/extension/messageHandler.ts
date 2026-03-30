@@ -3,8 +3,10 @@ import * as vscode from "vscode";
 import { AvatarManager } from "../avatarManager";
 import { GitBranch } from "../backend/features/gitBranch";
 import { GitClient } from "../backend/features/gitClient";
+import { GitCommit } from "../backend/features/gitCommit";
 import { GitTag } from "../backend/features/gitTag";
 import { abbrevCommit, copyToClipboard } from "../backend/utils";
+import { getConfig } from "../config";
 import { DataSource } from "../dataSource";
 import { encodeDiffDocUri } from "../diffDocProvider";
 import { ExtensionState } from "../extensionState";
@@ -51,6 +53,7 @@ export function registerMessageHandlers(
     dataSource: DataSource;
     gitClient: GitClient;
     gitBranch: GitBranch;
+    gitCommits: GitCommit;
     gitTag: GitTag;
     repoManager: RepoManager;
     extensionState: ExtensionState;
@@ -64,6 +67,7 @@ export function registerMessageHandlers(
     dataSource,
     gitClient,
     gitBranch,
+    gitCommits,
     gitTag,
     repoManager,
     extensionState,
@@ -94,23 +98,25 @@ export function registerMessageHandlers(
   });
 
   bridge.onMessage("checkoutCommit", async (msg) => {
+    const result = await gitCommits.checkout(msg.commitHash);
     bridge.post({
       command: "checkoutCommit",
-      status: await dataSource.checkoutCommit(msg.repo, msg.commitHash)
+      status: result.error ? result.message : null
     });
   });
 
   bridge.onMessage("cherrypickCommit", async (msg) => {
+    const result = await gitCommits.cherrypick(msg.commitHash, msg.parentIndex);
     bridge.post({
       command: "cherrypickCommit",
-      status: await dataSource.cherrypickCommit(msg.repo, msg.commitHash, msg.parentIndex)
+      status: result.error ? result.message : null
     });
   });
 
   bridge.onMessage("commitDetails", async (msg) => {
     bridge.post({
       command: "commitDetails",
-      commitDetails: await dataSource.commitDetails(msg.repo, msg.commitHash)
+      commitDetails: await gitCommits.details(msg.commitHash, getConfig().dateType())
     });
   });
 
@@ -169,11 +175,12 @@ export function registerMessageHandlers(
   bridge.onMessage("loadCommits", async (msg) => {
     bridge.post({
       command: "loadCommits",
-      ...(await dataSource.getCommits(
-        msg.repo,
+      ...(await gitCommits.list(
         msg.branchName,
         msg.maxCommits,
-        msg.showRemoteBranches
+        msg.showRemoteBranches,
+        getConfig().dateType(),
+        getConfig().showUncommittedChanges()
       )),
       hard: msg.hard
     });
@@ -220,16 +227,18 @@ export function registerMessageHandlers(
   });
 
   bridge.onMessage("resetToCommit", async (msg) => {
+    const result = await gitCommits.reset(msg.commitHash, msg.resetMode);
     bridge.post({
       command: "resetToCommit",
-      status: await dataSource.resetToCommit(msg.repo, msg.commitHash, msg.resetMode)
+      status: result.error ? result.message : null
     });
   });
 
   bridge.onMessage("revertCommit", async (msg) => {
+    const result = await gitCommits.revert(msg.commitHash, msg.parentIndex);
     bridge.post({
       command: "revertCommit",
-      status: await dataSource.revertCommit(msg.repo, msg.commitHash, msg.parentIndex)
+      status: result.error ? result.message : null
     });
   });
 

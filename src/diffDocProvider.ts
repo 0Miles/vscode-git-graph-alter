@@ -1,17 +1,17 @@
 import * as vscode from "vscode";
 
+import { GitInstance } from "./backend/features/gitClient";
 import { getPathFromStr } from "./backend/utils";
-import { DataSource } from "./dataSource";
 
 export class DiffDocProvider implements vscode.TextDocumentContentProvider {
   public static scheme = "neo-git-graph";
-  private dataSource: DataSource;
+  private gitClient: GitInstance;
   private onDidChangeEventEmitter = new vscode.EventEmitter<vscode.Uri>();
   private docs = new Map<string, DiffDocument>();
   private subscriptions: vscode.Disposable;
 
-  constructor(dataSource: DataSource) {
-    this.dataSource = dataSource;
+  constructor(gitClient: GitInstance) {
+    this.gitClient = gitClient;
     this.subscriptions = vscode.workspace.onDidCloseTextDocument((doc) =>
       this.docs.delete(doc.uri.toString())
     );
@@ -32,8 +32,10 @@ export class DiffDocProvider implements vscode.TextDocumentContentProvider {
     if (document) return document.value;
 
     let request = decodeDiffDocUri(uri);
-    return this.dataSource
-      .getCommitFile(request.repo, request.commit, request.filePath)
+    return this.gitClient()
+      .cwd(request.repo)
+      .show([`${request.commit}:${request.filePath}`])
+      .catch(() => "")
       .then((data) => {
         let document = new DiffDocument(data);
         this.docs.set(uri.toString(), document);
