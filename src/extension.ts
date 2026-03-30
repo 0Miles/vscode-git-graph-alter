@@ -4,11 +4,14 @@ import { AvatarManager } from "./avatarManager";
 import { gitBranchFactory } from "./backend/features/gitBranch";
 import { gitClientFactory } from "./backend/features/gitClient";
 import { gitCommitFactory } from "./backend/features/gitCommit";
+import { gitMergeFactory } from "./backend/features/gitMerge";
+import { gitRemoteFactory } from "./backend/features/gitRemote";
+import { gitRepoFactory } from "./backend/features/gitRepo";
 import { gitTagFactory } from "./backend/features/gitTag";
 import { buildExtensionUri } from "./backend/utils";
 import { getConfig } from "./config";
-import { DataSource } from "./dataSource";
 import { DiffDocProvider } from "./diffDocProvider";
+import { registerMessageHandlers } from "./extension/messageHandler";
 import { WebviewBridge, webviewBridgeFactory } from "./extension/webviewBridge";
 import { createWebviewPanel, WebviewPanel } from "./extension/webviewPanel";
 import { ExtensionState } from "./extensionState";
@@ -19,16 +22,18 @@ import { StatusBarItem } from "./statusBarItem";
 export function activate(context: vscode.ExtensionContext) {
   const outputChannel = vscode.window.createOutputChannel("(neo) Git Graph");
   const extensionState = new ExtensionState(context);
-  const dataSource = new DataSource();
-  const avatarManager = new AvatarManager(dataSource, extensionState);
+  const gitRemote = gitRemoteFactory(getConfig().gitPath());
+  const avatarManager = new AvatarManager(gitRemote, extensionState);
   const statusBarItem = new StatusBarItem(context);
-  const repoManager = new RepoManager(dataSource, extensionState, statusBarItem);
   const gitClient = gitClientFactory(
     extensionState.getLastActiveRepo() ?? "",
     getConfig().gitPath()
   );
+  const gitRepo = gitRepoFactory(getConfig().gitPath());
+  const repoManager = new RepoManager(extensionState, statusBarItem, gitRepo);
   const gitBranch = gitBranchFactory(gitClient.getInstance);
   const gitCommits = gitCommitFactory(gitClient.getInstance);
+  const gitMerge = gitMergeFactory(gitClient.getInstance);
   const gitTag = gitTagFactory(gitClient.getInstance);
 
   let currentPanel: WebviewPanel | undefined;
@@ -64,17 +69,26 @@ export function activate(context: vscode.ExtensionContext) {
         bridge,
         repoFileWatcher,
         extensionPath: context.extensionPath,
-        dataSource,
         extensionState,
         avatarManager,
         repoManager,
-        gitClient,
-        gitBranch,
-        gitCommits,
-        gitTag,
         onDispose: () => {
           currentPanel = undefined;
         }
+      });
+      registerMessageHandlers(bridge, {
+        gitClient,
+        gitRepo,
+        gitBranch,
+        gitCommits,
+        gitMerge,
+        gitTag,
+        repoManager,
+        extensionState,
+        avatarManager,
+        repoFileWatcher,
+        getCurrentRepo: currentPanel.getCurrentRepo,
+        setCurrentRepo: currentPanel.setCurrentRepo
       });
     }),
     vscode.commands.registerCommand("neo-git-graph.clearAvatarCache", () => {
@@ -90,8 +104,9 @@ export function activate(context: vscode.ExtensionContext) {
       } else if (e.affectsConfiguration("neo-git-graph.maxDepthOfRepoSearch")) {
         repoManager.maxDepthOfRepoSearchChanged();
       } else if (e.affectsConfiguration("git.path")) {
-        dataSource.registerGitPath();
         gitClient.setGitPath(getConfig().gitPath());
+        gitRepo.setGitPath(getConfig().gitPath());
+        gitRemote.setGitPath(getConfig().gitPath());
       }
     }),
     repoManager

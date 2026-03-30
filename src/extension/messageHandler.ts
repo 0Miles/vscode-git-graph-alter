@@ -4,10 +4,11 @@ import { AvatarManager } from "../avatarManager";
 import { GitBranch } from "../backend/features/gitBranch";
 import { GitClient } from "../backend/features/gitClient";
 import { GitCommit } from "../backend/features/gitCommit";
+import { GitMerge } from "../backend/features/gitMerge";
+import { GitRepo } from "../backend/features/gitRepo";
 import { GitTag } from "../backend/features/gitTag";
 import { abbrevCommit, copyToClipboard } from "../backend/utils";
 import { getConfig } from "../config";
-import { DataSource } from "../dataSource";
 import { encodeDiffDocUri } from "../diffDocProvider";
 import { ExtensionState } from "../extensionState";
 import { RepoFileWatcher } from "../repoFileWatcher";
@@ -50,10 +51,11 @@ function viewDiff(
 export function registerMessageHandlers(
   bridge: WebviewBridge,
   deps: {
-    dataSource: DataSource;
     gitClient: GitClient;
+    gitRepo: GitRepo;
     gitBranch: GitBranch;
     gitCommits: GitCommit;
+    gitMerge: GitMerge;
     gitTag: GitTag;
     repoManager: RepoManager;
     extensionState: ExtensionState;
@@ -64,10 +66,11 @@ export function registerMessageHandlers(
   }
 ) {
   const {
-    dataSource,
     gitClient,
+    gitRepo,
     gitBranch,
     gitCommits,
+    gitMerge,
     gitTag,
     repoManager,
     extensionState,
@@ -162,7 +165,7 @@ export function registerMessageHandlers(
 
   bridge.onMessage("loadBranches", async (msg) => {
     const branchData = await gitBranch.list(msg.showRemoteBranches);
-    const isRepo = branchData.error ? await dataSource.isGitRepository(getCurrentRepo()!) : true;
+    const isRepo = branchData.error ? await gitRepo.isGitRepository(getCurrentRepo()!) : true;
     bridge.post({
       command: "loadBranches",
       branches: branchData.branches,
@@ -197,16 +200,18 @@ export function registerMessageHandlers(
   });
 
   bridge.onMessage("mergeBranch", async (msg) => {
+    const result = await gitMerge.mergeBranch(msg.branchName, msg.createNewCommit);
     bridge.post({
       command: "mergeBranch",
-      status: await dataSource.mergeBranch(msg.repo, msg.branchName, msg.createNewCommit)
+      status: result.error ? result.message : null
     });
   });
 
   bridge.onMessage("mergeCommit", async (msg) => {
+    const result = await gitMerge.mergeCommit(msg.commitHash, msg.createNewCommit);
     bridge.post({
       command: "mergeCommit",
-      status: await dataSource.mergeCommit(msg.repo, msg.commitHash, msg.createNewCommit)
+      status: result.error ? result.message : null
     });
   });
 
