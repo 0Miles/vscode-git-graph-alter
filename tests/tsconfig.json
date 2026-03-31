@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "module": "commonjs",
     "target": "es6",
     "lib": ["es2020", "dom"],
@@ -8,10 +12,10 @@
     "skipLibCheck": true
   },
   "include": [
+    "./backend/**/*.ts",
     "./extension/**/*.ts",
-    "./features/**/*.ts",
-    "../src/features/**/*.ts",
     "./webview/**/*.ts",
+    "../src/backend/**/*.ts",
     "../src/webview/**/*.ts"
   ]
 }

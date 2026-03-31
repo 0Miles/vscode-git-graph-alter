@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "lib": ["es2020"],
     "module": "commonjs",
     "outDir": "../out",

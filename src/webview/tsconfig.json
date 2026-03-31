@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "lib": ["es2020", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
@@ -7,9 +11,8 @@
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "../../media",
     "removeComments": true,
     "strict": true,
-    "target": "es5"
+    "target": "es6"
   }
 }
