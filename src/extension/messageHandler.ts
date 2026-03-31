@@ -60,8 +60,6 @@ export function registerMessageHandlers(
     extensionState: ExtensionState;
     avatarManager: AvatarManager;
     repoFileWatcher: RepoFileWatcher;
-    getCurrentRepo: () => string | null;
-    setCurrentRepo: (repo: string) => void;
   }
 ) {
   const {
@@ -73,10 +71,10 @@ export function registerMessageHandlers(
     repoManager,
     extensionState,
     avatarManager,
-    repoFileWatcher,
-    getCurrentRepo,
-    setCurrentRepo
+    repoFileWatcher
   } = deps;
+
+  let currentRepo: string | null = null;
 
   bridge.onMessage("addTag", async (msg) => {
     const result = await gitTag.add(msg.tagName, msg.commitHash, msg.lightweight, msg.message);
@@ -154,9 +152,9 @@ export function registerMessageHandlers(
   });
 
   bridge.onMessage("selectRepo", (msg) => {
-    if (msg.repo === getCurrentRepo()) return;
+    if (msg.repo === currentRepo) return;
+    currentRepo = msg.repo;
     gitClient.setRepo(msg.repo);
-    setCurrentRepo(msg.repo);
     extensionState.setLastActiveRepo(msg.repo);
     repoFileWatcher.start(msg.repo);
   });
@@ -164,7 +162,7 @@ export function registerMessageHandlers(
   bridge.onMessage("loadBranches", async (msg) => {
     const branchData = await gitBranch.list(msg.showRemoteBranches);
     const isRepo = branchData.error
-      ? await isGitRepository(getCurrentRepo()!, getConfig().gitPath())
+      ? await isGitRepository(currentRepo!, getConfig().gitPath())
       : true;
     bridge.post({
       command: "loadBranches",
@@ -257,4 +255,10 @@ export function registerMessageHandlers(
       success: await viewDiff(msg.repo, msg.commitHash, msg.oldFilePath, msg.newFilePath, msg.type)
     });
   });
+
+  return {
+    onPanelShown: () => {
+      currentRepo = null;
+    }
+  };
 }

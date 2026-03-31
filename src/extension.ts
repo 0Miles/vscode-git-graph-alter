@@ -62,6 +62,17 @@ export function activate(context: vscode.ExtensionContext) {
       });
       bridge = webviewBridgeFactory(panel.webview, repoFileWatcher);
       avatarManager.registerBridge(bridge.post.bind(bridge));
+      const { onPanelShown } = registerMessageHandlers(bridge, {
+        gitClient,
+        gitBranch,
+        gitCommits,
+        gitMerge,
+        gitTag,
+        repoManager,
+        extensionState,
+        avatarManager,
+        repoFileWatcher
+      });
       currentPanel = createWebviewPanel({
         panel,
         bridge,
@@ -72,20 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
         repoManager,
         onDispose: () => {
           currentPanel = undefined;
-        }
-      });
-      registerMessageHandlers(bridge, {
-        gitClient,
-        gitBranch,
-        gitCommits,
-        gitMerge,
-        gitTag,
-        repoManager,
-        extensionState,
-        avatarManager,
-        repoFileWatcher,
-        getCurrentRepo: currentPanel.getCurrentRepo,
-        setCurrentRepo: currentPanel.setCurrentRepo
+        },
+        onPanelShown
       });
     }),
     vscode.commands.registerCommand("neo-git-graph.clearAvatarCache", () => {

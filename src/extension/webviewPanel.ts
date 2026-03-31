@@ -20,6 +20,7 @@ export function createWebviewPanel(opts: {
   avatarManager: AvatarManager;
   repoManager: RepoManager;
   onDispose: () => void;
+  onPanelShown: () => void;
 }) {
   const {
     panel,
@@ -29,13 +30,13 @@ export function createWebviewPanel(opts: {
     extensionState,
     avatarManager,
     repoManager,
-    onDispose
+    onDispose,
+    onPanelShown
   } = opts;
 
   const disposables: vscode.Disposable[] = [];
   let isGraphViewLoaded = false;
   let isPanelVisible = true;
-  let currentRepo: string | null = null;
 
   panel.iconPath =
     getConfig().tabIconColourTheme() === "colour"
@@ -74,9 +75,9 @@ export function createWebviewPanel(opts: {
     () => {
       if (panel.visible !== isPanelVisible) {
         if (panel.visible) {
+          onPanelShown();
           update();
         } else {
-          currentRepo = null;
           repoFileWatcher.stop();
         }
         isPanelVisible = panel.visible;
@@ -103,11 +104,7 @@ export function createWebviewPanel(opts: {
     reveal(column?: vscode.ViewColumn) {
       panel.reveal(column);
     },
-    dispose,
-    getCurrentRepo: () => currentRepo,
-    setCurrentRepo: (r: string) => {
-      currentRepo = r;
-    }
+    dispose
   };
 }
 
