@@ -1,4 +1,14 @@
+import simpleGit from "simple-git";
+
 import { GitRepoSet } from "@/types";
+
+export async function isGitRepository(repoPath: string, gitPath: string): Promise<boolean> {
+  try {
+    return await simpleGit({ baseDir: repoPath, binary: gitPath }).checkIsRepo();
+  } catch {
+    return false;
+  }
+}
 
 export function isPathWithinRepos(path: string, repos: GitRepoSet) {
   const repoPaths = Object.keys(repos);

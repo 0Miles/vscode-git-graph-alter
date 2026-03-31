@@ -5,9 +5,8 @@ import { GitBranch } from "@/backend/features/gitBranch";
 import { GitClient } from "@/backend/features/gitClient";
 import { GitCommit } from "@/backend/features/gitCommit";
 import { GitMerge } from "@/backend/features/gitMerge";
-import { GitRepo } from "@/backend/features/gitRepo";
 import { GitTag } from "@/backend/features/gitTag";
-import { abbrevCommit, copyToClipboard } from "@/backend/utils";
+import { abbrevCommit, copyToClipboard, isGitRepository } from "@/backend/utils";
 import { getConfig } from "@/config";
 import { encodeDiffDocUri } from "@/diffDocProvider";
 import { ExtensionState } from "@/extensionState";
@@ -53,7 +52,6 @@ export function registerMessageHandlers(
   bridge: WebviewBridge,
   deps: {
     gitClient: GitClient;
-    gitRepo: GitRepo;
     gitBranch: GitBranch;
     gitCommits: GitCommit;
     gitMerge: GitMerge;
@@ -68,7 +66,6 @@ export function registerMessageHandlers(
 ) {
   const {
     gitClient,
-    gitRepo,
     gitBranch,
     gitCommits,
     gitMerge,
@@ -166,7 +163,9 @@ export function registerMessageHandlers(
 
   bridge.onMessage("loadBranches", async (msg) => {
     const branchData = await gitBranch.list(msg.showRemoteBranches);
-    const isRepo = branchData.error ? await gitRepo.isGitRepository(getCurrentRepo()!) : true;
+    const isRepo = branchData.error
+      ? await isGitRepository(getCurrentRepo()!, getConfig().gitPath())
+      : true;
     bridge.post({
       command: "loadBranches",
       branches: branchData.branches,

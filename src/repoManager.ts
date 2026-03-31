@@ -2,8 +2,13 @@ import * as fs from "node:fs";
 
 import * as vscode from "vscode";
 
-import type { GitRepo } from "./backend/features/gitRepo";
-import { evalPromises, getPathFromUri, isPathWithinRepos, sortRepos } from "./backend/utils";
+import {
+  evalPromises,
+  getPathFromUri,
+  isGitRepository,
+  isPathWithinRepos,
+  sortRepos
+} from "./backend/utils";
 import { doesPathExist, isDirectory } from "./backend/utils/path.util";
 import { getConfig } from "./config";
 import { ExtensionState } from "./extensionState";
@@ -13,7 +18,6 @@ import { GitRepoSet, GitRepoState } from "./types";
 export class RepoManager {
   private readonly extensionState: ExtensionState;
   private readonly statusBarItem: StatusBarItem;
-  private readonly gitRepo: GitRepo;
   private repos: GitRepoSet;
   private maxDepthOfRepoSearch: number;
   private folderWatchers: { [workspace: string]: vscode.FileSystemWatcher } = {};
@@ -25,10 +29,9 @@ export class RepoManager {
   private processCreateEventsTimeout: NodeJS.Timeout | null = null;
   private processChangeEventsTimeout: NodeJS.Timeout | null = null;
 
-  constructor(extensionState: ExtensionState, statusBarItem: StatusBarItem, gitRepo: GitRepo) {
+  constructor(extensionState: ExtensionState, statusBarItem: StatusBarItem) {
     this.extensionState = extensionState;
     this.statusBarItem = statusBarItem;
-    this.gitRepo = gitRepo;
     this.repos = extensionState.getRepos();
     this.maxDepthOfRepoSearch = getConfig().maxDepthOfRepoSearch();
     this.startupTasks();
@@ -152,16 +155,18 @@ export class RepoManager {
     return new Promise<boolean>((resolve) => {
       let repoPaths = Object.keys(this.repos),
         changes = false;
-      evalPromises(repoPaths, 3, (path) => this.gitRepo.isGitRepository(path)).then((results) => {
-        for (let i = 0; i < repoPaths.length; i++) {
-          if (!results[i]) {
-            this.removeRepo(repoPaths[i]);
-            changes = true;
+      evalPromises(repoPaths, 3, (path) => isGitRepository(path, getConfig().gitPath())).then(
+        (results) => {
+          for (let i = 0; i < repoPaths.length; i++) {
+            if (!results[i]) {
+              this.removeRepo(repoPaths[i]);
+              changes = true;
+            }
           }
+          if (changes) this.sendRepos();
+          resolve(changes);
         }
-        if (changes) this.sendRepos();
-        resolve(changes);
-      });
+      );
     });
   }
   public setRepoState(repo: string, state: GitRepoState) {
@@ -194,8 +199,7 @@ export class RepoManager {
         return;
       }
 
-      this.gitRepo
-        .isGitRepository(directory)
+      isGitRepository(directory, getConfig().gitPath())
         .then((isRepo) => {
           if (isRepo) {
             this.addRepo(directory);

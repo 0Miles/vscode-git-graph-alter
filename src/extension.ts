@@ -6,7 +6,6 @@ import { gitClientFactory } from "./backend/features/gitClient";
 import { gitCommitFactory } from "./backend/features/gitCommit";
 import { gitMergeFactory } from "./backend/features/gitMerge";
 import { gitRemoteFactory } from "./backend/features/gitRemote";
-import { gitRepoFactory } from "./backend/features/gitRepo";
 import { gitTagFactory } from "./backend/features/gitTag";
 import { buildExtensionUri } from "./backend/utils";
 import { getConfig } from "./config";
@@ -29,8 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     extensionState.getLastActiveRepo() ?? "",
     getConfig().gitPath()
   );
-  const gitRepo = gitRepoFactory(getConfig().gitPath());
-  const repoManager = new RepoManager(extensionState, statusBarItem, gitRepo);
+  const repoManager = new RepoManager(extensionState, statusBarItem);
   const gitBranch = gitBranchFactory(gitClient.getInstance);
   const gitCommits = gitCommitFactory(gitClient.getInstance);
   const gitMerge = gitMergeFactory(gitClient.getInstance);
@@ -78,7 +76,6 @@ export function activate(context: vscode.ExtensionContext) {
       });
       registerMessageHandlers(bridge, {
         gitClient,
-        gitRepo,
         gitBranch,
         gitCommits,
         gitMerge,
@@ -105,7 +102,6 @@ export function activate(context: vscode.ExtensionContext) {
         repoManager.maxDepthOfRepoSearchChanged();
       } else if (e.affectsConfiguration("git.path")) {
         gitClient.setGitPath(getConfig().gitPath());
-        gitRepo.setGitPath(getConfig().gitPath());
         gitRemote.setGitPath(getConfig().gitPath());
       }
     }),

@@ -3,9 +3,9 @@ import * as os from "node:os";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { gitRepoFactory } from "@/backend/features/gitRepo";
+import { isGitRepository } from "@/backend/utils/repo.util";
 
-import { makeRepo } from "../helpers";
+import { makeRepo } from "../features/helpers";
 
 let repo: string;
 let nonGitDir: string;
@@ -22,17 +22,14 @@ afterAll(() => {
 
 describe("isGitRepository", () => {
   it("returns true for a git repository", async () => {
-    const gitRepo = gitRepoFactory("git");
-    expect(await gitRepo.isGitRepository(repo)).toBe(true);
+    expect(await isGitRepository(repo, "git")).toBe(true);
   });
 
   it("returns false for a non-git directory", async () => {
-    const gitRepo = gitRepoFactory("git");
-    expect(await gitRepo.isGitRepository(nonGitDir)).toBe(false);
+    expect(await isGitRepository(nonGitDir, "git")).toBe(false);
   });
 
   it("returns false for a non-existent path", async () => {
-    const gitRepo = gitRepoFactory("git");
-    expect(await gitRepo.isGitRepository("/tmp/ngg-test-does-not-exist-xyz")).toBe(false);
+    expect(await isGitRepository("/tmp/ngg-test-does-not-exist-xyz", "git")).toBe(false);
   });
 });
