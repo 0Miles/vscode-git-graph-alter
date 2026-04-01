@@ -1,12 +1,7 @@
 import * as vscode from "vscode";
 
 import { AvatarManager } from "./avatarManager";
-import { gitBranchFactory } from "./backend/features/gitBranch";
-import { gitClientFactory } from "./backend/features/gitClient";
-import { gitCommitFactory } from "./backend/features/gitCommit";
-import { gitMergeFactory } from "./backend/features/gitMerge";
-import { gitRemoteFactory } from "./backend/features/gitRemote";
-import { gitTagFactory } from "./backend/features/gitTag";
+import { gitClientFactory } from "./backend/gitClient";
 import { buildExtensionUri } from "./backend/utils";
 import { config } from "./config";
 import { DiffDocProvider } from "./diffDocProvider";
@@ -21,16 +16,10 @@ import { StatusBarItem } from "./statusBarItem";
 export function activate(context: vscode.ExtensionContext) {
   const outputChannel = vscode.window.createOutputChannel("(neo) Git Graph");
   const extensionState = new ExtensionState(context);
-  const gitRemote = gitRemoteFactory(config.gitPath());
-  const avatarManager = new AvatarManager(gitRemote, extensionState);
+  const avatarManager = new AvatarManager(config.gitPath, extensionState);
   const statusBarItem = new StatusBarItem(context, config);
   const gitClient = gitClientFactory(extensionState.getLastActiveRepo() ?? "", config.gitPath());
   const repoManager = new RepoManager(extensionState, statusBarItem, config);
-  const gitBranch = gitBranchFactory(gitClient.getInstance);
-  const gitCommits = gitCommitFactory(gitClient.getInstance);
-  const gitMerge = gitMergeFactory(gitClient.getInstance);
-  const gitTag = gitTagFactory(gitClient.getInstance);
-
   let currentPanel: WebviewPanel | undefined;
 
   context.subscriptions.push(
@@ -62,10 +51,6 @@ export function activate(context: vscode.ExtensionContext) {
       const { onPanelShown } = registerMessageHandlers(bridge, {
         config,
         gitClient,
-        gitBranch,
-        gitCommits,
-        gitMerge,
-        gitTag,
         repoManager,
         extensionState,
         avatarManager,
@@ -100,7 +85,6 @@ export function activate(context: vscode.ExtensionContext) {
         repoManager.maxDepthOfRepoSearchChanged();
       } else if (e.affectsConfiguration("git.path")) {
         gitClient.setGitPath(config.gitPath());
-        gitRemote.setGitPath(config.gitPath());
       }
     }),
     repoManager
