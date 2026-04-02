@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
-import { buildExtensionUri, getNonce } from "@/backend/utils";
+import { getNonce } from "@/backend/utils/nonce.util";
+import { buildExtensionUri } from "@/backend/utils/path.util";
 import { Config } from "@/config";
 import { ExtensionState } from "@/extensionState";
 import { RepoManager } from "@/repoManager";

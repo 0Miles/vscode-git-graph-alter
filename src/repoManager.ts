@@ -2,14 +2,9 @@ import * as fs from "node:fs";
 
 import * as vscode from "vscode";
 
-import {
-  evalPromises,
-  getPathFromUri,
-  isGitRepository,
-  isPathWithinRepos,
-  sortRepos
-} from "./backend/utils";
-import { doesPathExist, isDirectory } from "./backend/utils/path.util";
+import { isGitRepository, isPathWithinRepos, sortRepos } from "./backend/utils/git.util";
+import { doesPathExist, getPathFromUri, isDirectory } from "./backend/utils/path.util";
+import { evalPromises } from "./backend/utils/promise.util";
 import { Config } from "./config";
 import { ExtensionState } from "./extensionState";
 import { StatusBarItem } from "./statusBarItem";

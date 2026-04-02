@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 import { AvatarManager } from "./avatarManager";
 import { gitClientFactory } from "./backend/gitClient";
-import { buildExtensionUri } from "./backend/utils";
+import { buildExtensionUri } from "./backend/utils/path.util";
 import { config } from "./config";
 import { DiffDocProvider } from "./diffDocProvider";
 import { registerMessageHandlers } from "./extension/messageHandler";

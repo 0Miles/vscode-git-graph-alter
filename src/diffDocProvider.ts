@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { GitInstance } from "./backend/gitClient";
-import { getPathFromStr } from "./backend/utils";
+import { getPathFromStr } from "./backend/utils/path.util";
 
 export class DiffDocProvider implements vscode.TextDocumentContentProvider {
   public static scheme = "neo-git-graph";
