@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
+import type { GitCommitNode } from "@/backend/types";
 import type * as GG from "@/types";
 
 import { createVscodeMock, receive, setupHtml } from "./setup";
@@ -19,7 +20,7 @@ const defaultViewState: GG.GitGraphViewState = {
   showCurrentBranchByDefault: false
 };
 
-const twoCommits: GG.GitCommitNode[] = [
+const twoCommits: GitCommitNode[] = [
   {
     hash: "abc123",
     parentHashes: ["def456"],

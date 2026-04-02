@@ -1,20 +1,10 @@
-import type { ActionRequest, ActionResponse } from "./backend/types/actions.types";
-import type { QueryRequest, QueryResponse } from "./backend/types/queries.types";
-
-export type {
-  ActionPayload,
-  DateType,
-  GitCommandStatus,
-  GitCommitDetails,
-  GitCommitNode,
-  GitFileChange,
+import {
+  ActionRequest,
+  ActionResponse,
   GitFileChangeType,
-  GitLogEntry,
-  GitRef,
-  GitRefData,
-  GitResetMode,
-  QueryResult
-} from "./backend/types";
+  QueryRequest,
+  QueryResponse
+} from "@/backend/types";
 
 export type GitRepoSet = { [repo: string]: GitRepoState };
 export type GitRepoState = {
@@ -96,7 +86,7 @@ export type RequestViewDiff = {
   commitHash: string;
   oldFilePath: string;
   newFilePath: string;
-  type: import("./backend/types").GitFileChangeType;
+  type: GitFileChangeType;
 };
 export type ResponseViewDiff = {
   command: "viewDiff";

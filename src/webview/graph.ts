@@ -1,3 +1,5 @@
+import type { GitCommitNode } from "@/backend/types";
+
 interface UnavailablePoint {
   connectsTo: VertexOrNull;
   onBranch: Branch;
@@ -338,7 +340,7 @@ export class Graph {
   }
 
   public loadCommits(
-    commits: GG.GitCommitNode[],
+    commits: GitCommitNode[],
     commitHead: string | null,
     commitLookup: { [hash: string]: number }
   ) {

@@ -14,6 +14,7 @@ import { GitClient } from "@/backend/gitClient";
 import { commitDetails } from "@/backend/queries/commitDetails";
 import { loadBranches } from "@/backend/queries/loadBranches";
 import { loadCommits } from "@/backend/queries/loadCommits";
+import { GitFileChangeType } from "@/backend/types";
 import { copyToClipboard } from "@/backend/utils/clipboard.util";
 import { abbrevCommit } from "@/backend/utils/string.util";
 import { Config } from "@/config";
@@ -21,7 +22,7 @@ import { encodeDiffDocUri } from "@/diffDocProvider";
 import { ExtensionState } from "@/extensionState";
 import { RepoFileWatcher } from "@/repoFileWatcher";
 import { RepoManager } from "@/repoManager";
-import { GitFileChangeType, RequestMessage, ResponseMessage } from "@/types";
+import { RequestMessage, ResponseMessage } from "@/types";
 
 import { WebviewBridge } from "./webviewBridge";
 

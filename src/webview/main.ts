@@ -1,3 +1,12 @@
+import type {
+  GitCommandStatus,
+  GitCommitDetails,
+  GitCommitNode,
+  GitFileChange,
+  GitFileChangeType,
+  GitResetMode
+} from "@/backend/types";
+
 import { Dropdown } from "./dropdown";
 import { Graph } from "./graph";
 import {
@@ -21,7 +30,7 @@ class GitGraphView {
   private gitRepos: GG.GitRepoSet;
   private gitBranches: string[] = [];
   private gitBranchHead: string | null = null;
-  private commits: GG.GitCommitNode[] = [];
+  private commits: GitCommitNode[] = [];
   private commitHead: string | null = null;
   private commitLookup: { [hash: string]: number } = {};
   private avatars: AvatarImageCollection = {};
@@ -205,7 +214,7 @@ class GitGraphView {
   }
 
   public loadCommits(
-    commits: GG.GitCommitNode[],
+    commits: GitCommitNode[],
     commitHead: string | null,
     moreAvailable: boolean,
     hard: boolean
@@ -726,7 +735,7 @@ class GitGraphView {
                     command: "resetToCommit",
                     repo: this.currentRepo!,
                     commitHash: hash,
-                    resetMode: <GG.GitResetMode>mode
+                    resetMode: <GitResetMode>mode
                   });
                 },
                 sourceElem
@@ -1094,7 +1103,7 @@ class GitGraphView {
       this.renderGraph();
     }
   }
-  public showCommitDetails(commitDetails: GG.GitCommitDetails, fileTree: GitFolder) {
+  public showCommitDetails(commitDetails: GitCommitDetails, fileTree: GitFolder) {
     if (
       this.expandedCommit === null ||
       this.expandedCommit.srcElem === null ||
@@ -1192,7 +1201,7 @@ class GitGraphView {
         commitHash: this.expandedCommit.hash,
         oldFilePath: decodeURIComponent(sourceElem.dataset.oldfilepath!),
         newFilePath: decodeURIComponent(sourceElem.dataset.newfilepath!),
-        type: <GG.GitFileChangeType>sourceElem.dataset.type
+        type: <GitFileChangeType>sourceElem.dataset.type
       });
     });
   }
@@ -1297,7 +1306,7 @@ window.addEventListener("message", (event) => {
       break;
   }
 });
-function refreshGraphOrDisplayError(status: GG.GitCommandStatus, errorMessage: string) {
+function refreshGraphOrDisplayError(status: GitCommandStatus, errorMessage: string) {
   if (status === null) {
     gitGraph.refresh(true);
   } else {
@@ -1350,7 +1359,7 @@ function getCommitDate(dateVal: number) {
 }
 
 /* Utils */
-function generateGitFileTree(gitFiles: GG.GitFileChange[]) {
+function generateGitFileTree(gitFiles: GitFileChange[]) {
   let contents: GitFolderContents = {},
     i,
     j,
@@ -1386,7 +1395,7 @@ function generateGitFileTree(gitFiles: GG.GitFileChange[]) {
   }
   return files;
 }
-function generateGitFileTreeHtml(folder: GitFolder, gitFiles: GG.GitFileChange[]) {
+function generateGitFileTreeHtml(folder: GitFolder, gitFiles: GitFileChange[]) {
   let html =
       (folder.name !== ""
         ? '<span class="gitFolder" data-folderpath="' +
