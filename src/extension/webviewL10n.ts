@@ -55,11 +55,17 @@ export function getWebviewLocalizedStrings() {
     merge: l10n.t("action.merge"),
     reset: l10n.t("action.reset"),
     copyCommitHash: l10n.t("action.copyCommitHash"),
+    copyTagName: l10n.t("action.copyTagName"),
+    copyBranchName: l10n.t("action.copyBranchName"),
     deleteTag: l10n.t("action.deleteTag"),
     pushTag: l10n.t("action.pushTag"),
     checkoutBranch: l10n.t("action.checkoutBranch"),
     renameBranch: l10n.t("action.renameBranch"),
     deleteBranch: l10n.t("action.deleteBranch"),
+
+    typeCommitHash: l10n.t("type.commitHash"),
+    typeTagName: l10n.t("type.tagName"),
+    typeBranchName: l10n.t("type.branchName"),
 
     // label
     labelTag: l10n.t("label.tag"),
@@ -133,7 +139,22 @@ export function getWebviewLocalizedStrings() {
     monthSep: l10n.t("month.sep"),
     monthOct: l10n.t("month.oct"),
     monthNov: l10n.t("month.nov"),
-    monthDec: l10n.t("month.dec")
+    monthDec: l10n.t("month.dec"),
+
+    detailCommit: l10n.t("detail.commit"),
+    detailParents: l10n.t("detail.parents"),
+    detailAuthor: l10n.t("detail.author"),
+    detailDate: l10n.t("detail.date"),
+    detailCommitter: l10n.t("detail.committer"),
+
+    uncommittedChanges: l10n.t("uncommittedChanges"),
+
+    tooltipBinaryFile: l10n.t("tooltip.binaryFile"),
+    tooltipRenamedTo: l10n.t("tooltip.renamedTo"),
+    tooltipAddition: l10n.t("tooltip.addition"),
+    tooltipAdditions: l10n.t("tooltip.additions"),
+    tooltipDeletion: l10n.t("tooltip.deletion"),
+    tooltipDeletions: l10n.t("tooltip.deletions")
   };
 }
 

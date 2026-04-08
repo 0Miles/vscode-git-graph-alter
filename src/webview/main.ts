@@ -244,6 +244,11 @@ class GitGraphView {
     this.moreCommitsAvailable = moreAvailable;
     this.commits = commits;
     this.commitHead = commitHead;
+    if (this.commits.length > 0 && this.commits[0].hash === "*") {
+      const match = this.commits[0].message.match(/\((\d+)\)$/);
+      const count = match ? match[1] : "?";
+      this.commits[0].message = l10n.uncommittedChanges.replace("{0}", count);
+    }
     this.commitLookup = {};
     this.saveState();
 
@@ -771,7 +776,8 @@ class GitGraphView {
       let sourceElem = <HTMLElement>(<Element>e.target).closest(".gitRef")!;
       let refName = unescapeHtml(sourceElem.dataset.name!),
         menu: ContextMenuElement[],
-        copyType: string;
+        copyType: string,
+        copyTitle: string;
       if (sourceElem.classList.contains("tag")) {
         menu = [
           {
@@ -806,6 +812,7 @@ class GitGraphView {
           }
         ];
         copyType = "Tag Name";
+        copyTitle = l10n.copyTagName;
       } else {
         if (sourceElem.classList.contains("head")) {
           menu = [];
@@ -894,9 +901,10 @@ class GitGraphView {
           ];
         }
         copyType = "Branch Name";
+        copyTitle = l10n.copyBranchName;
       }
       menu.push(null, {
-        title: "Copy " + copyType + " to Clipboard",
+        title: copyTitle,
         onClick: () => {
           sendMessage({ command: "copyToClipboard", type: copyType, data: refName });
         }
@@ -1137,18 +1145,21 @@ class GitGraphView {
       '<span class="commitDetailsSummaryTop' +
       (typeof this.avatars[commitDetails.email] === "string" ? " withAvatar" : "") +
       '"><span class="commitDetailsSummaryTopRow"><span class="commitDetailsSummaryKeyValues">';
-    html += "<b>Commit: </b>" + escapeHtml(commitDetails.hash) + "<br>";
-    html += "<b>Parents: </b>" + commitDetails.parents.join(", ") + "<br>";
+    html += "<b>" + l10n.detailCommit + "</b>" + escapeHtml(commitDetails.hash) + "<br>";
+    html += "<b>" + l10n.detailParents + "</b>" + commitDetails.parents.join(", ") + "<br>";
     html +=
-      "<b>Author: </b>" +
+      "<b>" +
+      l10n.detailAuthor +
+      "</b>" +
       escapeHtml(commitDetails.author) +
       ' &lt;<a href="mailto:' +
       encodeURIComponent(commitDetails.email) +
       '">' +
       escapeHtml(commitDetails.email) +
       "</a>&gt;<br>";
-    html += "<b>Date: </b>" + new Date(commitDetails.date * 1000).toString() + "<br>";
-    html += "<b>Committer: </b>" + escapeHtml(commitDetails.committer) + "</span>";
+    html +=
+      "<b>" + l10n.detailDate + "</b>" + new Date(commitDetails.date * 1000).toString() + "<br>";
+    html += "<b>" + l10n.detailCommitter + "</b>" + escapeHtml(commitDetails.committer) + "</span>";
     if (typeof this.avatars[commitDetails.email] === "string")
       html +=
         '<span class="commitDetailsSummaryAvatar"><img src="' +
@@ -1269,8 +1280,18 @@ window.addEventListener("message", (event) => {
       }
       break;
     case "copyToClipboard":
-      if (msg.success === false)
-        showErrorDialog(l10n.unableToCopyToClipboard.replace("{0}", msg.type), null, null);
+      if (msg.success === false) {
+        let typeLabel: Record<string, string> = {
+          "Commit Hash": l10n.typeCommitHash,
+          "Tag Name": l10n.typeTagName,
+          "Branch Name": l10n.typeBranchName
+        };
+        showErrorDialog(
+          l10n.unableToCopyToClipboard.replace("{0}", typeLabel[msg.type] ?? msg.type),
+          null,
+          null
+        );
+      }
       break;
     case "createBranch":
       refreshGraphOrDisplayError(msg.status, l10n.unableToCreateBranch);
@@ -1477,7 +1498,7 @@ function generateGitFileTreeHtml(folder: GitFolder, gitFiles: GitFileChange[]) {
         gitFile.type +
         '"' +
         (gitFile.additions === null || gitFile.deletions === null
-          ? ' title="This is a binary file, unable to view diff."'
+          ? ' title="' + l10n.tooltipBinaryFile + '"'
           : "") +
         '><span class="gitFileIcon">' +
         svgIcons.file +
@@ -1485,7 +1506,7 @@ function generateGitFileTreeHtml(folder: GitFolder, gitFiles: GitFileChange[]) {
         folder.contents[keys[i]].name +
         (gitFile.type === "R"
           ? ' <span class="gitFileRename" title="' +
-            escapeHtml(gitFile.oldFilePath + " was renamed to " + gitFile.newFilePath) +
+            escapeHtml(gitFile.oldFilePath + l10n.tooltipRenamedTo + gitFile.newFilePath) +
             '">R</span>'
           : "") +
         (gitFile.type !== "A" &&
@@ -1494,14 +1515,12 @@ function generateGitFileTreeHtml(folder: GitFolder, gitFiles: GitFileChange[]) {
         gitFile.deletions !== null
           ? '<span class="gitFileAddDel">(<span class="gitFileAdditions" title="' +
             gitFile.additions +
-            " addition" +
-            (gitFile.additions !== 1 ? "s" : "") +
+            (gitFile.additions !== 1 ? l10n.tooltipAdditions : l10n.tooltipAddition) +
             '">+' +
             gitFile.additions +
             '</span>|<span class="gitFileDeletions" title="' +
             gitFile.deletions +
-            " deletion" +
-            (gitFile.deletions !== 1 ? "s" : "") +
+            (gitFile.deletions !== 1 ? l10n.tooltipDeletions : l10n.tooltipDeletion) +
             '">-' +
             gitFile.deletions +
             "</span>)</span>"
