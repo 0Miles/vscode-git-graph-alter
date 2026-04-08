@@ -865,10 +865,9 @@ class GitGraphView {
                 title: l10n.merge + ELLIPSIS,
                 onClick: () => {
                   showCheckboxDialog(
-                    l10n.dialogMergeConfirm.replace(
-                      "{0}",
-                      "<b><i>" + escapeHtml(refName) + "</i></b>"
-                    ),
+                    l10n.dialogMergeConfirm
+                      .replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>")
+                      .replace("{1}", l10n.labelCurrentBranch),
                     l10n.dialogMergeNoFastForward,
                     true,
                     l10n.dialogYesMerge,
