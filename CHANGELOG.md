@@ -2,10 +2,16 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-10
+
 ### Added
 
 - Full internationalization (i18n) support with multiple languages
 - Language support: English (default), Simplified Chinese (简体中文), Traditional Chinese (繁體中文)
+
+### Fixed
+
+- Escape HTML in git output before rendering
 
 ## [0.3.0] - 2026-03-26
 
@@ -40,7 +46,8 @@
 
 Initial release
 
-[Unreleased]: https://github.com/asispts/neo-git-graph/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/asispts/neo-git-graph/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/asispts/neo-git-graph/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/asispts/neo-git-graph/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/asispts/neo-git-graph/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/asispts/neo-git-graph/compare/v0.1.0...v0.1.1
