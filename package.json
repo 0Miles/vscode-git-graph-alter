@@ -77,7 +77,11 @@
       {
         "category": "(neo) Git Graph",
         "command": "neo-git-graph.view",
-        "title": "%command.view%"
+        "title": "%command.view%",
+        "icon": {
+          "light": "resources/webview-icon-light.svg",
+          "dark": "resources/webview-icon-dark.svg"
+        }
       },
       {
         "category": "(neo) Git Graph",
@@ -85,6 +89,15 @@
         "title": "%command.clearAvatarCache%"
       }
     ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "neo-git-graph.view",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "%config.title%",
