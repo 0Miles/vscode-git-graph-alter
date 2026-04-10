@@ -12,8 +12,10 @@ import { git, makeRepo } from "@tests/backend/helpers";
 let simpleRepo: string;
 let detachedRepo: string;
 let repoWithRemote: string;
+let originalLang: string | undefined;
 
 beforeAll(() => {
+  originalLang = process.env["LANG"];
   process.env["LANG"] = "en_US.UTF-8";
   simpleRepo = makeRepo();
   git(["branch", "feature/foo"], simpleRepo);
@@ -32,6 +34,11 @@ beforeAll(() => {
 });
 
 afterAll(() => {
+  if (originalLang === undefined) {
+    delete process.env["LANG"];
+  } else {
+    process.env["LANG"] = originalLang;
+  }
   fs.rmSync(simpleRepo, { recursive: true, force: true });
   fs.rmSync(detachedRepo, { recursive: true, force: true });
   fs.rmSync(repoWithRemote, { recursive: true, force: true });
