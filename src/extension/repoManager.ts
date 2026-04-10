@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 
-import { isGitRepository } from "@/backend/utils/git.util";
-import { getPathFromUri } from "@/backend/utils/path.util";
-import { evalPromises } from "@/backend/utils/promise.util";
+import { isGitRepository } from "@/backend/utils/git";
+import { getPathFromUri } from "@/backend/utils/path";
+import { evalPromises } from "@/backend/utils/promise";
 import { Config } from "@/config";
 import { ExtensionState } from "@/extensionState";
 import { StatusBarItem } from "@/statusBarItem";

@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { searchDirectoryForRepos } from "@/backend/utils/repoSearch.util";
+import { searchDirectoryForRepos } from "@/backend/utils/repoSearch";
 
 import { git } from "@tests/backend/helpers";
 

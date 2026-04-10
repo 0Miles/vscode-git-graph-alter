@@ -1,4 +1,5 @@
-import { escapeHtml, svgIcons } from "./utils";
+import { escapeHtml } from "./utils/html";
+import { svgIcons } from "./utils/icons";
 
 interface DropdownOption {
   name: string;

@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { getRemoteUrl } from "@/backend/utils/git.util";
+import { getRemoteUrl } from "@/backend/utils/git";
 
 import { git, makeRepo } from "@tests/backend/helpers";
 

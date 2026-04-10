@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { AvatarManager } from "@/avatarManager";
-import { buildExtensionUri } from "@/backend/utils/path.util";
+import { buildExtensionUri } from "@/backend/utils/path";
 import { Config } from "@/config";
 import { ExtensionState } from "@/extensionState";
 import { RepoFileWatcher } from "@/repoFileWatcher";

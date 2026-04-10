@@ -9,22 +9,12 @@ import type {
 
 import { Dropdown } from "./dropdown";
 import { Graph } from "./graph";
-import {
-  addListenerToClass,
-  arraysEqual,
-  blinkHeadRow,
-  ELLIPSIS,
-  escapeHtml,
-  getMonth,
-  getVSCodeStyle,
-  insertAfter,
-  pad2,
-  refInvalid,
-  sendMessage,
-  svgIcons,
-  unescapeHtml,
-  vscode
-} from "./utils";
+import { getMonth, pad2 } from "./utils/date";
+import { addListenerToClass, blinkHeadRow, insertAfter } from "./utils/dom";
+import { arraysEqual, ELLIPSIS, refInvalid } from "./utils/git";
+import { escapeHtml, unescapeHtml } from "./utils/html";
+import { svgIcons } from "./utils/icons";
+import { getVSCodeStyle, sendMessage, vscode } from "./utils/vscode";
 
 class GitGraphView {
   private gitRepos: GG.GitRepoSet;

@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 
-import { isGitRepository } from "@/backend/utils/git.util";
-import { evalPromises } from "@/backend/utils/promise.util";
+import { isGitRepository } from "@/backend/utils/git";
+import { evalPromises } from "@/backend/utils/promise";
 
 async function isDirectory(path: string): Promise<boolean> {
   return fs

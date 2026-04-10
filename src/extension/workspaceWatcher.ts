@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { doesPathExist, getPathFromUri, isDirectory } from "@/backend/utils/path.util";
+import { doesPathExist, getPathFromUri, isDirectory } from "@/backend/utils/path";
 import { Config } from "@/config";
 
 import { RepoManager } from "./repoManager";
