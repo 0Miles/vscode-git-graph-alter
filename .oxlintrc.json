@@ -50,7 +50,11 @@
       "error",
       {
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
+        "varsIgnorePattern": "^_",
+        "fix": {
+          "imports": "safe-fix",
+          "variables": "suggestion"
+        }
       }
     ]
   },
