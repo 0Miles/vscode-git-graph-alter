@@ -27,6 +27,8 @@ type ActionPayloads = {
   applyStash: { selector: string; reinstateIndex: boolean };
   popStash: { selector: string; reinstateIndex: boolean };
   dropStash: { selector: string };
+  renameStash: { selector: string; message: string };
+  fastForwardBranch: { branchName: string };
   resetUncommittedChanges: Record<never, never>;
   cleanUntrackedFiles: Record<never, never>;
   deleteBranch: { branchName: string; forceDelete: boolean; deleteOnRemotes: boolean };

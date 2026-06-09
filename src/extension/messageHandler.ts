@@ -10,6 +10,7 @@ import {
   createBranch,
   deleteBranch,
   deleteRemoteBranch,
+  fastForwardBranch,
   fetchIntoLocalBranch,
   pullBranch,
   pushBranch,
@@ -26,9 +27,10 @@ import {
 } from "@/backend/actions/commit";
 import { fetchFromRemotes } from "@/backend/actions/fetch";
 import { mergeBranch, mergeCommit } from "@/backend/actions/merge";
+import { exportPatch } from "@/backend/actions/patch";
 import { rebaseOn } from "@/backend/actions/rebase";
 import { getRemoteUrl } from "@/backend/actions/remote";
-import { applyStash, dropStash, popStash } from "@/backend/actions/stash";
+import { applyStash, dropStash, popStash, renameStash } from "@/backend/actions/stash";
 import { addTag, deleteTag, pushTag } from "@/backend/actions/tag";
 import { cleanUntrackedFiles, resetUncommittedChanges } from "@/backend/actions/workingTree";
 import { GitClient } from "@/backend/gitClient";
@@ -40,6 +42,7 @@ import { loadRemotes } from "@/backend/queries/loadRemotes";
 import { getNewPathOfRenamedFile } from "@/backend/queries/renamedFilePath";
 import { tagDetails } from "@/backend/queries/tagDetails";
 import { GitFileChangeType } from "@/backend/types";
+import { formatGitError } from "@/backend/utils/gitError";
 import { pullRequestCreateUrl } from "@/backend/utils/pullRequest";
 import { abbrevCommit } from "@/backend/utils/string";
 import { Config } from "@/config";
@@ -118,7 +121,7 @@ export function registerMessageHandlers(
       try {
         await handler(msg);
       } catch (e: unknown) {
-        status = e instanceof Error ? e.message : String(e);
+        status = formatGitError(e);
       }
       bridge.post({ command, status } as ResponseMessage);
     });
@@ -173,6 +176,8 @@ export function registerMessageHandlers(
   registerAction("applyStash", (msg) => applyStash(gitClient.getInstance(), msg));
   registerAction("popStash", (msg) => popStash(gitClient.getInstance(), msg));
   registerAction("dropStash", (msg) => dropStash(gitClient.getInstance(), msg));
+  registerAction("renameStash", (msg) => renameStash(gitClient.getInstance(), msg));
+  registerAction("fastForwardBranch", (msg) => fastForwardBranch(gitClient.getInstance(), msg));
   registerAction("resetUncommittedChanges", () => resetUncommittedChanges(gitClient.getInstance()));
   registerAction("cleanUntrackedFiles", () => cleanUntrackedFiles(gitClient.getInstance()));
 
@@ -239,6 +244,27 @@ export function registerMessageHandlers(
       success = false;
     }
     bridge.post({ command: "createArchive", success });
+  });
+
+  bridge.onMessage("exportPatch", async (msg) => {
+    let success = true;
+    try {
+      const uri = await vscode.window.showSaveDialog({
+        saveLabel: l10n.t("action.exportPatch"),
+        filters: { Patches: ["patch"] },
+        defaultUri: vscode.Uri.file(`${msg.repo}/${abbrevCommit(msg.commitHash)}.patch`)
+      });
+      // No uri means the user cancelled — not an error.
+      if (uri !== undefined) {
+        await exportPatch(gitClient.getInstance(), {
+          commitHash: msg.commitHash,
+          outputPath: uri.fsPath
+        });
+      }
+    } catch {
+      success = false;
+    }
+    bridge.post({ command: "exportPatch", success });
   });
 
   bridge.onMessage("tagDetails", async (msg) => {
@@ -315,7 +341,7 @@ export function registerMessageHandlers(
         pruneTags: config.fetchAndPruneTags()
       });
     } catch (e: unknown) {
-      status = e instanceof Error ? e.message : String(e);
+      status = formatGitError(e);
     }
     bridge.post({ command: "fetch", status });
   });

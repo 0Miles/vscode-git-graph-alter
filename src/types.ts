@@ -298,6 +298,16 @@ export type ResponseCreateArchive = {
   success: boolean;
 };
 
+export type RequestExportPatch = {
+  command: "exportPatch";
+  repo: string;
+  commitHash: string;
+};
+export type ResponseExportPatch = {
+  command: "exportPatch";
+  success: boolean;
+};
+
 export type ResponseRefresh = {
   command: "refresh";
 };
@@ -324,6 +334,7 @@ export type RequestMessage =
   | RequestOpenScmView
   | RequestFetch
   | RequestCreateArchive
+  | RequestExportPatch
   | RequestCreatePullRequest;
 
 export type ResponseMessage =
@@ -338,5 +349,6 @@ export type ResponseMessage =
   | ResponseViewDiffWithWorking
   | ResponseFetch
   | ResponseCreateArchive
+  | ResponseExportPatch
   | ResponseRefresh
   | ResponseSetRepo;

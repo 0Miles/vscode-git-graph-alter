@@ -110,6 +110,9 @@ export const config = {
   },
   dateType: (): DateType => getConfig("dates.type", "Author Date"),
   enhancedAccessibility: (): boolean => getConfig("accessibilityEnhancements", false),
+  autoFetchEnabled: (): boolean => getConfig("autoFetch.enabled", false),
+  // Clamped to the supported 1–60 minute range at the call site.
+  autoFetchIntervalMinutes: (): number => getConfig("autoFetch.intervalMinutes", 10),
   fetchAndPrune: (): boolean =>
     getConfig("fetch.prune", false),
   fetchAndPruneTags: (): boolean =>
