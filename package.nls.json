@@ -6,6 +6,7 @@
   "command.fetch": "Fetch from Remote(s)",
   "command.fetchRemote": "Fetch a Specific Remote...",
   "command.manageRemotes": "Manage Remotes...",
+  "command.viewReflog": "View Reflog / Recover Commits...",
   "command.setRepoName": "Set Repository Name...",
   "command.toggleRemoteVisibility": "Show/Hide Remote Branches...",
   "command.exportRepoConfig": "Export Repository Configuration",

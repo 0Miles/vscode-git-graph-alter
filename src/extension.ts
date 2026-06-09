@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 
 import { AvatarManager } from "./avatarManager";
+import { createBranch } from "./backend/actions/branch";
+import { resetToCommit } from "./backend/actions/commit";
 import { fetchFromRemotes, fetchRemote, listRemoteNames } from "./backend/actions/fetch";
 import {
   addRemote,
@@ -12,6 +14,7 @@ import {
 import { getUserDetails, setUserDetails } from "./backend/actions/userDetails";
 import { gitClientFactory } from "./backend/gitClient";
 import { getCommitFileContent } from "./backend/queries/commitFileContent";
+import { loadDanglingCommits, loadReflog } from "./backend/queries/loadReflog";
 import { formatGitError } from "./backend/utils/gitError";
 import { buildExtensionUri, getPathFromUri } from "./backend/utils/path";
 import { repoContainingPath, resolveToKnownRepo } from "./backend/utils/repoMatch";
@@ -371,6 +374,70 @@ export function activate(context: vscode.ExtensionContext) {
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
         void vscode.window.showErrorMessage(l10n.t("error.unableToFetch") + ": " + formatGitError(e));
+      }
+    }),
+    vscode.commands.registerCommand("git-graph-alter.viewReflog", async () => {
+      // Browse the reflog (and commits dangling beyond it) and recover any of
+      // them. A command + QuickPick, since neo has no settings widget.
+      const git = gitClient.getInstance();
+      try {
+        const [reflog, dangling] = await Promise.all([
+          loadReflog(git),
+          loadDanglingCommits(git)
+        ]);
+        const entries = [...reflog, ...dangling];
+        if (entries.length === 0) {
+          void vscode.window.showInformationMessage(l10n.t("reflog.empty"));
+          return;
+        }
+        const danglingTag = l10n.t("reflog.danglingTag");
+        const pick = await vscode.window.showQuickPick(
+          entries.map((e) => ({
+            label: `${e.dangling ? "$(warning) " : ""}${e.shortHash}  ${e.subject}`,
+            description: e.dangling ? danglingTag : e.selector,
+            entry: e
+          })),
+          { placeHolder: l10n.t("reflog.pickPrompt"), matchOnDescription: true }
+        );
+        if (pick === undefined) return; // cancelled
+        const hash = pick.entry.hash;
+        const createBranchLabel = l10n.t("reflog.createBranch");
+        const resetLabel = l10n.t("reflog.resetHard");
+        const copyLabel = l10n.t("reflog.copyHash");
+        const action = await vscode.window.showQuickPick(
+          [createBranchLabel, resetLabel, copyLabel],
+          { placeHolder: l10n.t("reflog.actionPrompt", pick.entry.shortHash) }
+        );
+        if (action === undefined) return;
+        if (action === createBranchLabel) {
+          const name = (
+            await vscode.window.showInputBox({
+              prompt: l10n.t("reflog.branchNamePrompt"),
+              ignoreFocusOut: true
+            })
+          )?.trim();
+          if (!name) return;
+          await createBranch(git, {
+            commitHash: hash,
+            branchName: name,
+            checkout: false,
+            force: false
+          });
+        } else if (action === resetLabel) {
+          const yes = l10n.t("reflog.resetConfirmYes");
+          const confirm = await vscode.window.showWarningMessage(
+            l10n.t("reflog.resetConfirm", pick.entry.shortHash),
+            { modal: true },
+            yes
+          );
+          if (confirm !== yes) return;
+          await resetToCommit(git, { commitHash: hash, resetMode: "hard" });
+        } else {
+          await vscode.env.clipboard.writeText(hash);
+        }
+        currentBridge?.post({ command: "refresh" });
+      } catch (e: unknown) {
+        void vscode.window.showErrorMessage(l10n.t("reflog.unableTo") + ": " + formatGitError(e));
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.exportRepoConfig", () => {

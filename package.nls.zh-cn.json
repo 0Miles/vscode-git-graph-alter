@@ -6,6 +6,7 @@
   "command.fetch": "从 remote fetch",
   "command.fetchRemote": "Fetch 特定 remote ...",
   "command.manageRemotes": "管理 remote ...",
+  "command.viewReflog": "检视 reflog / 救回 commit ...",
   "command.setRepoName": "设置仓库名称...",
   "command.toggleRemoteVisibility": "显示/隐藏 remote branch ...",
   "command.exportRepoConfig": "导出仓库设置",

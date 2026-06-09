@@ -105,6 +105,11 @@
       },
       {
         "category": "Git Graph Alter",
+        "command": "git-graph-alter.viewReflog",
+        "title": "%command.viewReflog%"
+      },
+      {
+        "category": "Git Graph Alter",
         "command": "git-graph-alter.setRepoName",
         "title": "%command.setRepoName%"
       },
