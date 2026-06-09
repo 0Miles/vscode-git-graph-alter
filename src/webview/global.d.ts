@@ -1,4 +1,4 @@
-import type { GitCommitDetails, GitCommitNode } from "@/backend/types";
+import type { GitCommitDetails, GitCommitNode, GitFileChange } from "@/backend/types";
 import * as GG from "@/types";
 
 declare global {
@@ -12,18 +12,47 @@ declare global {
 
   interface Config {
     autoCenterCommitDetailsView: boolean;
+    commitDetailsViewLocation: "Inline" | "Docked to Bottom";
+    branchLabelsAlignedToGraph: boolean;
+    tagLabelsRightAligned: boolean;
+    combineLocalAndRemoteBranchLabels: boolean;
+    dialogDeleteBranchForceDelete: boolean;
+    dialogCherryPickNoCommit: boolean;
+    dialogAddTagType: "annotated" | "lightweight";
+    dialogCreateBranchCheckOut: boolean;
+    dialogMergeNoFastForward: boolean;
+    dialogMergeSquash: boolean;
+    dialogResetMode: "soft" | "mixed" | "hard";
+    customBranchGlobPatterns: { name: string; glob: string }[];
+    customEmojiShortcodeMappings: { [code: string]: string };
+    enhancedAccessibility: boolean;
     fetchAvatars: boolean;
+    fileTreeCompactFolders: boolean;
+    fileViewType: "File Tree" | "File List";
     graphColours: string[];
     graphStyle: "rounded" | "angular";
     grid: { x: number; y: number; offsetX: number; offsetY: number; expandY: number };
     initialLoadCommits: number;
+    loadMoreAutomatically: boolean;
     loadMoreCommits: number;
+    markdown: boolean;
+    issueLinkingRegex: string;
+    issueLinkingUrl: string;
+    muteCommitsNotAncestorsOfHead: boolean;
+    muteMergeCommits: boolean;
+    onLoadScrollToHead: boolean;
     showCurrentBranchByDefault: boolean;
+    uncommittedChangesAtHead: boolean;
+    showSpecificBranches: string[];
+    showRemoteBranches: boolean;
+    showTags: boolean;
   }
 
   interface ContextMenuItem {
     title: string;
     onClick: () => void;
+    /** When false, the item is hidden (contextMenuActionsVisibility). */
+    visible?: boolean;
   }
 
   type ContextMenuElement = ContextMenuItem | null;
@@ -59,6 +88,13 @@ declare global {
     srcElem: HTMLElement | null;
     commitDetails: GitCommitDetails | null;
     fileTree: GitFolder | null;
+    /** When comparing two commits: the other commit's hash / row, the
+     *  resolved older→newer order, and the diff between them. NULL otherwise. */
+    compareWithHash: string | null;
+    compareWithSrcElem: HTMLElement | null;
+    compareFromHash: string | null;
+    compareToHash: string | null;
+    compareFileChanges: GitFileChange[] | null;
   }
 
   interface GitFile {
@@ -71,12 +107,12 @@ declare global {
     type: "folder";
     name: string;
     folderPath: string;
-    contents: GitFolderContents;
+    /** Child folders/files keyed by path segment; a Map keeps insertion order. */
+    children: Map<string, GitFolderOrFile>;
     open: boolean;
   }
 
   type GitFolderOrFile = GitFolder | GitFile;
-  type GitFolderContents = { [name: string]: GitFolderOrFile };
 
   interface Point {
     x: number;
@@ -108,12 +144,14 @@ declare global {
     commits: GitCommitNode[];
     commitHead: string | null;
     avatars: AvatarImageCollection;
-    currentBranch: string | null;
+    currentBranches: string[] | null;
     currentRepo: string;
     moreCommitsAvailable: boolean;
     maxCommits: number;
     showRemoteBranches: boolean;
     expandedCommit: ExpandedCommit | null;
+    columnVisibility: { date: boolean; author: boolean; commit: boolean };
+    alwaysAcceptCheckoutCommit: boolean;
   }
 }
 
