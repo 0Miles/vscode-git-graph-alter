@@ -25,7 +25,6 @@ export function createVscodeMock() {
 export function setupHtml(viewState: GG.GitGraphViewState) {
   document.body.innerHTML = `
     <div id="controls">
-      <span id="repoControl"><div id="repoSelect" class="dropdown"></div></span>
       <span id="branchControl"><div id="branchSelect" class="dropdown"></div></span>
       <label id="showRemoteBranchesControl">
         <input type="checkbox" id="showRemoteBranchesCheckbox" checked>
@@ -33,12 +32,20 @@ export function setupHtml(viewState: GG.GitGraphViewState) {
       </label>
       <div id="refreshBtn" class="roundedBtn">Refresh</div>
       <div id="blinkHeadBtn" class="roundedBtn">Locate HEAD</div>
+      <div id="findBtn" class="roundedBtn">Find</div>
     </div>
     <div id="content">
       <div id="commitGraph"></div>
       <div id="commitTable"></div>
     </div>
     <div id="footer"></div>
+    <div id="findWidget">
+      <input id="findInput" type="text">
+      <span id="findCount"></span>
+      <div id="findPrev" class="findBtn"></div>
+      <div id="findNext" class="findBtn"></div>
+      <div id="findClose" class="findBtn"></div>
+    </div>
     <ul id="contextMenu"></ul>
     <div id="dialogBacking"></div>
     <div id="dialog"></div>
