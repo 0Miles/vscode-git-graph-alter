@@ -54,6 +54,8 @@
   overflow-x: hidden;
   margin-top: -1px;
   white-space: nowrap;
+  /* Cap the width so long branch/tag names don't overflow narrow viewports. */
+  max-width: min(600px, 95vw);
 }
 
 .dropdownOption {
@@ -61,9 +63,41 @@
   cursor: pointer;
   padding: 4px 10px;
   user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .dropdownOptions.showInfo .dropdownOption {
   padding-right: 30px;
+}
+/* Multi-select dropdown: a checkbox at the left of each option. */
+.dropdownOption.multiple {
+  padding-left: 28px;
+}
+.dropdownOptionCheckbox {
+  position: absolute;
+  left: 8px;
+  top: 5px;
+  width: 13px;
+  height: 13px;
+  box-sizing: border-box;
+  border: 1px solid var(--vscode-menu-foreground);
+  border-radius: 3px;
+  opacity: 0.6;
+}
+.dropdownOption.selected .dropdownOptionCheckbox {
+  opacity: 1;
+}
+.dropdownOptionCheckbox svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+  fill: var(--vscode-menu-foreground);
+}
+.dropdownOption:hover .dropdownOptionCheckbox {
+  border-color: var(--vscode-menu-selectionForeground);
+}
+.dropdownOption:hover .dropdownOptionCheckbox svg {
+  fill: var(--vscode-menu-selectionForeground);
 }
 .dropdownOption.selected {
   background-color: rgba(128, 128, 128, 0.15);

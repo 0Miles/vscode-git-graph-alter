@@ -1,4 +1,10 @@
 /* Body */
+/* Always reserve the document scrollbar so the view doesn't shift horizontally
+   (whole-screen flicker) when a re-render changes the page height enough to
+   add/remove the scrollbar — e.g. when filtering or switching branches. */
+html {
+  overflow-y: scroll;
+}
 body {
   margin: 0;
   padding: 0;
@@ -18,6 +24,21 @@ body.unableToLoad p {
   height: 0px;
   box-shadow: 0 -6px 6px 6px var(--vscode-scrollbar-shadow);
   z-index: 200;
+}
+
+/* Use the VS Code Color Theme's text-selection background colour, but only when
+   the theme/user actually defines one (the body class is toggled from JS). */
+body.selection-background-color-exists ::-moz-selection {
+  background-color: var(--vscode-selection-background);
+}
+body.selection-background-color-exists ::selection {
+  background-color: var(--vscode-selection-background);
+}
+
+/* Markdown inline code (e.g. in commit messages): pin the line-height so the
+   monospace font can't increase a commit row's height across platforms. */
+code {
+  line-height: 1;
 }
 
 /* Content */
@@ -82,6 +103,32 @@ body.unableToLoad p {
 }
 #commitTable tr.commit:hover td {
   cursor: pointer;
+}
+#commitTable tr.commit.muted td {
+  color: var(--vscode-descriptionForeground);
+}
+#commitTable th.hidden,
+#commitTable td.hidden {
+  display: none;
+}
+.gitFileChangeTypeIndicator {
+  display: inline-block;
+  min-width: 1.1em;
+  font-weight: bold;
+  text-align: center;
+}
+.commitSignature {
+  font-weight: bold;
+  margin-right: 4px;
+}
+.commitSignature.good {
+  color: var(--vscode-gitDecoration-untrackedResourceForeground, #2ea043);
+}
+.commitSignature.unverified {
+  color: var(--vscode-descriptionForeground);
+}
+.commitSignature.bad {
+  color: var(--vscode-errorForeground, #f14c4c);
 }
 #commitTable td {
   line-height: 24px;
@@ -155,6 +202,53 @@ body.unableToLoad p {
 #commitTable tr.commit.commitDetailsOpen:hover td {
   background-color: rgba(128, 128, 128, 0.35);
 }
+/* Docked-to-bottom Commit Details View: a fixed panel below the graph
+   rather than a row inserted into the table. Its inner panels are positioned
+   absolutely, so the fixed container is their containing block. */
+#commitDetails.docked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 252px;
+  z-index: 80;
+  background-color: var(--vscode-editor-background);
+  border-top: 2px solid rgba(128, 128, 128, 0.2);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: normal;
+}
+#commitDetails.docked #commitDetailsSummary,
+#commitDetails.docked #commitDetailsFiles {
+  bottom: 0;
+}
+body.cdvDocked #content {
+  padding-bottom: 252px;
+}
+/* Draggable inline CDV summary/files divider + bottom height grip. */
+#detailsDivider {
+  position: absolute;
+  top: 0;
+  bottom: 2px;
+  left: 45%;
+  width: 7px;
+  margin-left: -3px;
+  cursor: col-resize;
+  z-index: 1;
+}
+#detailsResizeGrip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  cursor: row-resize;
+  z-index: 1;
+}
+#commitDetails.docked #detailsDivider,
+#commitDetails.docked #detailsResizeGrip {
+  display: none;
+}
 #commitDetailsSummary {
   position: absolute;
   left: 0;
@@ -225,7 +319,10 @@ body.unableToLoad p {
   margin-top: 4px;
   white-space: nowrap;
   text-overflow: ellipsis;
-  overflow-x: hidden;
+  /* Clip both axes: overflow-x:hidden alone makes overflow-y compute to auto,
+     which gives each row its own scrollbar when the icon is a touch taller than
+     the line box. */
+  overflow: hidden;
 }
 #commitDetailsClose {
   position: absolute;
@@ -322,16 +419,58 @@ svg.fileIcon {
   line-height: 18px;
   margin-top: 2px;
   margin-right: 5px;
-  padding-right: 5px;
   background-color: rgba(128, 128, 128, 0.15);
   border-radius: 5px;
   border: 1px solid rgba(128, 128, 128, 0.75);
   vertical-align: top;
   font-size: 12px;
   cursor: default;
+  overflow: hidden;
+  /* Keep the normal label colour even when the commit row is muted (e.g. a
+     merge commit), rather than inheriting the dimmed row text colour. */
+  color: var(--vscode-editor-foreground);
 }
 .gitRef.active {
   border-color: var(--git-graph-color);
+}
+.gitRef.active .gitRefName {
+  font-weight: bold;
+}
+.gitRefName {
+  display: inline-block;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 5px;
+  vertical-align: top;
+}
+/* Reference-label alignment. Branches aligned to the graph sit in the
+   first cell; trim the trailing margin of the last one. Right-aligned tags
+   gain a little left margin so they don't touch the message. */
+body.branchLabelsAlignedToGraph #commitTable tr.commit td:first-child .gitRef:last-child {
+  margin-right: 0;
+}
+body.tagLabelsRightAligned .gitRef.tag {
+  margin-left: 5px;
+  margin-right: 0;
+}
+.gitRef.stash {
+  background-color: rgba(255, 184, 0, 0.12);
+  border-color: rgba(255, 184, 0, 0.6);
+  font-style: italic;
+}
+/* A remote branch folded into its local head's label: an italic chip
+   separated from the branch name by a divider. */
+.gitRef.gitRefCombined {
+  height: 18px;
+  line-height: 18px;
+  margin: 0;
+  padding: 0 5px;
+  border: none;
+  border-left: 1px solid rgba(128, 128, 128, 0.45);
+  border-radius: 0;
+  background-color: transparent;
+  font-style: italic;
+  vertical-align: top;
 }
 .gitRef > svg {
   background-color: var(--git-graph-color);
@@ -339,8 +478,6 @@ svg.fileIcon {
   width: 14px;
   height: 14px;
   padding: 2px;
-  margin-right: 5px;
-  border-radius: 4px 0 0 4px;
   vertical-align: top;
 }
 
@@ -372,20 +509,18 @@ svg.fileIcon {
   left: 0;
   right: 0;
   top: 0;
-  padding: 4px 96px 4px 0;
+  padding: 4px 160px 4px 0;
   border-bottom: 1px solid rgba(128, 128, 128, 0.5);
   line-height: 32px;
   text-align: center;
   font-weight: 700;
   font-size: 13px;
 }
-#repoControl,
 #branchControl,
 #showRemoteBranchesControl {
   white-space: nowrap;
   margin: 0 10px;
 }
-#repoSelect,
 #branchSelect {
   margin-left: 3px;
 }
@@ -393,27 +528,77 @@ svg.fileIcon {
   width: 14px;
   vertical-align: text-top;
 }
+/* Control-bar icon buttons: small SVG icons absolutely positioned along the
+   right edge of the control bar. */
+#findBtn,
+#terminalBtn,
+#blinkHeadBtn,
+#fetchBtn,
 #refreshBtn {
   position: absolute;
-  right: 8px;
   top: 50%;
-  width: 80px;
-  height: 22px;
-  line-height: 22px;
-  border-radius: 11px;
-  margin-top: -12px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  cursor: pointer;
 }
-/* Make the Locate HEAD button match the refresh button style but smaller */
+#findBtn {
+  right: 130px;
+}
+#terminalBtn {
+  right: 100px;
+}
 #blinkHeadBtn {
+  right: 70px;
+}
+#fetchBtn {
+  right: 40px;
+}
+#refreshBtn {
+  right: 10px;
+}
+#findBtn svg,
+#terminalBtn svg,
+#blinkHeadBtn svg,
+#fetchBtn svg,
+#refreshBtn svg {
   position: absolute;
-  right: 96px;
-  top: 50%;
-  width: 120px;
-  height: 22px;
-  line-height: 22px;
-  border-radius: 11px;
-  margin-top: -12px;
-  text-align: center;
+  fill: var(--vscode-editor-foreground);
+  opacity: 0.8;
+  stroke: var(--vscode-editor-foreground);
+  stroke-opacity: 0.5;
+  stroke-width: 0;
+}
+#findBtn svg,
+#terminalBtn svg {
+  stroke-width: 0.5px;
+}
+#findBtn:hover svg,
+#terminalBtn:hover svg,
+#blinkHeadBtn:hover svg,
+#fetchBtn:hover svg,
+#refreshBtn:hover svg {
+  opacity: 1;
+  stroke-width: 0.5px;
+}
+#findBtn:hover svg,
+#terminalBtn:hover svg {
+  stroke-width: 1px;
+}
+#findBtn svg,
+#terminalBtn svg,
+#blinkHeadBtn svg,
+#fetchBtn svg {
+  left: 1px;
+  top: 1px;
+  width: 18px !important;
+  height: 18px !important;
+}
+#refreshBtn svg {
+  left: 2px;
+  top: 2px;
+  width: 16px !important;
+  height: 16px !important;
 }
 #loadMoreCommitsBtn {
   width: 180px;
@@ -511,9 +696,35 @@ svg.fileIcon {
 #dialog > table.dialogForm input[type="text"] {
   width: 100%;
 }
+/* Theme dialog inputs to respect the active VS Code Color Theme: a
+   custom-rendered checkbox and themed select/text controls. */
 #dialog > table.dialogForm input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 15px;
+  height: 15px;
   vertical-align: text-top;
+  border: 1px solid var(--vscode-checkbox-border, rgba(128, 128, 128, 0.6));
+  border-radius: 3px;
+  background: var(--vscode-checkbox-background, var(--vscode-input-background));
   outline-style: none;
+  cursor: pointer;
+}
+#dialog > table.dialogForm input[type="checkbox"]:checked {
+  background: var(--vscode-checkbox-selectBackground, var(--vscode-button-background));
+  border-color: var(--vscode-checkbox-selectBorder, var(--vscode-button-background));
+}
+#dialog > table.dialogForm input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--vscode-checkbox-foreground, var(--vscode-button-foreground, #fff));
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 #dialog > table.dialogForm.multi input[type="checkbox"] {
   margin-left: 0;
@@ -522,8 +733,24 @@ svg.fileIcon {
 #dialog > table.dialogForm select {
   padding: 4px;
   box-sizing: border-box;
-  border: 1px solid rgba(128, 128, 128, 0.3);
+  border: 1px solid var(--vscode-dropdown-border, rgba(128, 128, 128, 0.3));
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
   outline-style: none;
+}
+#dialog > table.dialogForm select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
+  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23808080' d='M8 11L3 6h10z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+}
+#dialog > table.dialogForm select option {
+  background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
+  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
 }
 #dialog .roundedBtn {
   display: inline-block;
@@ -610,6 +837,14 @@ svg.fileIcon {
 .roundedBtn:hover {
   background-color: rgba(128, 128, 128, 0.2);
 }
+/* Busy indicator while a refresh/load is in progress: spin the icon. */
+#refreshBtn.refreshing {
+  cursor: default;
+  pointer-events: none;
+}
+#refreshBtn.refreshing svg {
+  animation: loadingIconAnimation 2s linear infinite;
+}
 
 /* General */
 #commitGraph,
@@ -621,4 +856,109 @@ svg.fileIcon {
 .roundedBtn,
 #controls label {
   user-select: none;
+}
+
+.gitFileCopyPath,
+.gitFileOpen,
+.gitFileViewRev,
+.gitFileDiffWorking {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+  opacity: 0;
+}
+.gitFile:hover .gitFileCopyPath,
+.gitFile:hover .gitFileOpen,
+.gitFile:hover .gitFileViewRev,
+.gitFile:hover .gitFileDiffWorking {
+  opacity: 0.6;
+}
+.gitFileCopyPath:hover,
+.gitFileOpen:hover,
+.gitFileViewRev:hover,
+.gitFileDiffWorking:hover {
+  opacity: 1;
+}
+.gitFileCopyPath svg,
+.gitFileOpen svg,
+.gitFileViewRev svg,
+.gitFileDiffWorking svg {
+  width: 13px;
+  height: 13px;
+  fill: var(--vscode-editor-foreground);
+}
+
+.commitBodyHash {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Find Widget */
+#findWidget {
+  display: none;
+  position: fixed;
+  top: 44px;
+  right: 14px;
+  z-index: 250;
+  align-items: center;
+  padding: 4px 6px;
+  background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+#findWidget.active {
+  display: flex;
+}
+#findInput {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  outline: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 13px;
+  color: var(--vscode-editor-foreground);
+  width: 180px;
+}
+#findCount {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0 8px;
+  min-width: 48px;
+  text-align: center;
+}
+.findBtn {
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 12px;
+  opacity: 0.7;
+  user-select: none;
+}
+.findBtn:hover {
+  opacity: 1;
+}
+/* The "open details as you navigate" toggle, highlighted while enabled. */
+#findOpenCdv.active {
+  opacity: 1;
+  color: var(--git-graph-color);
+}
+#commitTable tr.commit.findMatch td {
+  background-color: rgba(234, 92, 0, 0.18);
+}
+#commitTable tr.commit.findMatchCurrent td {
+  background-color: rgba(234, 92, 0, 0.4);
+}
+/* Outline find matches so they remain visible under High Contrast themes,
+   where the translucent background tint may not render. */
+#commitTable tr.commit.findMatch,
+#commitTable tr.commit.findMatchCurrent {
+  outline: 1px solid var(--vscode-editor-findMatchHighlightBorder, transparent);
+  outline-offset: -1px;
+}
+body.vscode-high-contrast #commitTable tr.commit.findMatch,
+body.vscode-high-contrast #commitTable tr.commit.findMatchCurrent {
+  outline: 1px dotted var(--vscode-editor-findMatchHighlightBorder, transparent);
 }
