@@ -7,6 +7,7 @@
   "command.fetchRemote": "Fetch 特定 remote ...",
   "command.manageRemotes": "管理 remote ...",
   "command.viewReflog": "檢視 reflog / 救回 commit ...",
+  "command.showStatistics": "顯示統計",
   "command.setRepoName": "設定存放庫名稱...",
   "command.toggleRemoteVisibility": "顯示/隱藏 remote branch ...",
   "command.exportRepoConfig": "匯出存放庫設定",
