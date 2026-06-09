@@ -1469,6 +1469,13 @@ class GitGraphView {
               });
             }
           },
+          {
+            visible: true,
+            title: l10n.exportPatch + ELLIPSIS,
+            onClick: () => {
+              sendMessage({ command: "exportPatch", repo: this.currentRepo!, commitHash: hash });
+            }
+          },
           null,
           {
             visible: cmv.copyHash,
@@ -1607,6 +1614,31 @@ class GitGraphView {
                 ),
                 () =>
                   sendMessage({ command: "dropStash", repo: this.currentRepo!, selector: refName }),
+                sourceElem
+              );
+            }
+          },
+          {
+            title: l10n.stashRename + ELLIPSIS,
+            visible: true,
+            onClick: () => {
+              showFormDialog(
+                l10n.dialogStashRenameTitle.replace(
+                  "{0}",
+                  "<b><i>" + escapeHtml(refName) + "</i></b>"
+                ),
+                [{ type: "text", name: "", default: "", placeholder: null }],
+                l10n.dialogStashRenameSubmit,
+                (values) => {
+                  const message = values[0].trim();
+                  if (message === "") return; // empty message: treat as cancel
+                  sendMessage({
+                    command: "renameStash",
+                    repo: this.currentRepo!,
+                    selector: refName,
+                    message
+                  });
+                },
                 sourceElem
               );
             }
@@ -1815,6 +1847,26 @@ class GitGraphView {
                     () => {
                       sendMessage({ command: "rebaseOn", repo: this.currentRepo!, obj: refName });
                       showActionRunningDialog(l10n.rebasing);
+                    },
+                    null
+                  );
+                }
+              },
+              {
+                title: l10n.fastForwardBranch,
+                visible: true,
+                onClick: () => {
+                  showConfirmationDialog(
+                    l10n.dialogFastForwardConfirm.replace(
+                      "{0}",
+                      "<b><i>" + escapeHtml(refName) + "</i></b>"
+                    ),
+                    () => {
+                      sendMessage({
+                        command: "fastForwardBranch",
+                        repo: this.currentRepo!,
+                        branchName: refName
+                      });
                     },
                     null
                   );
@@ -3294,6 +3346,15 @@ window.addEventListener("message", (event) => {
       break;
     case "createArchive":
       if (msg.success === false) showErrorDialog(l10n.unableToCreateArchive, null, null);
+      break;
+    case "exportPatch":
+      if (msg.success === false) showErrorDialog(l10n.unableToExportPatch, null, null);
+      break;
+    case "renameStash":
+      refreshGraphOrDisplayError(msg.status, l10n.unableToRenameStash);
+      break;
+    case "fastForwardBranch":
+      refreshGraphOrDisplayError(msg.status, l10n.unableToFastForward);
       break;
     case "loadRepos":
       gitGraph.loadRepos(msg.repos, msg.lastActiveRepo);

@@ -81,6 +81,25 @@ export async function renameBranch(
   await git.raw(["branch", "-m", input.oldName, input.newName]);
 }
 
+/** Fast-forward a (non-checked-out) local branch up to its configured upstream
+ *  without switching to it. `git fetch .` refuses a non-fast-forward update, so
+ *  this can never rewrite or lose history; it errors if the branch has no
+ *  upstream or is the current branch (git won't fetch into a checked-out ref). */
+export async function fastForwardBranch(
+  git: SimpleGit,
+  input: ActionPayload<"fastForwardBranch">
+): Promise<void> {
+  const upstream = (
+    await git.raw([
+      "rev-parse",
+      "--abbrev-ref",
+      "--symbolic-full-name",
+      `${input.branchName}@{upstream}`
+    ])
+  ).trim();
+  await git.raw(["fetch", ".", `${upstream}:${input.branchName}`]);
+}
+
 export async function checkoutBranch(
   git: SimpleGit,
   input: ActionPayload<"checkoutBranch">

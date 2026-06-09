@@ -12,6 +12,7 @@ import {
 import { getUserDetails, setUserDetails } from "./backend/actions/userDetails";
 import { gitClientFactory } from "./backend/gitClient";
 import { getCommitFileContent } from "./backend/queries/commitFileContent";
+import { formatGitError } from "./backend/utils/gitError";
 import { buildExtensionUri, getPathFromUri } from "./backend/utils/path";
 import { repoContainingPath, resolveToKnownRepo } from "./backend/utils/repoMatch";
 import { config } from "./config";
@@ -223,6 +224,41 @@ export function activate(context: vscode.ExtensionContext) {
     return undefined;
   };
 
+  // Auto-fetch: periodically fetch all remotes when enabled, then refresh an
+  // open graph. Best-effort and silent — failures (offline, no remotes) must
+  // not nag the user.
+  let autoFetchTimer: ReturnType<typeof setInterval> | undefined;
+  const restartAutoFetch = () => {
+    if (autoFetchTimer !== undefined) {
+      clearInterval(autoFetchTimer);
+      autoFetchTimer = undefined;
+    }
+    if (!config.autoFetchEnabled()) return;
+    const minutes = Math.min(60, Math.max(1, config.autoFetchIntervalMinutes()));
+    autoFetchTimer = setInterval(
+      () => {
+        void (async () => {
+          try {
+            await fetchFromRemotes(gitClient.getInstance(), {
+              prune: config.fetchAndPrune(),
+              pruneTags: config.fetchAndPruneTags()
+            });
+            currentBridge?.post({ command: "refresh" });
+          } catch {
+            /* best-effort: stay silent on failure */
+          }
+        })();
+      },
+      minutes * 60 * 1000
+    );
+  };
+  restartAutoFetch();
+  context.subscriptions.push({
+    dispose: () => {
+      if (autoFetchTimer !== undefined) clearInterval(autoFetchTimer);
+    }
+  });
+
   context.subscriptions.push(
     outputChannel,
     vscode.commands.registerCommand("git-graph-alter.view", (arg?: unknown) =>
@@ -243,9 +279,7 @@ export function activate(context: vscode.ExtensionContext) {
         // Refresh an open graph so the freshly-fetched refs show immediately.
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
-        void vscode.window.showErrorMessage(
-          l10n.t("error.unableToFetch") + ": " + (e instanceof Error ? e.message : String(e))
-        );
+        void vscode.window.showErrorMessage(l10n.t("error.unableToFetch") + ": " + formatGitError(e));
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.manageRemotes", async () => {
@@ -336,9 +370,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
-        void vscode.window.showErrorMessage(
-          l10n.t("error.unableToFetch") + ": " + (e instanceof Error ? e.message : String(e))
-        );
+        void vscode.window.showErrorMessage(l10n.t("error.unableToFetch") + ": " + formatGitError(e));
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.exportRepoConfig", () => {
@@ -504,6 +536,8 @@ export function activate(context: vscode.ExtensionContext) {
         repoSearch.maxDepthChanged();
       } else if (e.affectsConfiguration("git.path")) {
         gitClient.setGitPath(config.gitPath());
+      } else if (e.affectsConfiguration("git-graph-alter.autoFetch")) {
+        restartAutoFetch();
       }
     }),
     repoWatcher,
