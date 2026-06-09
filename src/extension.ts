@@ -15,6 +15,7 @@ import { getUserDetails, setUserDetails } from "./backend/actions/userDetails";
 import { gitClientFactory } from "./backend/gitClient";
 import { getCommitFileContent } from "./backend/queries/commitFileContent";
 import { loadDanglingCommits, loadReflog } from "./backend/queries/loadReflog";
+import { loadStatistics } from "./backend/queries/loadStatistics";
 import { formatGitError } from "./backend/utils/gitError";
 import { buildExtensionUri, getPathFromUri } from "./backend/utils/path";
 import { repoContainingPath, resolveToKnownRepo } from "./backend/utils/repoMatch";
@@ -25,6 +26,7 @@ import { createLogger } from "./extension/logger";
 import { registerMessageHandlers } from "./extension/messageHandler";
 import { createRepoManager } from "./extension/repoManager";
 import { createScmRepoTracker } from "./extension/scmRepoTracker";
+import { showStatistics } from "./extension/statisticsPanel";
 import { WebviewBridge, webviewBridgeFactory } from "./extension/webviewBridge";
 import { createWebviewPanel, WebviewPanel } from "./extension/webviewPanel";
 import { createRepoSearch } from "./extension/workspaceSearch";
@@ -438,6 +440,15 @@ export function activate(context: vscode.ExtensionContext) {
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
         void vscode.window.showErrorMessage(l10n.t("reflog.unableTo") + ": " + formatGitError(e));
+      }
+    }),
+    vscode.commands.registerCommand("git-graph-alter.showStatistics", async () => {
+      // Open a read-only stats panel (commits by author + activity heatmap).
+      try {
+        const stats = await loadStatistics(gitClient.getInstance());
+        showStatistics(stats);
+      } catch (e: unknown) {
+        void vscode.window.showErrorMessage(l10n.t("stats.unableTo") + ": " + formatGitError(e));
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.exportRepoConfig", () => {

@@ -110,6 +110,11 @@
       },
       {
         "category": "Git Graph Alter",
+        "command": "git-graph-alter.showStatistics",
+        "title": "%command.showStatistics%"
+      },
+      {
+        "category": "Git Graph Alter",
         "command": "git-graph-alter.setRepoName",
         "title": "%command.setRepoName%"
       },
