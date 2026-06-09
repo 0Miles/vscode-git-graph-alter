@@ -240,6 +240,12 @@ export type RequestOpenTerminal = {
   repo: string;
 };
 
+export type RequestOpenMergeEditor = {
+  command: "openMergeEditor";
+  repo: string;
+  filePath: string;
+};
+
 export type RequestFetch = {
   command: "fetch";
   repo: string;
@@ -330,6 +336,7 @@ export type RequestMessage =
   | RequestViewFileAtRevision
   | RequestViewDiffWithWorking
   | RequestOpenTerminal
+  | RequestOpenMergeEditor
   | RequestOpenExternalUrl
   | RequestOpenScmView
   | RequestFetch

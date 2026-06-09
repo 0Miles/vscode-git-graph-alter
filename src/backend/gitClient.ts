@@ -45,6 +45,12 @@ export function gitClientFactory(
 ) {
   const create = (): SimpleGit => {
     const instance = simpleGit(gitOptions(repoPath, gitPath));
+    // The extension can never host an interactive editor, so force every git
+    // child to a no-op editor. Without this, commands that would open one
+    // (e.g. `merge`/`rebase`/`cherry-pick` `--continue`) hang the child
+    // forever. GIT_EDITOR is the portable way to do this (cross-platform,
+    // unlike a `core.editor=true` that relies on a `true` binary being on PATH).
+    instance.env("GIT_EDITOR", "true");
     // Set each variable individually so it merges into the inherited
     // process.env; passing a whole object via env() replaces the environment
     // and makes simple-git scrutinise (and reject) inherited variables.

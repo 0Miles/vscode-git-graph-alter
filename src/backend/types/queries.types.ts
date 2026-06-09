@@ -3,6 +3,7 @@ import type {
   GitCommitDetails,
   GitCommitNode,
   GitFileChange,
+  GitOperation,
   GitTagDetails
 } from "./git.types";
 
@@ -10,6 +11,12 @@ type QueryPayloads = {
   commitDetails: {
     request: { repo: string; commitHash: string; isStash?: boolean };
     response: { commitDetails: GitCommitDetails | null };
+  };
+  /** The in-progress git operation (merge/rebase/cherry-pick/revert) and its
+   *  unresolved conflict files, for the conflict-resolution banner. */
+  operationState: {
+    request: { repo: string };
+    response: { operation: GitOperation | null; conflictedFiles: string[] };
   };
   /** Files changed between two arbitrary commits. */
   compareCommits: {

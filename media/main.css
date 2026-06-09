@@ -46,6 +46,74 @@ code {
   position: relative;
 }
 
+/* Conflict-resolution banner */
+#conflictBanner {
+  display: none;
+}
+#conflictBanner.active {
+  display: block;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  background-color: var(--vscode-inputValidation-warningBackground, rgba(255, 200, 0, 0.1));
+  font-size: 13px;
+}
+.conflictBannerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.conflictBannerTitle {
+  font-weight: bold;
+}
+.conflictBannerButtons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+#conflictBanner .roundedBtn {
+  display: inline-block;
+  padding: 1px 12px;
+  border-radius: 11px;
+}
+#conflictBanner .roundedBtn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.conflictBannerList {
+  margin: 6px 0 0 0;
+  padding-left: 0;
+  list-style: none;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.conflictBannerList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 1px 0;
+}
+.conflictFile {
+  cursor: pointer;
+  text-decoration: underline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conflictFile:hover {
+  color: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground));
+}
+.conflictResolveBtn {
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--vscode-textLink-foreground);
+}
+.conflictBannerAllResolved {
+  margin-top: 4px;
+  color: var(--vscode-descriptionForeground);
+}
+
 /* Commit Graph */
 #commitGraph {
   display: block;
