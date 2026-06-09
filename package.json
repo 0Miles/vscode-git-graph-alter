@@ -53,6 +53,7 @@
     "l10n:check": "node ./scripts/check-l10n.js"
   },
   "dependencies": {
+    "iconv-lite": "^0.7.2",
     "simple-git": "^3.36.0"
   },
   "devDependencies": {
@@ -87,14 +88,76 @@
         "category": "(neo) Git Graph",
         "command": "neo-git-graph.clearAvatarCache",
         "title": "%command.clearAvatarCache%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.fetch",
+        "title": "%command.fetch%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.manageRemotes",
+        "title": "%command.manageRemotes%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.setRepoName",
+        "title": "%command.setRepoName%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.exportRepoConfig",
+        "title": "%command.exportRepoConfig%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.toggleRemoteVisibility",
+        "title": "%command.toggleRemoteVisibility%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.fetchRemote",
+        "title": "%command.fetchRemote%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.setGitUserDetails",
+        "title": "%command.setGitUserDetails%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.openExtensionSettings",
+        "title": "%command.openExtensionSettings%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.getVersionInfo",
+        "title": "%command.getVersionInfo%"
+      },
+      {
+        "category": "(neo) Git Graph",
+        "command": "neo-git-graph.openFileFromDiff",
+        "title": "%command.openFileFromDiff%",
+        "icon": "$(go-to-file)"
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "neo-git-graph.openFileFromDiff",
+          "when": "resourceScheme == neo-git-graph",
+          "group": "navigation"
+        }
+      ],
       "scm/title": [
         {
           "command": "neo-git-graph.view",
           "group": "navigation",
-          "when": "scmProvider == git"
+          "when": "scmProvider == git && config.neo-git-graph.scmButtonPosition == 'Inline'"
+        },
+        {
+          "command": "neo-git-graph.view",
+          "when": "scmProvider == git && config.neo-git-graph.scmButtonPosition == 'More actions...'"
         }
       ]
     },
@@ -102,27 +165,363 @@
       "type": "object",
       "title": "%config.title%",
       "properties": {
-        "neo-git-graph.autoCenterCommitDetailsView": {
+        "neo-git-graph.detailsPanel.autoScroll": {
           "type": "boolean",
           "default": true,
           "description": "%config.autoCenterCommitDetailsView%"
         },
-        "neo-git-graph.dateFormat": {
+        "neo-git-graph.detailsPanel.position": {
+          "type": "string",
+          "enum": [
+            "Inline",
+            "Docked to Bottom"
+          ],
+          "default": "Inline",
+          "description": "%config.commitDetailsView.location%"
+        },
+        "neo-git-graph.refLabels.alignment": {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Branches (on the left) & Tags (on the right)",
+            "Branches (aligned to the graph) & Tags (on the right)"
+          ],
+          "default": "Normal",
+          "description": "%config.referenceLabels.alignment%"
+        },
+        "neo-git-graph.refLabels.combineLocalAndRemote": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.referenceLabels.combineLocalAndRemoteBranchLabels%"
+        },
+        "neo-git-graph.dialogDefaults.addTagType": {
+          "type": "string",
+          "enum": [
+            "annotated",
+            "lightweight"
+          ],
+          "default": "annotated",
+          "description": "%config.dialog.addTag.type%"
+        },
+        "neo-git-graph.dialogDefaults.cherryPickNoCommit": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.dialog.cherryPick.noCommit%"
+        },
+        "neo-git-graph.dialogDefaults.createBranchCheckOut": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.dialog.createBranch.checkOut%"
+        },
+        "neo-git-graph.dialogDefaults.mergeNoFastForward": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.dialog.merge.noFastForward%"
+        },
+        "neo-git-graph.dialogDefaults.mergeSquash": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.dialog.merge.squash%"
+        },
+        "neo-git-graph.dialogDefaults.mergeSquashMessageFormat": {
+          "type": "string",
+          "enum": [
+            "Default",
+            "Git SQUASH_MSG"
+          ],
+          "enumDescriptions": [
+            "%config.dialog.merge.squashMessageFormat.default%",
+            "%config.dialog.merge.squashMessageFormat.gitSquashMsg%"
+          ],
+          "default": "Default",
+          "description": "%config.dialog.merge.squashMessageFormat%"
+        },
+        "neo-git-graph.dialogDefaults.resetMode": {
+          "type": "string",
+          "enum": [
+            "soft",
+            "mixed",
+            "hard"
+          ],
+          "default": "mixed",
+          "description": "%config.dialog.resetCurrentBranch.mode%"
+        },
+        "neo-git-graph.dialogDefaults.deleteBranchForce": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.dialog.deleteBranch.forceDelete%"
+        },
+        "neo-git-graph.history.showSignatures": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.commits.showSignatureStatus%"
+        },
+        "neo-git-graph.contextMenuActions": {
+          "type": "object",
+          "description": "%config.contextMenuActionsVisibility%",
+          "properties": {
+            "commit": {
+              "type": "object",
+              "properties": {
+                "addTag": {
+                  "type": "boolean"
+                },
+                "createBranch": {
+                  "type": "boolean"
+                },
+                "checkout": {
+                  "type": "boolean"
+                },
+                "cherrypick": {
+                  "type": "boolean"
+                },
+                "revert": {
+                  "type": "boolean"
+                },
+                "merge": {
+                  "type": "boolean"
+                },
+                "reset": {
+                  "type": "boolean"
+                },
+                "rebase": {
+                  "type": "boolean"
+                },
+                "drop": {
+                  "type": "boolean"
+                },
+                "openDirectoryDiff": {
+                  "type": "boolean"
+                },
+                "copyHash": {
+                  "type": "boolean"
+                },
+                "copySubject": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "branch": {
+              "type": "object",
+              "properties": {
+                "checkout": {
+                  "type": "boolean"
+                },
+                "checkoutAndPull": {
+                  "type": "boolean"
+                },
+                "rename": {
+                  "type": "boolean"
+                },
+                "push": {
+                  "type": "boolean"
+                },
+                "createArchive": {
+                  "type": "boolean"
+                },
+                "delete": {
+                  "type": "boolean"
+                },
+                "merge": {
+                  "type": "boolean"
+                },
+                "rebase": {
+                  "type": "boolean"
+                },
+                "copyName": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "remoteBranch": {
+              "type": "object",
+              "properties": {
+                "checkout": {
+                  "type": "boolean"
+                },
+                "merge": {
+                  "type": "boolean"
+                },
+                "pull": {
+                  "type": "boolean"
+                },
+                "fetch": {
+                  "type": "boolean"
+                },
+                "delete": {
+                  "type": "boolean"
+                },
+                "copyName": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "tag": {
+              "type": "object",
+              "properties": {
+                "viewDetails": {
+                  "type": "boolean"
+                },
+                "delete": {
+                  "type": "boolean"
+                },
+                "push": {
+                  "type": "boolean"
+                },
+                "createArchive": {
+                  "type": "boolean"
+                },
+                "copyName": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "stash": {
+              "type": "object",
+              "properties": {
+                "apply": {
+                  "type": "boolean"
+                },
+                "pop": {
+                  "type": "boolean"
+                },
+                "drop": {
+                  "type": "boolean"
+                },
+                "copyName": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "uncommittedChanges": {
+              "type": "object",
+              "properties": {
+                "openSourceControlView": {
+                  "type": "boolean"
+                },
+                "reset": {
+                  "type": "boolean"
+                },
+                "clean": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "commitDetailsViewFile": {
+              "type": "object",
+              "properties": {
+                "viewDiff": {
+                  "type": "boolean"
+                },
+                "viewFileAtThisRevision": {
+                  "type": "boolean"
+                },
+                "viewDiffWithWorkingFile": {
+                  "type": "boolean"
+                },
+                "openFile": {
+                  "type": "boolean"
+                },
+                "resetFileToThisRevision": {
+                  "type": "boolean"
+                },
+                "copyFilePath": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "neo-git-graph.history.commitOrder": {
+          "type": "string",
+          "enum": [
+            "date",
+            "author-date",
+            "topo"
+          ],
+          "enumDescriptions": [
+            "%config.commitOrder.date%",
+            "%config.commitOrder.authorDate%",
+            "%config.commitOrder.topo%"
+          ],
+          "default": "date",
+          "description": "%config.commitOrder%"
+        },
+        "neo-git-graph.customBranchGlobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "%config.customBranchGlobPatterns.name%"
+              },
+              "glob": {
+                "type": "string",
+                "description": "%config.customBranchGlobPatterns.glob%"
+              }
+            },
+            "required": [
+              "name",
+              "glob"
+            ],
+            "additionalProperties": false
+          },
+          "default": [],
+          "description": "%config.customBranchGlobPatterns%"
+        },
+        "neo-git-graph.customEmojiShortcodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "shortcode": {
+                "type": "string",
+                "description": "%config.customEmojiShortcodeMappings.shortcode%"
+              },
+              "emoji": {
+                "type": "string",
+                "description": "%config.customEmojiShortcodeMappings.emoji%"
+              }
+            },
+            "required": [
+              "shortcode",
+              "emoji"
+            ],
+            "additionalProperties": false
+          },
+          "default": [],
+          "description": "%config.customEmojiShortcodeMappings%"
+        },
+        "neo-git-graph.dates.format": {
           "type": "string",
           "enum": [
             "Date & Time",
             "Date Only",
-            "Relative"
+            "Relative",
+            "ISO Date & Time",
+            "ISO Date Only"
           ],
           "enumDescriptions": [
             "%config.dateFormat.dateTime%",
             "%config.dateFormat.dateOnly%",
-            "%config.dateFormat.relative%"
+            "%config.dateFormat.relative%",
+            "%config.dateFormat.isoDateTime%",
+            "%config.dateFormat.isoDateOnly%"
           ],
           "default": "Date & Time",
           "description": "%config.dateFormat%"
         },
-        "neo-git-graph.dateType": {
+        "neo-git-graph.dates.type": {
           "type": "string",
           "enum": [
             "Author Date",
@@ -135,12 +534,62 @@
           "default": "Author Date",
           "description": "%config.dateType%"
         },
-        "neo-git-graph.fetchAvatars": {
+        "neo-git-graph.columnVisibility": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "boolean"
+            },
+            "author": {
+              "type": "boolean"
+            },
+            "commit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "date": true,
+            "author": true,
+            "commit": true
+          },
+          "description": "%config.defaultColumnVisibility%"
+        },
+        "neo-git-graph.accessibilityEnhancements": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.enhancedAccessibility%"
+        },
+        "neo-git-graph.fetch.prune": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.fetchAndPrune%"
+        },
+        "neo-git-graph.fetch.pruneTags": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.fetchAndPruneTags%"
+        },
+        "neo-git-graph.history.fetchAvatars": {
           "type": "boolean",
           "default": false,
           "description": "%config.fetchAvatars%"
         },
-        "neo-git-graph.graphColours": {
+        "neo-git-graph.detailsPanel.compactFolders": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.fileTree.compactFolders%"
+        },
+        "neo-git-graph.detailsPanel.fileLayout": {
+          "type": "string",
+          "enum": [
+            "File Tree",
+            "File List"
+          ],
+          "default": "File Tree",
+          "description": "%config.fileView.type%"
+        },
+        "neo-git-graph.graph.palette": {
           "type": "array",
           "items": {
             "type": "string",
@@ -163,7 +612,7 @@
           ],
           "description": "%config.graphColours%"
         },
-        "neo-git-graph.graphStyle": {
+        "neo-git-graph.graph.edgeStyle": {
           "type": "string",
           "enum": [
             "rounded",
@@ -176,37 +625,342 @@
           "default": "rounded",
           "description": "%config.graphStyle%"
         },
-        "neo-git-graph.initialLoadCommits": {
+        "neo-git-graph.history.includeReflogCommits": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.includeCommitsMentionedByReflogs%"
+        },
+        "neo-git-graph.history.initialCommitCount": {
           "type": "number",
           "default": 300,
           "description": "%config.initialLoadCommits%"
         },
-        "neo-git-graph.loadMoreCommits": {
+        "neo-git-graph.issueLinks.pattern": {
+          "type": "string",
+          "default": "",
+          "description": "%config.issueLinkingRegex%"
+        },
+        "neo-git-graph.issueLinks.url": {
+          "type": "string",
+          "default": "",
+          "description": "%config.issueLinkingUrl%"
+        },
+        "neo-git-graph.shortcuts.find": {
+          "type": "string",
+          "enum": [
+            "UNASSIGNED",
+            "CTRL/CMD + A",
+            "CTRL/CMD + B",
+            "CTRL/CMD + C",
+            "CTRL/CMD + D",
+            "CTRL/CMD + E",
+            "CTRL/CMD + F",
+            "CTRL/CMD + G",
+            "CTRL/CMD + H",
+            "CTRL/CMD + I",
+            "CTRL/CMD + J",
+            "CTRL/CMD + K",
+            "CTRL/CMD + L",
+            "CTRL/CMD + M",
+            "CTRL/CMD + N",
+            "CTRL/CMD + O",
+            "CTRL/CMD + P",
+            "CTRL/CMD + Q",
+            "CTRL/CMD + R",
+            "CTRL/CMD + S",
+            "CTRL/CMD + T",
+            "CTRL/CMD + U",
+            "CTRL/CMD + V",
+            "CTRL/CMD + W",
+            "CTRL/CMD + X",
+            "CTRL/CMD + Y",
+            "CTRL/CMD + Z"
+          ],
+          "default": "CTRL/CMD + F",
+          "description": "%config.keyboardShortcut.find%"
+        },
+        "neo-git-graph.shortcuts.refresh": {
+          "type": "string",
+          "enum": [
+            "UNASSIGNED",
+            "CTRL/CMD + A",
+            "CTRL/CMD + B",
+            "CTRL/CMD + C",
+            "CTRL/CMD + D",
+            "CTRL/CMD + E",
+            "CTRL/CMD + F",
+            "CTRL/CMD + G",
+            "CTRL/CMD + H",
+            "CTRL/CMD + I",
+            "CTRL/CMD + J",
+            "CTRL/CMD + K",
+            "CTRL/CMD + L",
+            "CTRL/CMD + M",
+            "CTRL/CMD + N",
+            "CTRL/CMD + O",
+            "CTRL/CMD + P",
+            "CTRL/CMD + Q",
+            "CTRL/CMD + R",
+            "CTRL/CMD + S",
+            "CTRL/CMD + T",
+            "CTRL/CMD + U",
+            "CTRL/CMD + V",
+            "CTRL/CMD + W",
+            "CTRL/CMD + X",
+            "CTRL/CMD + Y",
+            "CTRL/CMD + Z"
+          ],
+          "default": "CTRL/CMD + R",
+          "description": "%config.keyboardShortcut.refresh%"
+        },
+        "neo-git-graph.shortcuts.scrollToHead": {
+          "type": "string",
+          "enum": [
+            "UNASSIGNED",
+            "CTRL/CMD + A",
+            "CTRL/CMD + B",
+            "CTRL/CMD + C",
+            "CTRL/CMD + D",
+            "CTRL/CMD + E",
+            "CTRL/CMD + F",
+            "CTRL/CMD + G",
+            "CTRL/CMD + H",
+            "CTRL/CMD + I",
+            "CTRL/CMD + J",
+            "CTRL/CMD + K",
+            "CTRL/CMD + L",
+            "CTRL/CMD + M",
+            "CTRL/CMD + N",
+            "CTRL/CMD + O",
+            "CTRL/CMD + P",
+            "CTRL/CMD + Q",
+            "CTRL/CMD + R",
+            "CTRL/CMD + S",
+            "CTRL/CMD + T",
+            "CTRL/CMD + U",
+            "CTRL/CMD + V",
+            "CTRL/CMD + W",
+            "CTRL/CMD + X",
+            "CTRL/CMD + Y",
+            "CTRL/CMD + Z"
+          ],
+          "default": "CTRL/CMD + H",
+          "description": "%config.keyboardShortcut.scrollToHead%"
+        },
+        "neo-git-graph.shortcuts.scrollToStash": {
+          "type": "string",
+          "enum": [
+            "UNASSIGNED",
+            "CTRL/CMD + A",
+            "CTRL/CMD + B",
+            "CTRL/CMD + C",
+            "CTRL/CMD + D",
+            "CTRL/CMD + E",
+            "CTRL/CMD + F",
+            "CTRL/CMD + G",
+            "CTRL/CMD + H",
+            "CTRL/CMD + I",
+            "CTRL/CMD + J",
+            "CTRL/CMD + K",
+            "CTRL/CMD + L",
+            "CTRL/CMD + M",
+            "CTRL/CMD + N",
+            "CTRL/CMD + O",
+            "CTRL/CMD + P",
+            "CTRL/CMD + Q",
+            "CTRL/CMD + R",
+            "CTRL/CMD + S",
+            "CTRL/CMD + T",
+            "CTRL/CMD + U",
+            "CTRL/CMD + V",
+            "CTRL/CMD + W",
+            "CTRL/CMD + X",
+            "CTRL/CMD + Y",
+            "CTRL/CMD + Z"
+          ],
+          "default": "CTRL/CMD + S",
+          "description": "%config.keyboardShortcut.scrollToStash%"
+        },
+        "neo-git-graph.history.loadMoreOnScroll": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.loadMoreAutomatically%"
+        },
+        "neo-git-graph.history.loadMoreCount": {
           "type": "number",
           "default": 100,
           "description": "%config.loadMoreCommits%"
         },
-        "neo-git-graph.maxDepthOfRepoSearch": {
+        "neo-git-graph.renderMarkdown": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.markdown%"
+        },
+        "neo-git-graph.repoSearchDepth": {
           "type": "number",
           "default": 0,
           "description": "%config.maxDepthOfRepoSearch%"
         },
-        "neo-git-graph.showCurrentBranchByDefault": {
+        "neo-git-graph.dim.nonAncestorCommits": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.mute.commitsThatAreNotAncestorsOfHead%"
+        },
+        "neo-git-graph.dim.mergeCommits": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.muteMergeCommits%"
+        },
+        "neo-git-graph.onOpen.scrollToHead": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.onLoad.scrollToHead%"
+        },
+        "neo-git-graph.history.firstParentOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.onlyFollowFirstParent%"
+        },
+        "neo-git-graph.followActiveEditorRepo": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.openToTheRepoOfTheActiveTextEditorDocument%"
+        },
+        "neo-git-graph.followSourceControlSelection": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.followSourceControlSelection%"
+        },
+        "neo-git-graph.diffEditorGroup": {
+          "type": "string",
+          "enum": [
+            "Active",
+            "Beside",
+            "One",
+            "Two",
+            "Three",
+            "Four",
+            "Five",
+            "Six",
+            "Seven",
+            "Eight",
+            "Nine"
+          ],
+          "default": "Active",
+          "description": "%config.openNewTabEditorGroup%"
+        },
+        "neo-git-graph.refNameSpaceReplacement": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Hyphen",
+            "Underscore"
+          ],
+          "default": "None",
+          "description": "%config.referenceInputSpaceSubstitution%"
+        },
+        "neo-git-graph.keepWebviewAlive": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.retainContextWhenHidden%"
+        },
+        "neo-git-graph.show.tagOnlyCommits": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showCommitsOnlyReferencedByTags%"
+        },
+        "neo-git-graph.onOpen.selectCheckedOutBranch": {
           "type": "boolean",
           "default": false,
           "description": "%config.showCurrentBranchByDefault%"
         },
-        "neo-git-graph.showStatusBarItem": {
+        "neo-git-graph.signing.commits": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.repository.sign.commits%"
+        },
+        "neo-git-graph.signing.tags": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.repository.sign.tags%"
+        },
+        "neo-git-graph.show.remoteBranches": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showRemoteBranches%"
+        },
+        "neo-git-graph.show.remoteHeads": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showRemoteHeads%"
+        },
+        "neo-git-graph.show.stashes": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.showStashes%"
+        },
+        "neo-git-graph.show.tags": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showTags%"
+        },
+        "neo-git-graph.scmButtonPosition": {
+          "type": "string",
+          "enum": [
+            "Inline",
+            "More actions..."
+          ],
+          "enumDescriptions": [
+            "%config.sourceCodeProviderIntegrationLocation.inline%",
+            "%config.sourceCodeProviderIntegrationLocation.moreActions%"
+          ],
+          "default": "Inline",
+          "description": "%config.sourceCodeProviderIntegrationLocation%"
+        },
+        "neo-git-graph.statusBarButton": {
           "type": "boolean",
           "default": true,
           "description": "%config.showStatusBarItem%"
         },
-        "neo-git-graph.showUncommittedChanges": {
+        "neo-git-graph.show.uncommittedChanges": {
           "type": "boolean",
           "default": true,
           "description": "%config.showUncommittedChanges%"
         },
-        "neo-git-graph.tabIconColourTheme": {
+        "neo-git-graph.show.untrackedFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.showUntrackedFiles%"
+        },
+        "neo-git-graph.history.useMailmap": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.useMailmap%"
+        },
+        "neo-git-graph.defaultFileEncoding": {
+          "type": "string",
+          "default": "utf8",
+          "scope": "resource",
+          "description": "%config.fileEncoding%"
+        },
+        "neo-git-graph.onOpen.branchSelection": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "%config.showSpecificBranches%"
+        },
+        "neo-git-graph.graph.uncommittedMarker": {
+          "type": "string",
+          "enum": [
+            "Open Circle at the Uncommitted Changes",
+            "Open Circle at the Checked Out Commit"
+          ],
+          "default": "Open Circle at the Uncommitted Changes",
+          "description": "%config.graph.uncommittedChanges%"
+        },
+        "neo-git-graph.tabIconTheme": {
           "type": "string",
           "enum": [
             "colour",
@@ -224,6 +978,9 @@
   },
   "activationEvents": [
     "onStartupFinished"
+  ],
+  "extensionDependencies": [
+    "vscode.git"
   ],
   "icon": "resources/icon.png",
   "engines": {
