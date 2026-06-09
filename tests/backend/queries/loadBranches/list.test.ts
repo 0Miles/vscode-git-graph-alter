@@ -5,6 +5,7 @@ import * as os from "node:os";
 import { simpleGit } from "simple-git";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { gitClientFactory } from "@/backend/gitClient";
 import { loadBranches } from "@/backend/queries/loadBranches";
 
 import { git, makeRepo } from "@tests/backend/helpers";
@@ -132,6 +133,27 @@ describe("loadBranches", () => {
       hard: false,
       isRepo: false
     });
+  });
+
+  it("does not include shell colour codes when color.branch is always", async () => {
+    const r = makeRepo();
+    try {
+      cp.execFileSync("git", ["config", "color.branch", "always"], { cwd: r });
+      cp.execFileSync("git", ["branch", "feature"], { cwd: r });
+      // The gitClient disables colour, so branch names must be free of ANSI escapes.
+      const client = gitClientFactory(r, "git");
+      const result = await loadBranches(client.getInstance(), {
+        showRemoteBranches: false,
+        hard: false,
+        currentRepo: r,
+        gitPath: "git"
+      });
+      // eslint-disable-next-line no-control-regex
+      expect(result.branches.every((b) => !/\x1b\[/.test(b))).toBe(true);
+      expect(result.branches).toContain("feature");
+    } finally {
+      fs.rmSync(r, { recursive: true, force: true });
+    }
   });
 
   it("passes hard flag through to the result", async () => {
