@@ -16,6 +16,13 @@ type QueryPayloads = {
     request: { repo: string; fromHash: string; toHash: string };
     response: { fromHash: string; toHash: string; fileChanges: GitFileChange[] | null };
   };
+  /** Files predicted to conflict if `theirs` is merged into `ours`. `token`
+   *  correlates the response with the dialog that requested it (the messaging
+   *  is command-keyed, not request-id'd). */
+  predictConflicts: {
+    request: { repo: string; ours: string; theirs: string; token: number };
+    response: { ok: boolean; conflictFiles: string[]; token: number };
+  };
   loadBranches: {
     request: { showRemoteBranches: boolean; hard: boolean };
     response: { branches: string[]; head: string | null; hard: boolean; isRepo: boolean };
