@@ -1361,7 +1361,8 @@ class GitGraphView {
               showFormDialog(
                 l10n.dialogMergeConfirm
                   .replace("{0}", `<b><i>${abbrevCommit(hash)}</i></b>`)
-                  .replace("{1}", this.currentBranchLabel()),
+                  .replace("{1}", this.currentBranchLabel()) +
+                  conflictPredictionPlaceholder(this.currentRepo!, hash),
                 [
                   {
                     type: "checkbox",
@@ -2148,7 +2149,8 @@ class GitGraphView {
     showFormDialog(
       l10n.dialogMergeConfirm
         .replace("{0}", "<b><i>" + escapeHtml(branchName) + "</i></b>")
-        .replace("{1}", this.currentBranchLabel()),
+        .replace("{1}", this.currentBranchLabel()) +
+        conflictPredictionPlaceholder(this.currentRepo!, branchName),
       [
         {
           type: "checkbox",
@@ -3229,6 +3231,23 @@ let gitGraph = new GitGraphView(
   vscode.getState()
 );
 
+/* Conflict prediction (merge dialogs) */
+// Correlates an async predictConflicts response with the dialog that asked for
+// it: only one dialog is open at a time, but a stale response from a previous
+// dialog must not fill a newer one.
+let conflictPredictionSeq = 0;
+function conflictPredictionPlaceholder(repo: string, theirs: string): string {
+  const token = ++conflictPredictionSeq;
+  sendMessage({ command: "predictConflicts", repo, ours: "HEAD", theirs, token });
+  return (
+    '<br><span id="conflictPrediction" class="conflictPrediction checking" data-token="' +
+    token +
+    '">' +
+    escapeHtml(l10n.conflictPredictionChecking) +
+    "</span>"
+  );
+}
+
 /* Command Processing */
 window.addEventListener("message", (event) => {
   const msg: GG.ResponseMessage = event.data;
@@ -3299,6 +3318,30 @@ window.addEventListener("message", (event) => {
         );
       }
       break;
+    case "predictConflicts": {
+      const elem = document.getElementById("conflictPrediction");
+      // Ignore a response whose dialog has closed or been superseded.
+      if (elem === null || elem.dataset.token !== String(msg.token)) break;
+      if (!msg.ok) {
+        // Couldn't predict (git too old / error): show nothing rather than a
+        // misleading "no conflicts".
+        elem.className = "conflictPrediction";
+        elem.textContent = "";
+      } else if (msg.conflictFiles.length === 0) {
+        elem.className = "conflictPrediction noConflict";
+        elem.textContent = l10n.conflictPredictionNone;
+      } else {
+        elem.className = "conflictPrediction hasConflict";
+        elem.innerHTML =
+          escapeHtml(
+            l10n.conflictPredictionConflicts.replace("{0}", String(msg.conflictFiles.length))
+          ) +
+          '<ul class="conflictPredictionList">' +
+          msg.conflictFiles.map((f) => "<li>" + escapeHtml(f) + "</li>").join("") +
+          "</ul>";
+      }
+      break;
+    }
     case "copyToClipboard":
       if (msg.success === false) {
         let typeLabel: Record<string, string> = {

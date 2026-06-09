@@ -766,6 +766,28 @@ body.tagLabelsRightAligned .gitRef.tag {
   margin-top: 10px;
   text-align: left;
 }
+#dialog .conflictPrediction {
+  display: block;
+  font-size: 0.9em;
+  margin-top: 10px;
+  text-align: left;
+}
+#dialog .conflictPrediction.checking {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+#dialog .conflictPrediction.noConflict {
+  color: var(--vscode-descriptionForeground);
+}
+#dialog .conflictPrediction.hasConflict {
+  color: var(--vscode-errorForeground, #f14c4c);
+}
+#dialog .conflictPredictionList {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+  max-height: 120px;
+  overflow-y: auto;
+}
 #dialogBacking.active {
   display: block;
   position: fixed;

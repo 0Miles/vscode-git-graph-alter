@@ -39,6 +39,7 @@ import { compareCommits } from "@/backend/queries/compareCommits";
 import { loadBranches } from "@/backend/queries/loadBranches";
 import { loadCommits } from "@/backend/queries/loadCommits";
 import { loadRemotes } from "@/backend/queries/loadRemotes";
+import { predictConflicts } from "@/backend/queries/predictConflicts";
 import { getNewPathOfRenamedFile } from "@/backend/queries/renamedFilePath";
 import { tagDetails } from "@/backend/queries/tagDetails";
 import { GitFileChangeType } from "@/backend/types";
@@ -293,6 +294,17 @@ export function registerMessageHandlers(
       ...(await compareCommits(gitClient.getInstance(), {
         fromHash: msg.fromHash,
         toHash: msg.toHash
+      }))
+    });
+  });
+
+  bridge.onMessage("predictConflicts", async (msg) => {
+    bridge.post({
+      command: "predictConflicts",
+      token: msg.token,
+      ...(await predictConflicts(gitClient.getInstance(), {
+        ours: msg.ours,
+        theirs: msg.theirs
       }))
     });
   });
