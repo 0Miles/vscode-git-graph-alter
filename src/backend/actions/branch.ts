@@ -6,7 +6,15 @@ export async function createBranch(
   git: SimpleGit,
   input: ActionPayload<"createBranch">
 ): Promise<void> {
-  await git.raw(["branch", input.branchName, input.commitHash]);
+  if (input.checkout) {
+    // -B resets an existing branch to the commit (replace); -b fails if it exists.
+    await git.raw(["checkout", input.force ? "-B" : "-b", input.branchName, input.commitHash]);
+  } else {
+    const args = ["branch"];
+    if (input.force) args.push("-f");
+    args.push(input.branchName, input.commitHash);
+    await git.raw(args);
+  }
 }
 
 export async function deleteBranch(
@@ -14,6 +22,56 @@ export async function deleteBranch(
   input: ActionPayload<"deleteBranch">
 ): Promise<void> {
   await git.deleteLocalBranch(input.branchName, input.forceDelete);
+  if (input.deleteOnRemotes) {
+    const remotes = await git.getRemotes();
+    await Promise.all(
+      remotes.map(async (remote) => {
+        // Only delete on remotes that actually have the branch.
+        const refs = await git.raw(["ls-remote", "--heads", remote.name, input.branchName]);
+        if (refs.trim() !== "") {
+          await git.raw(["push", remote.name, "--delete", input.branchName]);
+        }
+      })
+    );
+  }
+}
+
+export async function pullBranch(
+  git: SimpleGit,
+  input: ActionPayload<"pullBranch">
+): Promise<void> {
+  await git.pull(input.remote, input.branchName);
+}
+
+export async function pushBranch(
+  git: SimpleGit,
+  input: ActionPayload<"pushBranch">
+): Promise<void> {
+  const opts =
+    input.forceMode === "force"
+      ? ["--force"]
+      : input.forceMode === "forceWithLease"
+        ? ["--force-with-lease"]
+        : [];
+  // Push to each selected remote; simple-git serialises them internally.
+  await Promise.all(input.remotes.map((remote) => git.push(remote, input.branchName, opts)));
+}
+
+export async function deleteRemoteBranch(
+  git: SimpleGit,
+  input: ActionPayload<"deleteRemoteBranch">
+): Promise<void> {
+  await git.raw(["push", input.remote, "--delete", input.branchName]);
+}
+
+export async function fetchIntoLocalBranch(
+  git: SimpleGit,
+  input: ActionPayload<"fetchIntoLocalBranch">
+): Promise<void> {
+  const args = ["fetch"];
+  if (input.force) args.push("--force");
+  args.push(input.remote, `${input.remoteBranch}:${input.localBranch}`);
+  await git.raw(args);
 }
 
 export async function renameBranch(
@@ -32,4 +90,13 @@ export async function checkoutBranch(
   } else {
     await git.checkoutBranch(input.branchName, input.remoteBranch);
   }
+}
+
+export async function checkoutAndPullBranch(
+  git: SimpleGit,
+  input: ActionPayload<"checkoutAndPullBranch">
+): Promise<void> {
+  await git.checkout(input.branchName);
+  // Pull from the branch's configured upstream (errors if none is set).
+  await git.pull();
 }
