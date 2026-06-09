@@ -1,20 +1,46 @@
+import * as fs from "node:fs";
+
 import * as vscode from "vscode";
 
 import { AvatarManager } from "@/avatarManager";
-import { checkoutBranch, createBranch, deleteBranch, renameBranch } from "@/backend/actions/branch";
+import { createArchive } from "@/backend/actions/archive";
+import {
+  checkoutAndPullBranch,
+  checkoutBranch,
+  createBranch,
+  deleteBranch,
+  deleteRemoteBranch,
+  fetchIntoLocalBranch,
+  pullBranch,
+  pushBranch,
+  renameBranch
+} from "@/backend/actions/branch";
 import {
   checkoutCommit,
   cherrypickCommit,
+  dropCommit,
+  openDirectoryDiff,
+  resetFileToRevision,
   resetToCommit,
   revertCommit
 } from "@/backend/actions/commit";
+import { fetchFromRemotes } from "@/backend/actions/fetch";
 import { mergeBranch, mergeCommit } from "@/backend/actions/merge";
+import { rebaseOn } from "@/backend/actions/rebase";
+import { getRemoteUrl } from "@/backend/actions/remote";
+import { applyStash, dropStash, popStash } from "@/backend/actions/stash";
 import { addTag, deleteTag, pushTag } from "@/backend/actions/tag";
+import { cleanUntrackedFiles, resetUncommittedChanges } from "@/backend/actions/workingTree";
 import { GitClient } from "@/backend/gitClient";
 import { commitDetails } from "@/backend/queries/commitDetails";
+import { compareCommits } from "@/backend/queries/compareCommits";
 import { loadBranches } from "@/backend/queries/loadBranches";
 import { loadCommits } from "@/backend/queries/loadCommits";
+import { loadRemotes } from "@/backend/queries/loadRemotes";
+import { getNewPathOfRenamedFile } from "@/backend/queries/renamedFilePath";
+import { tagDetails } from "@/backend/queries/tagDetails";
 import { GitFileChangeType } from "@/backend/types";
+import { pullRequestCreateUrl } from "@/backend/utils/pullRequest";
 import { abbrevCommit } from "@/backend/utils/string";
 import { Config } from "@/config";
 import { encodeDiffDocUri } from "@/diffDocProvider";
@@ -32,9 +58,14 @@ function viewDiff(
   commitHash: string,
   oldFilePath: string,
   newFilePath: string,
-  type: GitFileChangeType
+  type: GitFileChangeType,
+  viewColumn: vscode.ViewColumn,
+  // When comparing two commits, diff against `fromHash` instead of the
+  // commit's first parent; otherwise the left side is `commitHash^`.
+  fromHash?: string
 ): Promise<boolean> {
   const abbrevHash = abbrevCommit(commitHash);
+  const leftRev = fromHash !== undefined ? fromHash : commitHash + "^";
   const pathComponents = newFilePath.split("/");
   const title =
     pathComponents[pathComponents.length - 1] +
@@ -43,19 +74,23 @@ function viewDiff(
       ? l10n.t("diff.addedIn", abbrevHash)
       : type === "D"
         ? l10n.t("diff.deletedIn", abbrevHash)
-        : abbrevCommit(commitHash) + "^ ↔ " + abbrevCommit(commitHash)) +
+        : (fromHash !== undefined ? abbrevCommit(fromHash) : abbrevCommit(commitHash) + "^") +
+          " ↔ " +
+          abbrevCommit(commitHash)) +
     ")";
   return new Promise<boolean>((resolve) => {
     vscode.commands
       .executeCommand(
         "vscode.diff",
-        encodeDiffDocUri(repo, oldFilePath, commitHash + "^"),
+        encodeDiffDocUri(repo, oldFilePath, leftRev),
         encodeDiffDocUri(repo, newFilePath, commitHash),
         title,
-        { preview: true }
+        { preview: true, viewColumn }
       )
-      .then(() => resolve(true))
-      .then(() => resolve(false));
+      .then(
+        () => resolve(true),
+        () => resolve(false)
+      );
   });
 }
 
@@ -91,19 +126,55 @@ export function registerMessageHandlers(
 
   // --- Action handlers ---
 
-  registerAction("addTag", (msg) => addTag(gitClient.getInstance(), msg));
+  registerAction("addTag", (msg) => addTag(gitClient.getInstance(), msg, config.signTags()));
   registerAction("deleteTag", (msg) => deleteTag(gitClient.getInstance(), msg));
   registerAction("pushTag", (msg) => pushTag(gitClient.getInstance(), msg));
   registerAction("createBranch", (msg) => createBranch(gitClient.getInstance(), msg));
   registerAction("deleteBranch", (msg) => deleteBranch(gitClient.getInstance(), msg));
+  registerAction("deleteRemoteBranch", (msg) => deleteRemoteBranch(gitClient.getInstance(), msg));
+  registerAction("fetchIntoLocalBranch", (msg) =>
+    fetchIntoLocalBranch(gitClient.getInstance(), msg)
+  );
+  registerAction("pushBranch", (msg) => pushBranch(gitClient.getInstance(), msg));
+  registerAction("pullBranch", (msg) => pullBranch(gitClient.getInstance(), msg));
   registerAction("renameBranch", (msg) => renameBranch(gitClient.getInstance(), msg));
   registerAction("checkoutBranch", (msg) => checkoutBranch(gitClient.getInstance(), msg));
+  registerAction("checkoutAndPullBranch", (msg) =>
+    checkoutAndPullBranch(gitClient.getInstance(), msg)
+  );
   registerAction("checkoutCommit", (msg) => checkoutCommit(gitClient.getInstance(), msg));
-  registerAction("cherrypickCommit", (msg) => cherrypickCommit(gitClient.getInstance(), msg));
-  registerAction("revertCommit", (msg) => revertCommit(gitClient.getInstance(), msg));
+  registerAction("cherrypickCommit", (msg) =>
+    cherrypickCommit(gitClient.getInstance(), msg, config.signCommits())
+  );
+  registerAction("dropCommit", (msg) => dropCommit(gitClient.getInstance(), msg));
+  registerAction("openDirectoryDiff", (msg) => openDirectoryDiff(gitClient.getInstance(), msg));
+  registerAction("resetFileToRevision", (msg) => resetFileToRevision(gitClient.getInstance(), msg));
+  registerAction("revertCommit", (msg) =>
+    revertCommit(gitClient.getInstance(), msg, config.signCommits())
+  );
   registerAction("resetToCommit", (msg) => resetToCommit(gitClient.getInstance(), msg));
-  registerAction("mergeBranch", (msg) => mergeBranch(gitClient.getInstance(), msg));
-  registerAction("mergeCommit", (msg) => mergeCommit(gitClient.getInstance(), msg));
+  registerAction("mergeBranch", (msg) =>
+    mergeBranch(
+      gitClient.getInstance(),
+      msg,
+      config.squashMergeMessageFormat(),
+      config.signCommits()
+    )
+  );
+  registerAction("mergeCommit", (msg) =>
+    mergeCommit(
+      gitClient.getInstance(),
+      msg,
+      config.squashMergeMessageFormat(),
+      config.signCommits()
+    )
+  );
+  registerAction("rebaseOn", (msg) => rebaseOn(gitClient.getInstance(), msg, config.signCommits()));
+  registerAction("applyStash", (msg) => applyStash(gitClient.getInstance(), msg));
+  registerAction("popStash", (msg) => popStash(gitClient.getInstance(), msg));
+  registerAction("dropStash", (msg) => dropStash(gitClient.getInstance(), msg));
+  registerAction("resetUncommittedChanges", () => resetUncommittedChanges(gitClient.getInstance()));
+  registerAction("cleanUntrackedFiles", () => cleanUntrackedFiles(gitClient.getInstance()));
 
   // --- Query handlers ---
 
@@ -111,12 +182,23 @@ export function registerMessageHandlers(
     bridge.post({
       command: "loadCommits",
       ...(await loadCommits(gitClient.getInstance(), {
-        branchName: msg.branchName,
+        branchNames: msg.branchNames,
         maxCommits: msg.maxCommits,
         showRemoteBranches: msg.showRemoteBranches,
         hard: msg.hard,
         dateType: config.dateType(),
-        showUncommittedChanges: config.showUncommittedChanges()
+        showUncommittedChanges: config.showUncommittedChanges(),
+        // A per-repo override (from the column-header menu) wins over the setting.
+        commitOrder: msg.commitOrder ?? config.commitOrder(),
+        onlyFollowFirstParent: config.onlyFollowFirstParent(),
+        showUntrackedFiles: config.showUntrackedFiles(),
+        showCommitsOnlyReferencedByTags: config.showCommitsOnlyReferencedByTags(),
+        showRemoteHeads: config.showRemoteHeads(),
+        includeCommitsMentionedByReflogs: config.includeCommitsMentionedByReflogs(),
+        showSignatureStatus: config.showSignatureStatus(),
+        showStashes: config.showStashes(),
+        useMailmap: config.useMailmap(),
+        hiddenRemotes: msg.hiddenRemotes ?? []
       }))
     });
   });
@@ -133,12 +215,58 @@ export function registerMessageHandlers(
     });
   });
 
+  bridge.onMessage("loadRemotes", async () => {
+    bridge.post({
+      command: "loadRemotes",
+      ...(await loadRemotes(gitClient.getInstance()))
+    });
+  });
+
+  bridge.onMessage("createArchive", async (msg) => {
+    let success = true;
+    try {
+      const safeRef = msg.ref.replace(/[^a-zA-Z0-9-_.]/g, "-");
+      const uri = await vscode.window.showSaveDialog({
+        saveLabel: l10n.t("action.createArchive"),
+        filters: { Archives: ["zip", "tar"] },
+        defaultUri: vscode.Uri.file(`${msg.repo}/${safeRef}.zip`)
+      });
+      // No uri means the user cancelled — not an error.
+      if (uri !== undefined) {
+        await createArchive(gitClient.getInstance(), { ref: msg.ref, outputPath: uri.fsPath });
+      }
+    } catch {
+      success = false;
+    }
+    bridge.post({ command: "createArchive", success });
+  });
+
+  bridge.onMessage("tagDetails", async (msg) => {
+    bridge.post({
+      command: "tagDetails",
+      ...(await tagDetails(gitClient.getInstance(), { tagName: msg.tagName }))
+    });
+  });
+
   bridge.onMessage("commitDetails", async (msg) => {
     bridge.post({
       command: "commitDetails",
       ...(await commitDetails(gitClient.getInstance(), {
         commitHash: msg.commitHash,
-        dateType: config.dateType()
+        useMailmap: config.useMailmap(),
+        isStash: msg.isStash
+      }))
+    });
+  });
+
+  bridge.onMessage("compareCommits", async (msg) => {
+    bridge.post({
+      command: "compareCommits",
+      fromHash: msg.fromHash,
+      toHash: msg.toHash,
+      ...(await compareCommits(gitClient.getInstance(), {
+        fromHash: msg.fromHash,
+        toHash: msg.toHash
       }))
     });
   });
@@ -179,10 +307,120 @@ export function registerMessageHandlers(
     });
   });
 
+  bridge.onMessage("fetch", async () => {
+    let status: string | null = null;
+    try {
+      await fetchFromRemotes(gitClient.getInstance(), {
+        prune: config.fetchAndPrune(),
+        pruneTags: config.fetchAndPruneTags()
+      });
+    } catch (e: unknown) {
+      status = e instanceof Error ? e.message : String(e);
+    }
+    bridge.post({ command: "fetch", status });
+  });
+
+  bridge.onMessage("openTerminal", (msg) => {
+    const name = msg.repo.split("/").findLast((s) => s !== "") ?? msg.repo;
+    const terminal = vscode.window.createTerminal({ cwd: msg.repo, name: `Git Graph: ${name}` });
+    terminal.show();
+  });
+
+  bridge.onMessage("openExternalUrl", (msg) => {
+    vscode.env.openExternal(vscode.Uri.parse(msg.url));
+  });
+
+  bridge.onMessage("createPullRequest", async (msg) => {
+    // Build the provider's pre-filled PR-create URL from the remote and open it
+    // externally; tell the user when the remote's host isn't supported.
+    const remoteUrl = await getRemoteUrl(gitClient.getInstance(), msg.remote);
+    const url = pullRequestCreateUrl(remoteUrl === "" ? null : remoteUrl, msg.branchName);
+    if (url !== null) {
+      void vscode.env.openExternal(vscode.Uri.parse(url));
+    } else {
+      void vscode.window.showErrorMessage(l10n.t("pullRequest.unsupported"));
+    }
+  });
+
+  bridge.onMessage("openScmView", () => {
+    void vscode.commands.executeCommand("workbench.view.scm");
+  });
+
+  // Resolve a file's current working-tree path: if it no longer exists at
+  // `filePath` and was renamed since `commitHash`, follow the rename.
+  async function resolveWorkingFilePath(
+    repo: string,
+    filePath: string,
+    commitHash: string | undefined
+  ): Promise<string> {
+    if (commitHash === undefined || fs.existsSync(`${repo}/${filePath}`)) return filePath;
+    const renamed = await getNewPathOfRenamedFile(gitClient.getInstance(), commitHash, filePath);
+    return renamed ?? filePath;
+  }
+
+  bridge.onMessage("openFile", async (msg) => {
+    let success = true;
+    try {
+      const filePath = await resolveWorkingFilePath(msg.repo, msg.filePath, msg.commitHash);
+      const uri = vscode.Uri.file(`${msg.repo}/${filePath}`);
+      await vscode.commands.executeCommand("vscode.open", uri, { preview: true });
+    } catch {
+      success = false;
+    }
+    bridge.post({ command: "openFile", success });
+  });
+
+  bridge.onMessage("viewDiffWithWorking", async (msg) => {
+    let success = true;
+    try {
+      const workingFilePath = await resolveWorkingFilePath(msg.repo, msg.filePath, msg.commitHash);
+      const components = workingFilePath.split("/");
+      const title =
+        components[components.length - 1] +
+        " (" +
+        abbrevCommit(msg.commitHash) +
+        l10n.t("diff.workingTreeSep") +
+        ")";
+      await vscode.commands.executeCommand(
+        "vscode.diff",
+        encodeDiffDocUri(msg.repo, msg.filePath, msg.commitHash),
+        vscode.Uri.file(`${msg.repo}/${workingFilePath}`),
+        title,
+        { preview: true }
+      );
+    } catch {
+      success = false;
+    }
+    bridge.post({ command: "viewDiffWithWorking", success });
+  });
+
+  bridge.onMessage("viewFileAtRevision", async (msg) => {
+    let success = true;
+    try {
+      // Open the file's content as of the given commit (read-only) via the diff
+      // document provider, which resolves to `git show <commit>:<path>`.
+      const uri = encodeDiffDocUri(msg.repo, msg.filePath, msg.commitHash);
+      await vscode.commands.executeCommand("vscode.open", uri, { preview: true });
+    } catch {
+      success = false;
+    }
+    bridge.post({ command: "viewFileAtRevision", success });
+  });
+
   bridge.onMessage("viewDiff", async (msg) => {
+    // EditorGroup values are vscode.ViewColumn enum keys (Active, Beside, One..Nine).
+    const viewColumn = vscode.ViewColumn[config.openNewTabEditorGroup()];
     bridge.post({
       command: "viewDiff",
-      success: await viewDiff(msg.repo, msg.commitHash, msg.oldFilePath, msg.newFilePath, msg.type)
+      success: await viewDiff(
+        msg.repo,
+        msg.commitHash,
+        msg.oldFilePath,
+        msg.newFilePath,
+        msg.type,
+        viewColumn,
+        msg.fromHash
+      )
     });
   });
 

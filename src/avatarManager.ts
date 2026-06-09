@@ -5,6 +5,8 @@ import * as https from "node:https";
 import * as url from "node:url";
 
 import { getRemoteUrl } from "./backend/utils/git";
+import { gravatarHash } from "./backend/utils/gravatar";
+import { RemoteSource, remoteSourceFromUrl } from "./backend/utils/remoteSource";
 import { ExtensionState } from "./extensionState";
 import { AvatarCache, ResponseMessage } from "./types";
 
@@ -107,26 +109,9 @@ export class AvatarManager {
       // If the repo exists in the cache of remote sources
       return this.remoteSourceCache[avatarRequest.repo];
     } else {
-      // Fetch the remote repo source
-      let remoteUrl = await getRemoteUrl(avatarRequest.repo, this.gitPath()),
-        remoteSource: RemoteSource;
-      if (remoteUrl !== null) {
-        // Depending on the domain of the remote repo source, determine the type of source it is
-        if (remoteUrl.startsWith("https://github.com/")) {
-          let remoteUrlComps = remoteUrl.split("/");
-          remoteSource = {
-            type: "github",
-            owner: remoteUrlComps[3],
-            repo: remoteUrlComps[4].replace(/\.git$/, "")
-          };
-        } else if (remoteUrl.startsWith("https://gitlab.com/")) {
-          remoteSource = { type: "gitlab" };
-        } else {
-          remoteSource = { type: "gravatar" };
-        }
-      } else {
-        remoteSource = { type: "gravatar" };
-      }
+      // Determine the avatar source (GitHub/GitLab over HTTPS or SSH, else Gravatar).
+      let remoteUrl = await getRemoteUrl(avatarRequest.repo, this.gitPath());
+      const remoteSource = remoteSourceFromUrl(remoteUrl);
       this.remoteSourceCache[avatarRequest.repo] = remoteSource; // Add the remote source to the cache for future use
       return remoteSource;
     }
@@ -171,7 +156,8 @@ export class AvatarManager {
                 // Avatar url found
                 let img = await this.downloadAvatarImage(
                   avatarRequest.email,
-                  commit.author.avatar_url + "&size=54"
+                  // Fetch at 3x display size for High DPI / Retina displays.
+                  commit.author.avatar_url + "&size=162"
                 );
                 if (img !== null) this.saveAvatar(avatarRequest.email, img, false);
                 return;
@@ -264,16 +250,17 @@ export class AvatarManager {
   }
 
   private async fetchFromGravatar(avatarRequest: AvatarRequestItem) {
-    let hash: string = crypto.createHash("md5").update(avatarRequest.email).digest("hex");
+    let hash: string = gravatarHash(avatarRequest.email);
+    // Fetch at 3x display size for High DPI / Retina displays.
     let img = await this.downloadAvatarImage(
         avatarRequest.email,
-        "https://secure.gravatar.com/avatar/" + hash + "?s=54&d=404"
+        "https://secure.gravatar.com/avatar/" + hash + "?s=162&d=404"
       ),
       identicon = false;
     if (img === null) {
       img = await this.downloadAvatarImage(
         avatarRequest.email,
-        "https://secure.gravatar.com/avatar/" + hash + "?s=54&d=identicon"
+        "https://secure.gravatar.com/avatar/" + hash + "?s=162&d=identicon"
       );
       identicon = true;
     }
@@ -433,15 +420,3 @@ interface AvatarRequestItem {
   checkAfter: number;
   attempts: number;
 }
-interface GitHubRemoteSource {
-  type: "github";
-  owner: string;
-  repo: string;
-}
-interface GitLabRemoteSource {
-  type: "gitlab";
-}
-interface GravatarRemoteSource {
-  type: "gravatar";
-}
-type RemoteSource = GitHubRemoteSource | GitLabRemoteSource | GravatarRemoteSource;

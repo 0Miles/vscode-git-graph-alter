@@ -33,15 +33,45 @@ export function buildWebviewHtml(opts: {
   const l10nStrings = getWebviewLocalizedStrings();
   const viewState: GitGraphViewState = {
     autoCenterCommitDetailsView: config.autoCenterCommitDetailsView(),
+    commitDetailsViewLocation: config.commitDetailsViewLocation(),
+    referenceLabelAlignment: config.referenceLabelAlignment(),
+    combineLocalAndRemoteBranchLabels: config.combineLocalAndRemoteBranchLabels(),
+    dialogDeleteBranchForceDelete: config.dialogDeleteBranchForceDelete(),
+    dialogCherryPickNoCommit: config.dialogCherryPickNoCommit(),
+    dialogAddTagType: config.dialogAddTagType(),
+    dialogCreateBranchCheckOut: config.dialogCreateBranchCheckOut(),
+    dialogMergeNoFastForward: config.dialogMergeNoFastForward(),
+    dialogMergeSquash: config.dialogMergeSquash(),
+    dialogResetMode: config.dialogResetMode(),
+    contextMenuActionsVisibility: config.contextMenuActionsVisibility(),
+    customBranchGlobPatterns: config.customBranchGlobPatterns(),
+    customEmojiShortcodeMappings: config.customEmojiShortcodeMappings(),
     dateFormat: config.dateFormat(),
+    defaultColumnVisibility: config.defaultColumnVisibility(),
+    enhancedAccessibility: config.enhancedAccessibility(),
     fetchAvatars: config.fetchAvatars() && extensionState.isAvatarStorageAvailable(),
+    fileTreeCompactFolders: config.fileTreeCompactFolders(),
+    fileViewType: config.fileViewType(),
     graphColours: config.graphColours(),
     graphStyle: config.graphStyle(),
     initialLoadCommits: config.initialLoadCommits(),
+    issueLinkingRegex: config.issueLinkingRegex(),
+    issueLinkingUrl: config.issueLinkingUrl(),
+    keybindings: config.keybindings(),
     lastActiveRepo: extensionState.getLastActiveRepo(),
+    loadMoreAutomatically: config.loadMoreAutomatically(),
     loadMoreCommits: config.loadMoreCommits(),
+    markdown: config.markdown(),
+    muteCommitsNotAncestorsOfHead: config.muteCommitsNotAncestorsOfHead(),
+    muteMergeCommits: config.muteMergeCommits(),
+    onLoadScrollToHead: config.onLoadScrollToHead(),
+    referenceInputSpaceSubstitution: config.referenceInputSpaceSubstitution(),
     repos: repoManager.getRepos(),
-    showCurrentBranchByDefault: config.showCurrentBranchByDefault()
+    showCurrentBranchByDefault: config.showCurrentBranchByDefault(),
+    uncommittedChangesAtHead: config.uncommittedChangesAtHead(),
+    showSpecificBranches: config.showSpecificBranches(),
+    showRemoteBranches: config.showRemoteBranches(),
+    showTags: config.showTags()
   };
 
   const numRepos = Object.keys(viewState.repos).length;
@@ -61,17 +91,27 @@ export function buildWebviewHtml(opts: {
   if (numRepos > 0) {
     body = `<body style="${colorVars}">
 		<div id="controls">
-			<span id="repoControl"><span class="unselectable">${l10nStrings.repo}: </span><div id="repoSelect" class="dropdown"></div></span>
 			<span id="branchControl"><span class="unselectable">${l10nStrings.branch}: </span><div id="branchSelect" class="dropdown"></div></span>
 			<label id="showRemoteBranchesControl"><input type="checkbox" id="showRemoteBranchesCheckbox" value="1" checked>${l10nStrings.showRemoteBranches}</label>
-      <div id="refreshBtn" class="roundedBtn">${l10nStrings.refresh}</div>
-      <div id="blinkHeadBtn" class="roundedBtn">${l10nStrings.locateHead}</div>
+      <div id="findBtn" class="iconBtn" title="${l10nStrings.find}"></div>
+      <div id="terminalBtn" class="iconBtn" title="${l10nStrings.openTerminal}"></div>
+      <div id="blinkHeadBtn" class="iconBtn" title="${l10nStrings.locateHead}"></div>
+      <div id="fetchBtn" class="iconBtn" title="${l10nStrings.fetch}"></div>
+      <div id="refreshBtn" class="iconBtn" title="${l10nStrings.refresh}"></div>
 		</div>
 		<div id="content">
 			<div id="commitGraph"></div>
 			<div id="commitTable"></div>
 		</div>
 		<div id="footer"></div>
+		<div id="findWidget">
+			<input id="findInput" type="text" placeholder="${l10nStrings.findPlaceholder}">
+			<span id="findCount"></span>
+			<div id="findPrev" class="findBtn" title="${l10nStrings.findPrevious}">&#9650;</div>
+			<div id="findNext" class="findBtn" title="${l10nStrings.findNext}">&#9660;</div>
+			<div id="findOpenCdv" class="findBtn" title="${l10nStrings.findOpenCommitDetails}">&#9776;</div>
+			<div id="findClose" class="findBtn" title="${l10nStrings.findClose}">&#10005;</div>
+		</div>
 		<ul id="contextMenu"></ul>
 		<div id="dialogBacking"></div>
 		<div id="dialog"></div>
@@ -84,6 +124,7 @@ export function buildWebviewHtml(opts: {
     body = `<body class="unableToLoad" style="${colorVars}">
 		<h2>${l10nStrings.unableToLoadGitGraph}</h2>
 		<p>${l10nStrings.noGitRepository}</p>
+		<p>${l10nStrings.subfolderHint}</p>
 		<p>${l10nStrings.noGit}</p>
 		</body>`;
   }
