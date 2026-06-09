@@ -134,7 +134,7 @@ export class AvatarManager {
         {
           hostname: "api.github.com",
           path: "/repos/" + owner + "/" + repo + "/commits/" + avatarRequest.commits[commitIndex],
-          headers: { "User-Agent": "neo-git-graph" },
+          headers: { "User-Agent": "git-graph-alter" },
           agent: false,
           timeout: 15000
         },
@@ -204,7 +204,7 @@ export class AvatarManager {
         {
           hostname: "gitlab.com",
           path: "/api/v4/users?search=" + avatarRequest.email,
-          headers: { "User-Agent": "neo-git-graph", "Private-Token": "w87U_3gAxWWaPtFgCcus" }, // Token only has read access
+          headers: { "User-Agent": "git-graph-alter", "Private-Token": "w87U_3gAxWWaPtFgCcus" }, // Token only has read access
           agent: false,
           timeout: 15000
         },
@@ -276,7 +276,7 @@ export class AvatarManager {
           {
             hostname: imgUrl.hostname,
             path: imgUrl.path,
-            headers: { "User-Agent": "neo-git-graph" },
+            headers: { "User-Agent": "git-graph-alter" },
             agent: false,
             timeout: 15000
           },

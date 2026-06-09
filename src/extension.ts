@@ -129,7 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
       currentPanel.reveal(column);
     } else {
       const panel = vscode.window.createWebviewPanel(
-        "neo-git-graph",
+        "git-graph-alter",
         l10n.t("outputChannel.text"),
         column ?? vscode.ViewColumn.One,
         {
@@ -225,16 +225,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     outputChannel,
-    vscode.commands.registerCommand("neo-git-graph.view", (arg?: unknown) =>
+    vscode.commands.registerCommand("git-graph-alter.view", (arg?: unknown) =>
       openGraphView(scmRepoPathFromArg(arg))
     ),
-    vscode.commands.registerCommand("neo-git-graph.sidebar.openGraph", (rawRepoPath?: string) =>
+    vscode.commands.registerCommand("git-graph-alter.sidebar.openGraph", (rawRepoPath?: string) =>
       openGraphView(rawRepoPath)
     ),
-    vscode.commands.registerCommand("neo-git-graph.clearAvatarCache", () => {
+    vscode.commands.registerCommand("git-graph-alter.clearAvatarCache", () => {
       avatarManager.clearCache();
     }),
-    vscode.commands.registerCommand("neo-git-graph.fetch", async () => {
+    vscode.commands.registerCommand("git-graph-alter.fetch", async () => {
       try {
         await fetchFromRemotes(gitClient.getInstance(), {
           prune: config.fetchAndPrune(),
@@ -248,7 +248,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     }),
-    vscode.commands.registerCommand("neo-git-graph.manageRemotes", async () => {
+    vscode.commands.registerCommand("git-graph-alter.manageRemotes", async () => {
       // View/add/edit/delete remotes; offered as a command since neo has
       // no settings widget.
       const git = gitClient.getInstance();
@@ -313,7 +313,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     }),
-    vscode.commands.registerCommand("neo-git-graph.fetchRemote", async () => {
+    vscode.commands.registerCommand("git-graph-alter.fetchRemote", async () => {
       // Fetch a single chosen remote, offered as a command.
       try {
         const git = gitClient.getInstance();
@@ -341,7 +341,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     }),
-    vscode.commands.registerCommand("neo-git-graph.exportRepoConfig", () => {
+    vscode.commands.registerCommand("git-graph-alter.exportRepoConfig", () => {
       // Export the repo's Git Graph config to a committable .vscode file.
       const repo = extensionState.getLastActiveRepo();
       const repos = repoManager.getRepos();
@@ -356,7 +356,7 @@ export function activate(context: vscode.ExtensionContext) {
         void vscode.window.showErrorMessage(l10n.t("exportConfig.failed") + ": " + error);
       }
     }),
-    vscode.commands.registerCommand("neo-git-graph.toggleRemoteVisibility", async () => {
+    vscode.commands.registerCommand("git-graph-alter.toggleRemoteVisibility", async () => {
       // Show/hide the branches of individual remotes for the current repo.
       const repo = extensionState.getLastActiveRepo();
       const repos = repoManager.getRepos();
@@ -381,7 +381,7 @@ export function activate(context: vscode.ExtensionContext) {
       repoManager.sendRepos();
       currentBridge?.post({ command: "refresh" });
     }),
-    vscode.commands.registerCommand("neo-git-graph.setRepoName", async () => {
+    vscode.commands.registerCommand("git-graph-alter.setRepoName", async () => {
       // Custom display name for a repo in the Repo dropdown; a command
       // since neo has no settings widget.
       const repos = repoManager.getRepos();
@@ -410,14 +410,14 @@ export function activate(context: vscode.ExtensionContext) {
       });
       repoManager.sendRepos();
     }),
-    vscode.commands.registerCommand("neo-git-graph.openExtensionSettings", () => {
+    vscode.commands.registerCommand("git-graph-alter.openExtensionSettings", () => {
       // Quick access to this extension's settings.
       void vscode.commands.executeCommand(
         "workbench.action.openSettings",
-        "@ext:asispts.neo-git-graph"
+        "@ext:your-publisher.vscode-git-graph-alter"
       );
     }),
-    vscode.commands.registerCommand("neo-git-graph.setGitUserDetails", async () => {
+    vscode.commands.registerCommand("git-graph-alter.setGitUserDetails", async () => {
       // neo has no Settings Widget; the local/global user name & email are set
       // through this command instead.
       const git = gitClient.getInstance();
@@ -453,7 +453,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     }),
-    vscode.commands.registerCommand("neo-git-graph.getVersionInfo", async () => {
+    vscode.commands.registerCommand("git-graph-alter.getVersionInfo", async () => {
       let gitVersion = "git: unknown";
       try {
         gitVersion = (await gitClient.getInstance().raw(["--version"])).trim();
@@ -461,7 +461,7 @@ export function activate(context: vscode.ExtensionContext) {
         /* git not available; report what we can */
       }
       const info = [
-        "(neo) Git Graph: " + context.extension.packageJSON.version,
+        "Git Graph Alter: " + context.extension.packageJSON.version,
         "Visual Studio Code: " + vscode.version,
         "OS: " + process.platform + " " + process.arch,
         gitVersion
@@ -473,7 +473,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
       if (copy !== undefined) await vscode.env.clipboard.writeText(info);
     }),
-    vscode.commands.registerCommand("neo-git-graph.openFileFromDiff", (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand("git-graph-alter.openFileFromDiff", (uri?: vscode.Uri) => {
       // Opens the working-tree version of the file shown in a Git Graph diff
       // editor. `uri` is supplied by the editor/title menu; fall back to the
       // active editor.
@@ -498,9 +498,9 @@ export function activate(context: vscode.ExtensionContext) {
       )
     ),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("neo-git-graph.showStatusBarItem")) {
+      if (e.affectsConfiguration("git-graph-alter.showStatusBarItem")) {
         statusBarItem.refresh();
-      } else if (e.affectsConfiguration("neo-git-graph.maxDepthOfRepoSearch")) {
+      } else if (e.affectsConfiguration("git-graph-alter.maxDepthOfRepoSearch")) {
         repoSearch.maxDepthChanged();
       } else if (e.affectsConfiguration("git.path")) {
         gitClient.setGitPath(config.gitPath());

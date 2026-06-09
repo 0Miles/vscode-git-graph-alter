@@ -6,7 +6,7 @@ import { getPathFromStr } from "./backend/utils/path";
 export type DiffFileReader = (repo: string, commit: string, filePath: string) => Promise<string>;
 
 export class DiffDocProvider implements vscode.TextDocumentContentProvider {
-  public static scheme = "neo-git-graph";
+  public static scheme = "git-graph-alter";
   private readFile: DiffFileReader;
   private onDidChangeEventEmitter = new vscode.EventEmitter<vscode.Uri>();
   private docs = new Map<string, DiffDocument>();

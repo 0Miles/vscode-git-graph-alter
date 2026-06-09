@@ -103,10 +103,10 @@ export class AskpassManager implements vscode.Disposable {
 
 function getIPCHandlePath(nonce: string): string {
   if (process.platform === "win32") {
-    return "\\\\.\\pipe\\neo-git-graph-askpass-" + nonce + "-sock";
+    return "\\\\.\\pipe\\git-graph-alter-askpass-" + nonce + "-sock";
   } else if (process.env["XDG_RUNTIME_DIR"]) {
-    return path.join(process.env["XDG_RUNTIME_DIR"], "neo-git-graph-askpass-" + nonce + ".sock");
+    return path.join(process.env["XDG_RUNTIME_DIR"], "git-graph-alter-askpass-" + nonce + ".sock");
   } else {
-    return path.join(os.tmpdir(), "neo-git-graph-askpass-" + nonce + ".sock");
+    return path.join(os.tmpdir(), "git-graph-alter-askpass-" + nonce + ".sock");
   }
 }

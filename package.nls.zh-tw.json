@@ -1,5 +1,5 @@
 {
-  "displayName": "(neo) Git Graph",
+  "displayName": "Git Graph Alter",
   "description": "Git Graph 的純淨 MIT branch。視覺化歷史記錄、 branch 操作和開發容器支援。",
   "command.view": "檢視 Git 圖形 (git log)",
   "command.clearAvatarCache": "清除頭像快取",
@@ -11,7 +11,7 @@
   "command.exportRepoConfig": "匯出存放庫設定",
   "command.setGitUserDetails": "設定 Git 使用者名稱與電子郵件",
   "command.openExtensionSettings": "開啟擴充功能設定",
-  "config.title": "(neo) Git Graph",
+  "config.title": "Git Graph Alter",
   "config.autoCenterCommitDetailsView": "開啟 commit 詳情檢視時自動置中顯示。",
   "config.commitDetailsView.location": "指定 commit 詳情檢視的顯示位置：在圖形內嵌顯示，或停靠於視窗底部。",
   "config.referenceLabels.alignment": "指定圖形中每個 commit 的 branch 與 tag 標籤的對齊方式。",

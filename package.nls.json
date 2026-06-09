@@ -1,5 +1,5 @@
 {
-  "displayName": "(neo) Git Graph",
+  "displayName": "Git Graph Alter",
   "description": "A clean MIT fork of Git Graph. Visual history, branch actions, and devcontainer support.",
   "command.view": "View Git Graph (git log)",
   "command.clearAvatarCache": "Clear Avatar Cache",
@@ -11,7 +11,7 @@
   "command.exportRepoConfig": "Export Repository Configuration",
   "command.setGitUserDetails": "Set Git User Name & Email",
   "command.openExtensionSettings": "Open Extension Settings",
-  "config.title": "(neo) Git Graph",
+  "config.title": "Git Graph Alter",
   "config.autoCenterCommitDetailsView": "Automatically center the commit details view when it is opened.",
   "config.commitDetailsView.location": "Specifies where the Commit Details View is displayed: inline within the graph, or docked to the bottom of the window.",
   "config.referenceLabels.alignment": "Specifies how branch and tag labels are aligned on each commit in the graph.",

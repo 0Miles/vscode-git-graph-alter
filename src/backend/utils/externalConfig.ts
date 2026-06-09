@@ -2,7 +2,7 @@ import type { CommitOrdering } from "@/backend/types";
 import type { GitRepoState } from "@/types";
 
 /** Path (relative to the repo root) of the shareable Git Graph config file. */
-export const EXTERNAL_CONFIG_RELATIVE_PATH = ".vscode/neo-git-graph.json";
+export const EXTERNAL_CONFIG_RELATIVE_PATH = ".vscode/git-graph-alter.json";
 
 /** The subset of a repo's Git Graph configuration that is shared via the file. */
 export type ExternalRepoConfig = {

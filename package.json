@@ -1,5 +1,5 @@
 {
-  "name": "neo-git-graph",
+  "name": "vscode-git-graph-alter",
   "displayName": "%displayName%",
   "version": "0.4.0",
   "description": "%description%",
@@ -14,26 +14,30 @@
     "git history",
     "git log"
   ],
-  "homepage": "https://github.com/asispts/neo-git-graph",
+  "homepage": "https://github.com/your-org/vscode-git-graph-alter",
   "bugs": {
-    "url": "https://github.com/asispts/neo-git-graph/issues"
+    "url": "https://github.com/your-org/vscode-git-graph-alter/issues"
   },
   "license": "MIT",
   "author": {
-    "name": "Asis Pattisahusiwa",
-    "email": "asispts@gmail.com"
+    "name": "Miles",
+    "email": "miles.huang@staff.nueip.com"
   },
   "contributors": [
     {
       "name": "Michael Hutchison",
       "url": "https://github.com/mhutchie"
+    },
+    {
+      "name": "Asis Pattisahusiwa",
+      "url": "https://github.com/asispts"
     }
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/asispts/neo-git-graph.git"
+    "url": "https://github.com/your-org/vscode-git-graph-alter.git"
   },
-  "publisher": "asispts",
+  "publisher": "your-publisher",
   "main": "./out/extension.js",
   "scripts": {
     "typecheck": "tsc -p ./src --noEmit && tsc -p ./src/webview --noEmit && tsc -p ./tests --noEmit",
@@ -76,8 +80,8 @@
   "contributes": {
     "commands": [
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.view",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.view",
         "title": "%command.view%",
         "icon": {
           "light": "resources/webview-icon-light.svg",
@@ -85,58 +89,58 @@
         }
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.clearAvatarCache",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.clearAvatarCache",
         "title": "%command.clearAvatarCache%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.fetch",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.fetch",
         "title": "%command.fetch%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.manageRemotes",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.manageRemotes",
         "title": "%command.manageRemotes%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.setRepoName",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.setRepoName",
         "title": "%command.setRepoName%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.exportRepoConfig",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.exportRepoConfig",
         "title": "%command.exportRepoConfig%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.toggleRemoteVisibility",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.toggleRemoteVisibility",
         "title": "%command.toggleRemoteVisibility%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.fetchRemote",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.fetchRemote",
         "title": "%command.fetchRemote%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.setGitUserDetails",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.setGitUserDetails",
         "title": "%command.setGitUserDetails%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.openExtensionSettings",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.openExtensionSettings",
         "title": "%command.openExtensionSettings%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.getVersionInfo",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.getVersionInfo",
         "title": "%command.getVersionInfo%"
       },
       {
-        "category": "(neo) Git Graph",
-        "command": "neo-git-graph.openFileFromDiff",
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.openFileFromDiff",
         "title": "%command.openFileFromDiff%",
         "icon": "$(go-to-file)"
       }
@@ -144,20 +148,20 @@
     "menus": {
       "editor/title": [
         {
-          "command": "neo-git-graph.openFileFromDiff",
-          "when": "resourceScheme == neo-git-graph",
+          "command": "git-graph-alter.openFileFromDiff",
+          "when": "resourceScheme == git-graph-alter",
           "group": "navigation"
         }
       ],
       "scm/title": [
         {
-          "command": "neo-git-graph.view",
+          "command": "git-graph-alter.view",
           "group": "navigation",
-          "when": "scmProvider == git && config.neo-git-graph.scmButtonPosition == 'Inline'"
+          "when": "scmProvider == git && config.git-graph-alter.scmButtonPosition == 'Inline'"
         },
         {
-          "command": "neo-git-graph.view",
-          "when": "scmProvider == git && config.neo-git-graph.scmButtonPosition == 'More actions...'"
+          "command": "git-graph-alter.view",
+          "when": "scmProvider == git && config.git-graph-alter.scmButtonPosition == 'More actions...'"
         }
       ]
     },
@@ -165,12 +169,12 @@
       "type": "object",
       "title": "%config.title%",
       "properties": {
-        "neo-git-graph.detailsPanel.autoScroll": {
+        "git-graph-alter.detailsPanel.autoScroll": {
           "type": "boolean",
           "default": true,
           "description": "%config.autoCenterCommitDetailsView%"
         },
-        "neo-git-graph.detailsPanel.position": {
+        "git-graph-alter.detailsPanel.position": {
           "type": "string",
           "enum": [
             "Inline",
@@ -179,7 +183,7 @@
           "default": "Inline",
           "description": "%config.commitDetailsView.location%"
         },
-        "neo-git-graph.refLabels.alignment": {
+        "git-graph-alter.refLabels.alignment": {
           "type": "string",
           "enum": [
             "Normal",
@@ -189,12 +193,12 @@
           "default": "Normal",
           "description": "%config.referenceLabels.alignment%"
         },
-        "neo-git-graph.refLabels.combineLocalAndRemote": {
+        "git-graph-alter.refLabels.combineLocalAndRemote": {
           "type": "boolean",
           "default": true,
           "description": "%config.referenceLabels.combineLocalAndRemoteBranchLabels%"
         },
-        "neo-git-graph.dialogDefaults.addTagType": {
+        "git-graph-alter.dialogDefaults.addTagType": {
           "type": "string",
           "enum": [
             "annotated",
@@ -203,27 +207,27 @@
           "default": "annotated",
           "description": "%config.dialog.addTag.type%"
         },
-        "neo-git-graph.dialogDefaults.cherryPickNoCommit": {
+        "git-graph-alter.dialogDefaults.cherryPickNoCommit": {
           "type": "boolean",
           "default": false,
           "description": "%config.dialog.cherryPick.noCommit%"
         },
-        "neo-git-graph.dialogDefaults.createBranchCheckOut": {
+        "git-graph-alter.dialogDefaults.createBranchCheckOut": {
           "type": "boolean",
           "default": false,
           "description": "%config.dialog.createBranch.checkOut%"
         },
-        "neo-git-graph.dialogDefaults.mergeNoFastForward": {
+        "git-graph-alter.dialogDefaults.mergeNoFastForward": {
           "type": "boolean",
           "default": true,
           "description": "%config.dialog.merge.noFastForward%"
         },
-        "neo-git-graph.dialogDefaults.mergeSquash": {
+        "git-graph-alter.dialogDefaults.mergeSquash": {
           "type": "boolean",
           "default": false,
           "description": "%config.dialog.merge.squash%"
         },
-        "neo-git-graph.dialogDefaults.mergeSquashMessageFormat": {
+        "git-graph-alter.dialogDefaults.mergeSquashMessageFormat": {
           "type": "string",
           "enum": [
             "Default",
@@ -236,7 +240,7 @@
           "default": "Default",
           "description": "%config.dialog.merge.squashMessageFormat%"
         },
-        "neo-git-graph.dialogDefaults.resetMode": {
+        "git-graph-alter.dialogDefaults.resetMode": {
           "type": "string",
           "enum": [
             "soft",
@@ -246,17 +250,17 @@
           "default": "mixed",
           "description": "%config.dialog.resetCurrentBranch.mode%"
         },
-        "neo-git-graph.dialogDefaults.deleteBranchForce": {
+        "git-graph-alter.dialogDefaults.deleteBranchForce": {
           "type": "boolean",
           "default": false,
           "description": "%config.dialog.deleteBranch.forceDelete%"
         },
-        "neo-git-graph.history.showSignatures": {
+        "git-graph-alter.history.showSignatures": {
           "type": "boolean",
           "default": false,
           "description": "%config.commits.showSignatureStatus%"
         },
-        "neo-git-graph.contextMenuActions": {
+        "git-graph-alter.contextMenuActions": {
           "type": "object",
           "description": "%config.contextMenuActionsVisibility%",
           "properties": {
@@ -441,7 +445,7 @@
           "additionalProperties": false,
           "default": {}
         },
-        "neo-git-graph.history.commitOrder": {
+        "git-graph-alter.history.commitOrder": {
           "type": "string",
           "enum": [
             "date",
@@ -456,7 +460,7 @@
           "default": "date",
           "description": "%config.commitOrder%"
         },
-        "neo-git-graph.customBranchGlobs": {
+        "git-graph-alter.customBranchGlobs": {
           "type": "array",
           "items": {
             "type": "object",
@@ -479,7 +483,7 @@
           "default": [],
           "description": "%config.customBranchGlobPatterns%"
         },
-        "neo-git-graph.customEmojiShortcodes": {
+        "git-graph-alter.customEmojiShortcodes": {
           "type": "array",
           "items": {
             "type": "object",
@@ -502,7 +506,7 @@
           "default": [],
           "description": "%config.customEmojiShortcodeMappings%"
         },
-        "neo-git-graph.dates.format": {
+        "git-graph-alter.dates.format": {
           "type": "string",
           "enum": [
             "Date & Time",
@@ -521,7 +525,7 @@
           "default": "Date & Time",
           "description": "%config.dateFormat%"
         },
-        "neo-git-graph.dates.type": {
+        "git-graph-alter.dates.type": {
           "type": "string",
           "enum": [
             "Author Date",
@@ -534,7 +538,7 @@
           "default": "Author Date",
           "description": "%config.dateType%"
         },
-        "neo-git-graph.columnVisibility": {
+        "git-graph-alter.columnVisibility": {
           "type": "object",
           "properties": {
             "date": {
@@ -555,32 +559,32 @@
           },
           "description": "%config.defaultColumnVisibility%"
         },
-        "neo-git-graph.accessibilityEnhancements": {
+        "git-graph-alter.accessibilityEnhancements": {
           "type": "boolean",
           "default": false,
           "description": "%config.enhancedAccessibility%"
         },
-        "neo-git-graph.fetch.prune": {
+        "git-graph-alter.fetch.prune": {
           "type": "boolean",
           "default": false,
           "description": "%config.fetchAndPrune%"
         },
-        "neo-git-graph.fetch.pruneTags": {
+        "git-graph-alter.fetch.pruneTags": {
           "type": "boolean",
           "default": false,
           "description": "%config.fetchAndPruneTags%"
         },
-        "neo-git-graph.history.fetchAvatars": {
+        "git-graph-alter.history.fetchAvatars": {
           "type": "boolean",
           "default": false,
           "description": "%config.fetchAvatars%"
         },
-        "neo-git-graph.detailsPanel.compactFolders": {
+        "git-graph-alter.detailsPanel.compactFolders": {
           "type": "boolean",
           "default": true,
           "description": "%config.fileTree.compactFolders%"
         },
-        "neo-git-graph.detailsPanel.fileLayout": {
+        "git-graph-alter.detailsPanel.fileLayout": {
           "type": "string",
           "enum": [
             "File Tree",
@@ -589,7 +593,7 @@
           "default": "File Tree",
           "description": "%config.fileView.type%"
         },
-        "neo-git-graph.graph.palette": {
+        "git-graph-alter.graph.palette": {
           "type": "array",
           "items": {
             "type": "string",
@@ -612,7 +616,7 @@
           ],
           "description": "%config.graphColours%"
         },
-        "neo-git-graph.graph.edgeStyle": {
+        "git-graph-alter.graph.edgeStyle": {
           "type": "string",
           "enum": [
             "rounded",
@@ -625,27 +629,27 @@
           "default": "rounded",
           "description": "%config.graphStyle%"
         },
-        "neo-git-graph.history.includeReflogCommits": {
+        "git-graph-alter.history.includeReflogCommits": {
           "type": "boolean",
           "default": false,
           "description": "%config.includeCommitsMentionedByReflogs%"
         },
-        "neo-git-graph.history.initialCommitCount": {
+        "git-graph-alter.history.initialCommitCount": {
           "type": "number",
           "default": 300,
           "description": "%config.initialLoadCommits%"
         },
-        "neo-git-graph.issueLinks.pattern": {
+        "git-graph-alter.issueLinks.pattern": {
           "type": "string",
           "default": "",
           "description": "%config.issueLinkingRegex%"
         },
-        "neo-git-graph.issueLinks.url": {
+        "git-graph-alter.issueLinks.url": {
           "type": "string",
           "default": "",
           "description": "%config.issueLinkingUrl%"
         },
-        "neo-git-graph.shortcuts.find": {
+        "git-graph-alter.shortcuts.find": {
           "type": "string",
           "enum": [
             "UNASSIGNED",
@@ -679,7 +683,7 @@
           "default": "CTRL/CMD + F",
           "description": "%config.keyboardShortcut.find%"
         },
-        "neo-git-graph.shortcuts.refresh": {
+        "git-graph-alter.shortcuts.refresh": {
           "type": "string",
           "enum": [
             "UNASSIGNED",
@@ -713,7 +717,7 @@
           "default": "CTRL/CMD + R",
           "description": "%config.keyboardShortcut.refresh%"
         },
-        "neo-git-graph.shortcuts.scrollToHead": {
+        "git-graph-alter.shortcuts.scrollToHead": {
           "type": "string",
           "enum": [
             "UNASSIGNED",
@@ -747,7 +751,7 @@
           "default": "CTRL/CMD + H",
           "description": "%config.keyboardShortcut.scrollToHead%"
         },
-        "neo-git-graph.shortcuts.scrollToStash": {
+        "git-graph-alter.shortcuts.scrollToStash": {
           "type": "string",
           "enum": [
             "UNASSIGNED",
@@ -781,57 +785,57 @@
           "default": "CTRL/CMD + S",
           "description": "%config.keyboardShortcut.scrollToStash%"
         },
-        "neo-git-graph.history.loadMoreOnScroll": {
+        "git-graph-alter.history.loadMoreOnScroll": {
           "type": "boolean",
           "default": false,
           "description": "%config.loadMoreAutomatically%"
         },
-        "neo-git-graph.history.loadMoreCount": {
+        "git-graph-alter.history.loadMoreCount": {
           "type": "number",
           "default": 100,
           "description": "%config.loadMoreCommits%"
         },
-        "neo-git-graph.renderMarkdown": {
+        "git-graph-alter.renderMarkdown": {
           "type": "boolean",
           "default": true,
           "description": "%config.markdown%"
         },
-        "neo-git-graph.repoSearchDepth": {
+        "git-graph-alter.repoSearchDepth": {
           "type": "number",
           "default": 0,
           "description": "%config.maxDepthOfRepoSearch%"
         },
-        "neo-git-graph.dim.nonAncestorCommits": {
+        "git-graph-alter.dim.nonAncestorCommits": {
           "type": "boolean",
           "default": false,
           "description": "%config.mute.commitsThatAreNotAncestorsOfHead%"
         },
-        "neo-git-graph.dim.mergeCommits": {
+        "git-graph-alter.dim.mergeCommits": {
           "type": "boolean",
           "default": true,
           "description": "%config.muteMergeCommits%"
         },
-        "neo-git-graph.onOpen.scrollToHead": {
+        "git-graph-alter.onOpen.scrollToHead": {
           "type": "boolean",
           "default": false,
           "description": "%config.onLoad.scrollToHead%"
         },
-        "neo-git-graph.history.firstParentOnly": {
+        "git-graph-alter.history.firstParentOnly": {
           "type": "boolean",
           "default": false,
           "description": "%config.onlyFollowFirstParent%"
         },
-        "neo-git-graph.followActiveEditorRepo": {
+        "git-graph-alter.followActiveEditorRepo": {
           "type": "boolean",
           "default": false,
           "description": "%config.openToTheRepoOfTheActiveTextEditorDocument%"
         },
-        "neo-git-graph.followSourceControlSelection": {
+        "git-graph-alter.followSourceControlSelection": {
           "type": "boolean",
           "default": true,
           "description": "%config.followSourceControlSelection%"
         },
-        "neo-git-graph.diffEditorGroup": {
+        "git-graph-alter.diffEditorGroup": {
           "type": "string",
           "enum": [
             "Active",
@@ -849,7 +853,7 @@
           "default": "Active",
           "description": "%config.openNewTabEditorGroup%"
         },
-        "neo-git-graph.refNameSpaceReplacement": {
+        "git-graph-alter.refNameSpaceReplacement": {
           "type": "string",
           "enum": [
             "None",
@@ -859,52 +863,52 @@
           "default": "None",
           "description": "%config.referenceInputSpaceSubstitution%"
         },
-        "neo-git-graph.keepWebviewAlive": {
+        "git-graph-alter.keepWebviewAlive": {
           "type": "boolean",
           "default": true,
           "description": "%config.retainContextWhenHidden%"
         },
-        "neo-git-graph.show.tagOnlyCommits": {
+        "git-graph-alter.show.tagOnlyCommits": {
           "type": "boolean",
           "default": true,
           "description": "%config.showCommitsOnlyReferencedByTags%"
         },
-        "neo-git-graph.onOpen.selectCheckedOutBranch": {
+        "git-graph-alter.onOpen.selectCheckedOutBranch": {
           "type": "boolean",
           "default": false,
           "description": "%config.showCurrentBranchByDefault%"
         },
-        "neo-git-graph.signing.commits": {
+        "git-graph-alter.signing.commits": {
           "type": "boolean",
           "default": false,
           "description": "%config.repository.sign.commits%"
         },
-        "neo-git-graph.signing.tags": {
+        "git-graph-alter.signing.tags": {
           "type": "boolean",
           "default": false,
           "description": "%config.repository.sign.tags%"
         },
-        "neo-git-graph.show.remoteBranches": {
+        "git-graph-alter.show.remoteBranches": {
           "type": "boolean",
           "default": true,
           "description": "%config.showRemoteBranches%"
         },
-        "neo-git-graph.show.remoteHeads": {
+        "git-graph-alter.show.remoteHeads": {
           "type": "boolean",
           "default": true,
           "description": "%config.showRemoteHeads%"
         },
-        "neo-git-graph.show.stashes": {
+        "git-graph-alter.show.stashes": {
           "type": "boolean",
           "default": false,
           "description": "%config.showStashes%"
         },
-        "neo-git-graph.show.tags": {
+        "git-graph-alter.show.tags": {
           "type": "boolean",
           "default": true,
           "description": "%config.showTags%"
         },
-        "neo-git-graph.scmButtonPosition": {
+        "git-graph-alter.scmButtonPosition": {
           "type": "string",
           "enum": [
             "Inline",
@@ -917,33 +921,33 @@
           "default": "Inline",
           "description": "%config.sourceCodeProviderIntegrationLocation%"
         },
-        "neo-git-graph.statusBarButton": {
+        "git-graph-alter.statusBarButton": {
           "type": "boolean",
           "default": true,
           "description": "%config.showStatusBarItem%"
         },
-        "neo-git-graph.show.uncommittedChanges": {
+        "git-graph-alter.show.uncommittedChanges": {
           "type": "boolean",
           "default": true,
           "description": "%config.showUncommittedChanges%"
         },
-        "neo-git-graph.show.untrackedFiles": {
+        "git-graph-alter.show.untrackedFiles": {
           "type": "boolean",
           "default": true,
           "description": "%config.showUntrackedFiles%"
         },
-        "neo-git-graph.history.useMailmap": {
+        "git-graph-alter.history.useMailmap": {
           "type": "boolean",
           "default": false,
           "description": "%config.useMailmap%"
         },
-        "neo-git-graph.defaultFileEncoding": {
+        "git-graph-alter.defaultFileEncoding": {
           "type": "string",
           "default": "utf8",
           "scope": "resource",
           "description": "%config.fileEncoding%"
         },
-        "neo-git-graph.onOpen.branchSelection": {
+        "git-graph-alter.onOpen.branchSelection": {
           "type": "array",
           "items": {
             "type": "string"
@@ -951,7 +955,7 @@
           "default": [],
           "description": "%config.showSpecificBranches%"
         },
-        "neo-git-graph.graph.uncommittedMarker": {
+        "git-graph-alter.graph.uncommittedMarker": {
           "type": "string",
           "enum": [
             "Open Circle at the Uncommitted Changes",
@@ -960,7 +964,7 @@
           "default": "Open Circle at the Uncommitted Changes",
           "description": "%config.graph.uncommittedChanges%"
         },
-        "neo-git-graph.tabIconTheme": {
+        "git-graph-alter.tabIconTheme": {
           "type": "string",
           "enum": [
             "colour",

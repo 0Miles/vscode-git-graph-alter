@@ -2,7 +2,7 @@
  * Emoji shortcode replacement for commit messages, e.g. `:tada:` -> 🎉.
  *
  * This bundles the most common GitHub / gitmoji shortcodes. Users can add or
- * override any mapping through the `neo-git-graph.customEmojiShortcodeMappings`
+ * override any mapping through the `git-graph-alter.customEmojiShortcodeMappings`
  * setting.
  */
 const EMOJI_SHORTCODES: { [code: string]: string } = {

@@ -8,7 +8,7 @@ import { config } from "@/config";
 // its default (never undefined), and getRenamedConfig must honour the old flat
 // key while letting the new grouped key win.
 suite("config renamed settings", () => {
-  const cfg = () => vscode.workspace.getConfiguration("neo-git-graph");
+  const cfg = () => vscode.workspace.getConfiguration("git-graph-alter");
   const G = vscode.ConfigurationTarget.Global;
   const touched = [
     "showRemoteBranches",

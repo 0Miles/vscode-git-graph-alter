@@ -36,7 +36,7 @@ export type EditorGroup =
   | "Nine";
 
 function getConfig<T>(key: string, defaultValue: T): T {
-  return vscode.workspace.getConfiguration("neo-git-graph").get(key, defaultValue);
+  return vscode.workspace.getConfiguration("git-graph-alter").get(key, defaultValue);
 }
 
 /** Read and normalise a `keyboardShortcut.*` setting (see normalizeKeybinding). */
@@ -205,7 +205,7 @@ export const config = {
   // Resolvable at a Workspace Folder scope: pass the repo's Uri so a
   // per-folder `fileEncoding` override is honoured, else the global value.
   fileEncoding: (scope?: vscode.Uri): string =>
-    vscode.workspace.getConfiguration("neo-git-graph", scope).get("defaultFileEncoding", "utf8"),
+    vscode.workspace.getConfiguration("git-graph-alter", scope).get("defaultFileEncoding", "utf8"),
   tabIconColourTheme: (): TabIconColourTheme => getConfig("tabIconTheme", "colour"),
   gitPath: (): string =>
     resolveGitPath(

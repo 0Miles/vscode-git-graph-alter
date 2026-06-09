@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed the project to **Git Graph Alter** (`vscode-git-graph-alter`), forked from (neo) Git Graph. Command, configuration, and URI-scheme namespaces moved from `neo-git-graph` to `git-graph-alter`. Existing `neo-git-graph.*` settings and keybindings must be re-created under the new prefix.
+
 ## [0.4.0] - 2026-04-10
 
 ### Added
@@ -46,9 +50,9 @@
 
 Initial release
 
-[Unreleased]: https://github.com/asispts/neo-git-graph/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/asispts/neo-git-graph/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/asispts/neo-git-graph/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/asispts/neo-git-graph/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/asispts/neo-git-graph/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/asispts/neo-git-graph/releases/tag/v0.1.0
+[Unreleased]: https://github.com/your-org/vscode-git-graph-alter/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/your-org/vscode-git-graph-alter/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/your-org/vscode-git-graph-alter/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/your-org/vscode-git-graph-alter/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/your-org/vscode-git-graph-alter/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/your-org/vscode-git-graph-alter/releases/tag/v0.1.0
