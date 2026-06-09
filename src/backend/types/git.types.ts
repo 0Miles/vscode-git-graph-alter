@@ -70,3 +70,5 @@ export type GitFileChangeType = "A" | "M" | "D" | "R";
 export type DateType = "Author Date" | "Commit Date";
 export type CommitOrdering = "date" | "author-date" | "topo";
 export type GitResetMode = "soft" | "mixed" | "hard";
+/** An in-progress git operation that can be continued or aborted. */
+export type GitOperation = "merge" | "rebase" | "cherrypick" | "revert";

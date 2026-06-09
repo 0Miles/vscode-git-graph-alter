@@ -27,6 +27,7 @@ import {
 } from "@/backend/actions/commit";
 import { fetchFromRemotes } from "@/backend/actions/fetch";
 import { mergeBranch, mergeCommit } from "@/backend/actions/merge";
+import { abortOperation, continueOperation, markResolved } from "@/backend/actions/operation";
 import { exportPatch } from "@/backend/actions/patch";
 import { rebaseOn } from "@/backend/actions/rebase";
 import { getRemoteUrl } from "@/backend/actions/remote";
@@ -39,6 +40,7 @@ import { compareCommits } from "@/backend/queries/compareCommits";
 import { loadBranches } from "@/backend/queries/loadBranches";
 import { loadCommits } from "@/backend/queries/loadCommits";
 import { loadRemotes } from "@/backend/queries/loadRemotes";
+import { operationState } from "@/backend/queries/operationState";
 import { predictConflicts } from "@/backend/queries/predictConflicts";
 import { getNewPathOfRenamedFile } from "@/backend/queries/renamedFilePath";
 import { tagDetails } from "@/backend/queries/tagDetails";
@@ -181,6 +183,9 @@ export function registerMessageHandlers(
   registerAction("fastForwardBranch", (msg) => fastForwardBranch(gitClient.getInstance(), msg));
   registerAction("resetUncommittedChanges", () => resetUncommittedChanges(gitClient.getInstance()));
   registerAction("cleanUntrackedFiles", () => cleanUntrackedFiles(gitClient.getInstance()));
+  registerAction("continueOperation", () => continueOperation(gitClient.getInstance()));
+  registerAction("abortOperation", () => abortOperation(gitClient.getInstance()));
+  registerAction("markResolved", (msg) => markResolved(gitClient.getInstance(), msg));
 
   // --- Query handlers ---
 
@@ -225,6 +230,15 @@ export function registerMessageHandlers(
     bridge.post({
       command: "loadRemotes",
       ...(await loadRemotes(gitClient.getInstance()))
+    });
+  });
+
+  bridge.onMessage("operationState", async () => {
+    // Like loadBranches/loadCommits, this reads the gitClient's current repo
+    // (switched by the selectRepo message), so msg.repo is unused here.
+    bridge.post({
+      command: "operationState",
+      ...(await operationState(gitClient.getInstance()))
     });
   });
 
@@ -382,6 +396,16 @@ export function registerMessageHandlers(
 
   bridge.onMessage("openScmView", () => {
     void vscode.commands.executeCommand("workbench.view.scm");
+  });
+
+  bridge.onMessage("openMergeEditor", (msg) => {
+    const uri = vscode.Uri.joinPath(vscode.Uri.file(msg.repo), msg.filePath);
+    // The built-in git extension's 3-way merge editor; fall back to a plain
+    // open if it (or the command) isn't available.
+    void Promise.resolve(vscode.commands.executeCommand("git.openMergeEditor", uri)).then(
+      undefined,
+      () => vscode.commands.executeCommand("vscode.open", uri)
+    );
   });
 
   // Resolve a file's current working-tree path: if it no longer exists at

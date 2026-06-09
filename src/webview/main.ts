@@ -5,6 +5,7 @@ import type {
   GitCommitNode,
   GitFileChange,
   GitFileChangeType,
+  GitOperation,
   GitResetMode,
   GitTagDetails
 } from "@/backend/types";
@@ -625,6 +626,86 @@ class GitGraphView {
     this.remotes = remotes;
     this.pushDefault = pushDefault;
   }
+  /** Render (or clear) the conflict-resolution banner for an in-progress
+   *  operation. Handlers close over `conflictedFiles`, so a `data-index`
+   *  (never the path) is all that goes into the markup. */
+  public showConflictBanner(operation: GitOperation | null, conflictedFiles: string[]) {
+    const banner = document.getElementById("conflictBanner");
+    if (banner === null) return;
+    if (operation === null) {
+      banner.className = "";
+      banner.innerHTML = "";
+      return;
+    }
+    const opLabel = {
+      merge: l10n.conflictOpMerge,
+      rebase: l10n.conflictOpRebase,
+      cherrypick: l10n.conflictOpCherryPick,
+      revert: l10n.conflictOpRevert
+    }[operation];
+    const hasConflicts = conflictedFiles.length > 0;
+    let html =
+      '<div class="conflictBannerHeader"><span class="conflictBannerTitle">' +
+      escapeHtml(l10n.conflictBannerTitle.replace("{0}", opLabel)) +
+      '</span><span class="conflictBannerButtons">' +
+      '<div id="conflictContinue" class="roundedBtn' +
+      (hasConflicts ? " disabled" : "") +
+      '">' +
+      escapeHtml(l10n.conflictContinue) +
+      '</div><div id="conflictAbort" class="roundedBtn">' +
+      escapeHtml(l10n.conflictAbort) +
+      "</div></span></div>";
+    if (hasConflicts) {
+      html +=
+        '<ul class="conflictBannerList">' +
+        conflictedFiles
+          .map(
+            (f, i) =>
+              '<li><span class="conflictFile" data-index="' +
+              i +
+              '" title="' +
+              escapeHtml(l10n.conflictOpenInMergeEditor) +
+              '">' +
+              escapeHtml(f) +
+              '</span><span class="conflictResolveBtn" data-index="' +
+              i +
+              '">' +
+              escapeHtml(l10n.conflictMarkResolved) +
+              "</span></li>"
+          )
+          .join("") +
+        "</ul>";
+    } else {
+      html += '<div class="conflictBannerAllResolved">' + escapeHtml(l10n.conflictAllResolved) + "</div>";
+    }
+    banner.className = "active";
+    banner.innerHTML = html;
+
+    // innerHTML wiped any previous listeners; (re)attach.
+    const repo = this.currentRepo!;
+    if (!hasConflicts) {
+      document
+        .getElementById("conflictContinue")
+        ?.addEventListener("click", () =>
+          sendMessage({ command: "continueOperation", repo })
+        );
+    }
+    document
+      .getElementById("conflictAbort")
+      ?.addEventListener("click", () => sendMessage({ command: "abortOperation", repo }));
+    banner.querySelectorAll(".conflictFile").forEach((el) => {
+      el.addEventListener("click", () => {
+        const i = parseInt((el as HTMLElement).dataset.index!);
+        sendMessage({ command: "openMergeEditor", repo, filePath: conflictedFiles[i] });
+      });
+    });
+    banner.querySelectorAll(".conflictResolveBtn").forEach((el) => {
+      el.addEventListener("click", () => {
+        const i = parseInt((el as HTMLElement).dataset.index!);
+        sendMessage({ command: "markResolved", repo, filePath: conflictedFiles[i] });
+      });
+    });
+  }
   private requestLoadCommits(hard: boolean, loadedCallback: (changes: boolean) => void) {
     if (this.loadCommitsCallback !== null) return;
     this.loadCommitsCallback = loadedCallback;
@@ -641,6 +722,11 @@ class GitGraphView {
   }
   private requestLoadBranchesAndCommits(hard: boolean) {
     this.setRefreshing(true);
+    // Refresh the conflict banner alongside every (re)load so it tracks the
+    // repo's operation state (.git changes trigger a refresh via the watcher).
+    if (this.currentRepo) {
+      sendMessage({ command: "operationState", repo: this.currentRepo });
+    }
     this.requestLoadBranches(hard, (branchChanges: boolean, isRepo: boolean) => {
       if (isRepo) {
         this.requestLoadCommits(hard, (commitChanges: boolean) => {
@@ -3285,6 +3371,18 @@ window.addEventListener("message", (event) => {
       break;
     case "cleanUntrackedFiles":
       refreshGraphOrDisplayError(msg.status, l10n.unableToCleanUntracked);
+      break;
+    case "operationState":
+      gitGraph.showConflictBanner(msg.operation, msg.conflictedFiles);
+      break;
+    case "continueOperation":
+      refreshGraphOrDisplayError(msg.status, l10n.unableToContinueOperation);
+      break;
+    case "abortOperation":
+      refreshGraphOrDisplayError(msg.status, l10n.unableToAbortOperation);
+      break;
+    case "markResolved":
+      refreshGraphOrDisplayError(msg.status, l10n.unableToMarkResolved);
       break;
     case "resetFileToRevision":
       refreshGraphOrDisplayError(msg.status, l10n.unableToResetFile);

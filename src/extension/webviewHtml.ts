@@ -99,6 +99,7 @@ export function buildWebviewHtml(opts: {
       <div id="fetchBtn" class="iconBtn" title="${l10nStrings.fetch}"></div>
       <div id="refreshBtn" class="iconBtn" title="${l10nStrings.refresh}"></div>
 		</div>
+		<div id="conflictBanner"></div>
 		<div id="content">
 			<div id="commitGraph"></div>
 			<div id="commitTable"></div>

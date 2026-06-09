@@ -31,6 +31,9 @@ type ActionPayloads = {
   fastForwardBranch: { branchName: string };
   resetUncommittedChanges: Record<never, never>;
   cleanUntrackedFiles: Record<never, never>;
+  continueOperation: Record<never, never>;
+  abortOperation: Record<never, never>;
+  markResolved: { filePath: string };
   deleteBranch: { branchName: string; forceDelete: boolean; deleteOnRemotes: boolean };
   deleteRemoteBranch: { branchName: string; remote: string };
   deleteTag: { tagName: string; deleteOnRemote: string | null };
