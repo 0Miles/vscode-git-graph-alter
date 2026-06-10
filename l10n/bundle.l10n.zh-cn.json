@@ -145,6 +145,7 @@
   "dialog.yesReset": "是， reset",
   "dialog.cancel": "取消",
   "dialog.dismiss": "关闭",
+  "dialog.rememberChoice": "记住我的选择",
   "error.unableToLoadCommitDetails": "无法加载 commit 详情",
   "type.commitHash": "Commit 哈希",
   "type.commitSubject": "Commit 主题",
