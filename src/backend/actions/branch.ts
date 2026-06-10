@@ -106,6 +106,10 @@ export async function checkoutBranch(
 ): Promise<void> {
   if (input.remoteBranch === null) {
     await git.checkout(input.branchName);
+  } else if (input.force) {
+    // -B resets an existing (divergent) local branch to the remote and checks it
+    // out, discarding any local-only commits; it sets up tracking just like -b.
+    await git.raw(["checkout", "-B", input.branchName, input.remoteBranch]);
   } else {
     await git.checkoutBranch(input.branchName, input.remoteBranch);
   }
