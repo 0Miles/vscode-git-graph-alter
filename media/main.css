@@ -986,7 +986,10 @@ body.tagLabelsRightAligned .gitRef.tag {
   text-decoration: underline;
 }
 
-/* Find Widget */
+/* Find Widget — styled to mirror VS Code's native editor find widget, reusing
+   the same theme variables (editorWidget / input / inputOption / findMatch) so
+   it stays visually consistent with native search across colour themes and
+   high-contrast modes. */
 #findWidget {
   display: none;
   position: fixed;
@@ -994,61 +997,87 @@ body.tagLabelsRightAligned .gitRef.tag {
   right: 14px;
   z-index: 250;
   align-items: center;
-  padding: 4px 6px;
+  padding: 4px 4px 4px 6px;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-editor-foreground));
   background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  border: 1px solid rgba(128, 128, 128, 0.5);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--vscode-widget-border, var(--vscode-contrastBorder, transparent));
+  border-radius: 4px;
+  box-shadow: 0 0 8px 2px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
 }
 #findWidget.active {
   display: flex;
 }
 #findInput {
-  background: none;
-  border: 1px solid rgba(128, 128, 128, 0.5);
+  height: 24px;
+  box-sizing: border-box;
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
   outline: none;
-  border-radius: 4px;
-  padding: 3px 6px;
+  border-radius: 2px;
+  padding: 2px 6px;
   font-size: 13px;
-  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-input-foreground);
   width: 180px;
+}
+#findInput::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  opacity: 1;
+}
+#findInput:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
 }
 #findCount {
   font-size: 12px;
-  opacity: 0.7;
-  margin: 0 8px;
+  opacity: 0.75;
+  margin: 0 4px 0 8px;
   min-width: 48px;
   text-align: center;
 }
 .findBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
   cursor: pointer;
-  padding: 2px 5px;
   font-size: 12px;
-  opacity: 0.7;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--vscode-icon-foreground, var(--vscode-editor-foreground));
   user-select: none;
 }
 .findBtn:hover {
-  opacity: 1;
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
 }
-/* The "open details as you navigate" toggle, highlighted while enabled. */
+/* The "open details as you navigate" toggle, highlighted while enabled —
+   styled like a native input-option toggle (e.g. Match Case) when active. */
 #findOpenCdv.active {
-  opacity: 1;
-  color: var(--git-graph-color);
+  color: var(--vscode-inputOption-activeForeground, var(--vscode-editor-foreground));
+  background-color: var(--vscode-inputOption-activeBackground, transparent);
+  border-color: var(--vscode-inputOption-activeBorder, transparent);
 }
+/* Find matches reuse VS Code's native find-match highlight colours. */
 #commitTable tr.commit.findMatch td {
-  background-color: rgba(234, 92, 0, 0.18);
+  background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 92, 0, 0.18));
 }
 #commitTable tr.commit.findMatchCurrent td {
-  background-color: rgba(234, 92, 0, 0.4);
+  background-color: var(--vscode-editor-findMatchBackground, rgba(234, 92, 0, 0.4));
 }
 /* Outline find matches so they remain visible under High Contrast themes,
    where the translucent background tint may not render. */
-#commitTable tr.commit.findMatch,
-#commitTable tr.commit.findMatchCurrent {
+#commitTable tr.commit.findMatch {
   outline: 1px solid var(--vscode-editor-findMatchHighlightBorder, transparent);
+  outline-offset: -1px;
+}
+#commitTable tr.commit.findMatchCurrent {
+  outline: 1px solid
+    var(--vscode-editor-findMatchBorder, var(--vscode-editor-findMatchHighlightBorder, transparent));
   outline-offset: -1px;
 }
 body.vscode-high-contrast #commitTable tr.commit.findMatch,
 body.vscode-high-contrast #commitTable tr.commit.findMatchCurrent {
-  outline: 1px dotted var(--vscode-editor-findMatchHighlightBorder, transparent);
+  outline-style: dotted;
 }
