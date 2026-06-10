@@ -3560,7 +3560,11 @@ function refreshGraphOrDisplayError(status: GitCommandStatus, errorMessage: stri
   if (status === null) {
     gitGraph.refresh(true, true); // keep the user's scroll position after an action
   } else {
-    showErrorDialog(errorMessage, status, null);
+    // Refresh once the error is dismissed: a failed merge/rebase/cherry-pick/
+    // revert leaves an operation in progress, and the file watcher is muted
+    // during the action, so this is what surfaces the conflict banner without a
+    // manual refresh. (Harmless for non-operation failures — state is unchanged.)
+    showErrorDialog(errorMessage, status, null, () => gitGraph.refresh(false));
   }
 }
 
@@ -3898,7 +3902,12 @@ function showTagDetailsDialog(details: GitTagDetails) {
   }
   showDialog(html, null, l10n.dialogDismiss, null, null);
 }
-function showErrorDialog(message: string, reason: string | null, sourceElem: HTMLElement | null) {
+function showErrorDialog(
+  message: string,
+  reason: string | null,
+  sourceElem: HTMLElement | null,
+  onDismiss?: () => void
+) {
   showDialog(
     svgIcons.alert +
       message +
@@ -3908,7 +3917,8 @@ function showErrorDialog(message: string, reason: string | null, sourceElem: HTM
     null,
     l10n.dialogDismiss,
     null,
-    sourceElem
+    sourceElem,
+    onDismiss
   );
 }
 function showActionRunningDialog(command: string) {
@@ -3925,7 +3935,8 @@ function showDialog(
   actionName: string | null,
   dismissName: string,
   actioned: (() => void) | null,
-  sourceElem: HTMLElement | null
+  sourceElem: HTMLElement | null,
+  onDismiss?: () => void
 ) {
   dialogBacking.className = "active";
   dialog.className = "active";
@@ -3940,7 +3951,15 @@ function showDialog(
     "</div>";
   if (actionName !== null && actioned !== null)
     document.getElementById("dialogAction")!.addEventListener("click", actioned);
-  document.getElementById("dialogDismiss")!.addEventListener("click", hideDialog);
+  document.getElementById("dialogDismiss")!.addEventListener(
+    "click",
+    onDismiss === undefined
+      ? hideDialog
+      : () => {
+          hideDialog();
+          onDismiss();
+        }
+  );
 
   dialogMenuSource = sourceElem;
   if (dialogMenuSource !== null) dialogMenuSource.classList.add("dialogActive");
