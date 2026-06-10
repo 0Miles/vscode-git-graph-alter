@@ -232,6 +232,7 @@ export function getWebviewLocalizedStrings() {
     dialogResetFileConfirm: l10n.t("dialog.resetFile.confirm"),
     dialogCancel: l10n.t("dialog.cancel"),
     dialogDismiss: l10n.t("dialog.dismiss"),
+    dialogRememberChoice: l10n.t("dialog.rememberChoice"),
 
     // Status
     tooltipCommitHead: l10n.t("tooltip.commitHead"),

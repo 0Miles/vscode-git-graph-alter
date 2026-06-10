@@ -113,6 +113,9 @@ export type GitGraphViewState = {
   dialogMergeNoFastForward: boolean;
   dialogMergeSquash: boolean;
   dialogResetMode: "soft" | "mixed" | "hard";
+  /** Remembered "Remember my choice" values for option-bearing dialogs,
+   *  injected at load so they can be applied before any dialog opens. */
+  dialogMemory: DialogMemoryStore;
   contextMenuActionsVisibility: ContextMenuActionsVisibility;
   customBranchGlobPatterns: { name: string; glob: string }[];
   customEmojiShortcodeMappings: { [code: string]: string };
@@ -192,6 +195,19 @@ export type RequestSaveRepoState = {
   command: "saveRepoState";
   repo: string;
   state: GitRepoState;
+};
+
+/** Persisted "Remember my choice" values for option-bearing confirmation
+ *  dialogs. Keyed by a stable dialog key, then by each remembered input's name.
+ *  Values use the same encoding the dialog form produces: "checked"/"unchecked"
+ *  for checkboxes, the option value for selects. */
+export type DialogMemoryStore = { [dialogKey: string]: { [inputName: string]: string } };
+
+export type RequestSaveDialogMemory = {
+  command: "saveDialogMemory";
+  dialogKey: string;
+  /** The values to remember, or null to forget this dialog's choices. */
+  values: { [inputName: string]: string } | null;
 };
 
 export type RequestCopyToClipboard = {
@@ -354,6 +370,7 @@ export type RequestMessage =
   | RequestFetch
   | RequestCreateArchive
   | RequestExportPatch
+  | RequestSaveDialogMemory
   | RequestCreatePullRequest;
 
 export type ResponseMessage =

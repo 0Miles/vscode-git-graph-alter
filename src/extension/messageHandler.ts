@@ -379,6 +379,10 @@ export function registerMessageHandlers(
     repoManager.setRepoState(msg.repo, msg.state);
   });
 
+  bridge.onMessage("saveDialogMemory", (msg) => {
+    extensionState.saveDialogMemory(msg.dialogKey, msg.values);
+  });
+
   bridge.onMessage("copyToClipboard", async (msg) => {
     bridge.post({
       command: "copyToClipboard",

@@ -43,6 +43,7 @@ export function buildWebviewHtml(opts: {
     dialogMergeNoFastForward: config.dialogMergeNoFastForward(),
     dialogMergeSquash: config.dialogMergeSquash(),
     dialogResetMode: config.dialogResetMode(),
+    dialogMemory: extensionState.getDialogMemory(),
     contextMenuActionsVisibility: config.contextMenuActionsVisibility(),
     customBranchGlobPatterns: config.customBranchGlobPatterns(),
     customEmojiShortcodeMappings: config.customEmojiShortcodeMappings(),
