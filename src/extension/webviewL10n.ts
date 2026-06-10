@@ -182,6 +182,8 @@ export function getWebviewLocalizedStrings() {
     dialogCheckoutRemoteExists: l10n.t("dialog.checkout.remoteExists"),
     dialogCheckoutExistingLocal: l10n.t("dialog.checkout.existingLocal"),
     dialogCheckoutNewLocal: l10n.t("dialog.checkout.newLocal"),
+    dialogCheckoutResetLocal: l10n.t("dialog.checkout.resetLocal"),
+    dialogCheckoutResetLocalConfirm: l10n.t("dialog.checkout.resetLocalConfirm"),
     dialogCherryPickConfirm: l10n.t("dialog.cherryPick.confirm"),
     dialogCherryPickNoCommit: l10n.t("dialog.cherryPick.noCommit"),
     dialogCherryPickRecordOrigin: l10n.t("dialog.cherryPick.recordOrigin"),

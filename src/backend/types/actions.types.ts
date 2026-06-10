@@ -11,7 +11,7 @@ type ActionPayloads = {
     pushToRemote: string | null;
     force: boolean;
   };
-  checkoutBranch: { branchName: string; remoteBranch: string | null };
+  checkoutBranch: { branchName: string; remoteBranch: string | null; force: boolean };
   checkoutCommit: { commitHash: string };
   cherrypickCommit: {
     commitHash: string;

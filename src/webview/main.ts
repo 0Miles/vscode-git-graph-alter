@@ -2107,7 +2107,8 @@ class GitGraphView {
         command: "checkoutBranch",
         repo: this.currentRepo!,
         branchName: refName,
-        remoteBranch: null
+        remoteBranch: null,
+        force: false
       });
     } else if (sourceElem.classList.contains("remote")) {
       // refName is "<remote>/<branch>"; strip only the remote prefix so the
@@ -2129,7 +2130,8 @@ class GitGraphView {
               command: "checkoutBranch",
               repo: this.currentRepo!,
               branchName: newBranch,
-              remoteBranch: refName
+              remoteBranch: refName,
+              force: false
             });
           },
           null
@@ -2137,12 +2139,14 @@ class GitGraphView {
       };
       if (this.gitBranches.includes(leaf)) {
         // A local branch with the same name already exists: let the user check
-        // it out directly, or create a new local branch under a different name.
+        // it out directly, reset it to the remote (discarding local commits), or
+        // create a new local branch under a different name.
         showSelectDialog(
           l10n.dialogCheckoutRemoteExists.replace("{0}", "<b><i>" + escapeHtml(leaf) + "</i></b>"),
           "existing",
           [
             { name: l10n.dialogCheckoutExistingLocal, value: "existing" },
+            { name: l10n.dialogCheckoutResetLocal, value: "reset" },
             { name: l10n.dialogCheckoutNewLocal, value: "new" }
           ],
           l10n.checkoutBranch,
@@ -2153,8 +2157,28 @@ class GitGraphView {
                 command: "checkoutBranch",
                 repo: this.currentRepo!,
                 branchName: leaf,
-                remoteBranch: null
+                remoteBranch: null,
+                force: false
               });
+            } else if (choice === "reset") {
+              // Destructive: confirm before discarding the local branch's commits.
+              showConfirmationDialog(
+                l10n.dialogCheckoutResetLocalConfirm.replace(
+                  "{0}",
+                  "<b><i>" + escapeHtml(leaf) + "</i></b>"
+                ),
+                () => {
+                  showActionRunningDialog(l10n.checkoutBranch);
+                  sendMessage({
+                    command: "checkoutBranch",
+                    repo: this.currentRepo!,
+                    branchName: leaf,
+                    remoteBranch: refName,
+                    force: true
+                  });
+                },
+                null
+              );
             } else {
               promptNewLocalBranch();
             }
