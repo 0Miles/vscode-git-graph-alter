@@ -89,7 +89,6 @@ class GitGraphView {
 
   private tableElem: HTMLElement;
   private footerElem: HTMLElement;
-  private showRemoteBranchesElem: HTMLInputElement;
   private scrollShadowElem: HTMLElement;
 
   private loadBranchesCallback: ((changes: boolean, isRepo: boolean) => void) | null = null;
@@ -112,24 +111,6 @@ class GitGraphView {
     this.graph = new Graph("commitGraph", this.config);
     this.tableElem = document.getElementById("commitTable")!;
     this.footerElem = document.getElementById("footer")!;
-    this.showRemoteBranchesElem = <HTMLInputElement>(
-      document.getElementById("showRemoteBranchesCheckbox")!
-    );
-    this.showRemoteBranchesElem.checked = this.showRemoteBranches;
-    this.showRemoteBranchesElem.addEventListener("change", () => {
-      this.showRemoteBranches = this.showRemoteBranchesElem.checked;
-      // Persist the choice per-repo so it is remembered when switching back.
-      if (typeof this.gitRepos[this.currentRepo] !== "undefined") {
-        this.gitRepos[this.currentRepo].showRemoteBranches = this.showRemoteBranches;
-        sendMessage({
-          command: "saveRepoState",
-          repo: this.currentRepo,
-          state: this.gitRepos[this.currentRepo]
-        });
-      }
-      this.saveState();
-      this.refresh(true);
-    });
     this.scrollShadowElem = <HTMLInputElement>document.getElementById("scrollShadow")!;
     const refreshBtn = document.getElementById("refreshBtn")!;
     refreshBtn.innerHTML = svgIcons.refresh;
@@ -195,7 +176,6 @@ class GitGraphView {
       this.showRemoteBranches = prevState.showRemoteBranches;
       if (prevState.columnVisibility) this.columnVisibility = prevState.columnVisibility;
       this.alwaysAcceptCheckoutCommit = prevState.alwaysAcceptCheckoutCommit === true;
-      this.showRemoteBranchesElem.checked = this.showRemoteBranches;
       if (typeof this.gitRepos[prevState.currentRepo] !== "undefined") {
         this.currentRepo = prevState.currentRepo;
         this.maxCommits = prevState.maxCommits;
@@ -245,13 +225,25 @@ class GitGraphView {
       : null;
   }
 
-  /** Resolve the "Show Remote Branches" state for the current repo: a
-   *  per-repo override wins over the global setting. Updates the checkbox UI. */
+  /** Resolve the "Show Remote Branches" state for the current repo: a per-repo
+   *  override wins over the global setting. The toggle now lives in the Branches
+   *  side-view; the graph just consumes the resolved value. */
   private applyShowRemoteBranchesForRepo() {
     const override = this.gitRepos[this.currentRepo]?.showRemoteBranches;
     this.showRemoteBranches =
       typeof override === "boolean" ? override : this.config.showRemoteBranches;
-    this.showRemoteBranchesElem.checked = this.showRemoteBranches;
+  }
+
+  /** Apply a "Show Remote Branches" change driven by the Branches side-view's
+   *  toggle, keeping the local per-repo copy in sync and reloading the graph. */
+  public setShowRemoteBranches(value: boolean) {
+    if (this.showRemoteBranches === value) return;
+    this.showRemoteBranches = value;
+    if (typeof this.gitRepos[this.currentRepo] !== "undefined") {
+      this.gitRepos[this.currentRepo].showRemoteBranches = value;
+    }
+    this.saveState();
+    this.refresh(true);
   }
 
   /** Send a branch-deletion request, remembering its parameters so a failed
@@ -3359,6 +3351,9 @@ window.addEventListener("message", (event) => {
       break;
     case "setBranchFilter":
       gitGraph.setBranchFilter(msg.branches);
+      break;
+    case "setShowRemoteBranches":
+      gitGraph.setShowRemoteBranches(msg.value);
       break;
     case "loadCommits":
       gitGraph.loadCommits(msg.commits, msg.head, msg.moreCommitsAvailable, msg.hard);

@@ -76,10 +76,15 @@ export function activate(context: vscode.ExtensionContext) {
     gitPath: config.gitPath,
     gitEnv: askpassManager.getEnv()
   });
+  // "Show remote branches" is a per-repo setting (persisted in repoManager);
+  // fall back to the global default. The side-view's toggle is now the sole
+  // control for it (the graph's checkbox was removed).
+  const resolveShowRemote = (repo: string): boolean =>
+    repoManager.getRepos()[repo]?.showRemoteBranches ?? config.showRemoteBranches();
   const branchesView = createBranchesView({
     dataService: branchDataService,
     filterStore: branchFilterStore,
-    initialShowRemote: config.showRemoteBranches()
+    resolveShowRemote
   });
   branchesView.setActiveRepo(extensionState.getLastActiveRepo());
   context.subscriptions.push(branchesView, branchFilterStore);
@@ -334,7 +339,16 @@ export function activate(context: vscode.ExtensionContext) {
       if (repo !== null) branchFilterStore.set(repo, []);
     }),
     vscode.commands.registerCommand("git-graph-alter.branches.toggleRemoteBranches", () => {
-      branchesView.toggleShowRemote();
+      const repo = branchesView.getActiveRepo();
+      if (repo === null) return;
+      const state = repoManager.getRepos()[repo];
+      if (state === undefined) return;
+      const next = !(state.showRemoteBranches ?? config.showRemoteBranches());
+      // Persist per-repo, re-list the side-view, and push the new state into the
+      // graph (the graph's checkbox is gone — this toggle is the sole control).
+      repoManager.setRepoState(repo, { ...state, showRemoteBranches: next });
+      branchesView.refresh();
+      currentBridge?.post({ command: "setShowRemoteBranches", value: next });
     }),
     vscode.commands.registerCommand("git-graph-alter.branches.checkout", (item: unknown) =>
       runBranchAction(item, "error.unableToCheckoutBranch", async (git, target) => {
