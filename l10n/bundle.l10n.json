@@ -334,5 +334,9 @@
   "dialog.pushForce.force": "Force",
   "dialog.pushForce.lease": "Force with lease",
   "detail.commitDate": "Commit Date: ",
-  "detail.comparingCommits": "Displaying all changes from {0} to {1}."
+  "detail.comparingCommits": "Displaying all changes from {0} to {1}.",
+  "branchView.current": "current",
+  "branchView.renamePrompt": "Enter a new name for branch '{0}':",
+  "branchView.deleteConfirm": "Are you sure you want to delete the branch '{0}'?",
+  "branchView.deleteConfirmYes": "Delete Branch"
 }

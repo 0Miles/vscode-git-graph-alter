@@ -1,6 +1,5 @@
 import type { SimpleGit } from "simple-git";
 
-import type { QueryResult } from "@/backend/types";
 import { isGitRepository } from "@/backend/utils/git";
 
 type LoadBranchesInput = {
@@ -10,10 +9,20 @@ type LoadBranchesInput = {
   gitPath: string;
 };
 
+/** The raw branch data. The `filter` field of the `loadBranches` response is
+ *  attached by the message handler (from the per-repo filter store), not here:
+ *  this query stays a pure git read. */
+export type LoadBranchesResult = {
+  branches: string[];
+  head: string | null;
+  hard: boolean;
+  isRepo: boolean;
+};
+
 export async function loadBranches(
   git: SimpleGit,
   input: LoadBranchesInput
-): Promise<QueryResult<"loadBranches">> {
+): Promise<LoadBranchesResult> {
   const { showRemoteBranches, hard, currentRepo, gitPath } = input;
 
   let branches: string[];

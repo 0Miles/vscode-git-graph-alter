@@ -107,5 +107,14 @@
   "config.dialog.merge.squashMessageFormat.gitSquashMsg": "使用 Git 产生的详细 squash commit 讯息（储存在 .git/SQUASH_MSG 的 squash commit 清单）",
   "config.dialog.resetCurrentBranch.mode": "Reset 当前 branch 到 commit 对话框中默认选中的 reset 模式（soft、mixed 或 hard）。",
   "config.deprecatedRenamed": "此设置已重命名并分组。为保持向后兼容仍会读取它——请迁移到新的分组设置。",
-  "config.followSourceControlSelection": "启用后，Git Graph 会跟随在源代码管理视图中选取的存储库，打开或切换图表到该存储库。当选取多个存储库时，图表控制列会显示存储库下拉框供你选择要显示哪一个。默认：启用"
+  "config.followSourceControlSelection": "启用后，Git Graph 会跟随在源代码管理视图中选取的存储库，打开或切换图表到该存储库。当选取多个存储库时，图表控制列会显示存储库下拉框供你选择要显示哪一个。默认：启用",
+  "view.branches": "分支",
+  "view.branches.welcome": "未选取存储库。\n[打开 Git Graph](command:git-graph-alter.view)",
+  "command.branches.showAll": "显示所有分支",
+  "command.branches.toggleRemoteBranches": "切换远程分支",
+  "command.branches.checkout": "检出",
+  "command.branches.merge": "合并到当前分支",
+  "command.branches.rename": "重命名分支…",
+  "command.branches.delete": "删除分支…",
+  "command.branches.copyName": "复制分支名称"
 }

@@ -25,7 +25,6 @@ export function createVscodeMock() {
 export function setupHtml(viewState: GG.GitGraphViewState) {
   document.body.innerHTML = `
     <div id="controls">
-      <span id="branchControl"><div id="branchSelect" class="dropdown"></div></span>
       <label id="showRemoteBranchesControl">
         <input type="checkbox" id="showRemoteBranchesCheckbox" checked>
         Show Remote Branches

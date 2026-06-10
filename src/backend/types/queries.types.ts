@@ -32,7 +32,15 @@ type QueryPayloads = {
   };
   loadBranches: {
     request: { showRemoteBranches: boolean; hard: boolean };
-    response: { branches: string[]; head: string | null; hard: boolean; isRepo: boolean };
+    response: {
+      branches: string[];
+      head: string | null;
+      hard: boolean;
+      isRepo: boolean;
+      /** The branch filter resolved by the host (the side-view's per-repo
+       *  selection, or the configured default). Empty = show all. */
+      filter: string[];
+    };
   };
   loadRemotes: {
     request: Record<never, never>;

@@ -321,6 +321,13 @@ export type ResponseSetRepo = {
   repo: string;
 };
 
+/** Push a new branch filter into the graph (driven by the Branches side-view).
+ *  An empty array means "show all branches". */
+export type ResponseSetBranchFilter = {
+  command: "setBranchFilter";
+  branches: string[];
+};
+
 export type RequestMessage =
   | ActionRequest
   | QueryRequest
@@ -356,4 +363,5 @@ export type ResponseMessage =
   | ResponseCreateArchive
   | ResponseExportPatch
   | ResponseRefresh
-  | ResponseSetRepo;
+  | ResponseSetRepo
+  | ResponseSetBranchFilter;

@@ -81,7 +81,8 @@ describe("checking out a remote branch whose name contains slashes", () => {
       branches: ["main"],
       head: "main",
       hard: true,
-      isRepo: true
+      isRepo: true,
+      filter: []
     });
     receive({ command: "loadRemotes", remotes: ["origin"], pushDefault: null });
     receive({

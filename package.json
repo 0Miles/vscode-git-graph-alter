@@ -153,6 +153,58 @@
         "command": "git-graph-alter.openFileFromDiff",
         "title": "%command.openFileFromDiff%",
         "icon": "$(go-to-file)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.showAll",
+        "title": "%command.branches.showAll%",
+        "icon": "$(clear-all)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.toggleRemoteBranches",
+        "title": "%command.branches.toggleRemoteBranches%",
+        "icon": "$(cloud)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.checkout",
+        "title": "%command.branches.checkout%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.merge",
+        "title": "%command.branches.merge%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.rename",
+        "title": "%command.branches.rename%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.delete",
+        "title": "%command.branches.delete%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.copyName",
+        "title": "%command.branches.copyName%"
+      }
+    ],
+    "views": {
+      "scm": [
+        {
+          "id": "git-graph-alter.branches",
+          "name": "%view.branches%",
+          "contextualTitle": "%view.branches%"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "git-graph-alter.branches",
+        "contents": "%view.branches.welcome%"
       }
     ],
     "menus": {
@@ -172,6 +224,45 @@
         {
           "command": "git-graph-alter.view",
           "when": "scmProvider == git && config.git-graph-alter.scmButtonPosition == 'More actions...'"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "git-graph-alter.branches.showAll",
+          "when": "view == git-graph-alter.branches",
+          "group": "navigation@1"
+        },
+        {
+          "command": "git-graph-alter.branches.toggleRemoteBranches",
+          "when": "view == git-graph-alter.branches",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "git-graph-alter.branches.checkout",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|remote)$/",
+          "group": "1_checkout@1"
+        },
+        {
+          "command": "git-graph-alter.branches.merge",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|remote)$/",
+          "group": "1_checkout@2"
+        },
+        {
+          "command": "git-graph-alter.branches.rename",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/",
+          "group": "2_modify@1"
+        },
+        {
+          "command": "git-graph-alter.branches.delete",
+          "when": "view == git-graph-alter.branches && viewItem == branch-local",
+          "group": "2_modify@2"
+        },
+        {
+          "command": "git-graph-alter.branches.copyName",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current|remote)$/",
+          "group": "3_copy@1"
         }
       ]
     },
