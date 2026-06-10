@@ -304,9 +304,6 @@
                 "drop": {
                   "type": "boolean"
                 },
-                "openDirectoryDiff": {
-                  "type": "boolean"
-                },
                 "copyHash": {
                   "type": "boolean"
                 },
@@ -320,9 +317,6 @@
               "type": "object",
               "properties": {
                 "checkout": {
-                  "type": "boolean"
-                },
-                "checkoutAndPull": {
                   "type": "boolean"
                 },
                 "rename": {

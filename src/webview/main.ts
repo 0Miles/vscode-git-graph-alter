@@ -346,25 +346,6 @@ class GitGraphView {
     }
   }
 
-  /** Whether `value` (a branch / remote-branch ref) is currently selected in the
-   *  Branches dropdown. */
-  private isBranchSelectedInDropdown(value: string): boolean {
-    return (this.currentBranches ?? []).indexOf(value) > -1;
-  }
-
-  /** Add or remove a branch from the Branches dropdown selection. Drops
-   *  the "Show All" / glob sentinels when adding a specific branch, and falls
-   *  back to "Show All" when the last specific branch is removed. */
-  private toggleBranchInDropdown(value: string) {
-    const specific = (this.currentBranches ?? []).filter((b) => b !== "" && !b.startsWith("glob:"));
-    const at = specific.indexOf(value);
-    if (at > -1) specific.splice(at, 1);
-    else specific.push(value);
-    this.currentBranches = specific.length > 0 ? specific : [""];
-    this.branchDropdown.selectValues(this.currentBranches);
-    this.reloadForBranchChange();
-  }
-
   /** Reload commits after the branch selection changed: reset paging, close any
    *  open details, show the loading state, and request the new commit set. */
   private reloadForBranchChange() {
@@ -1554,17 +1535,6 @@ class GitGraphView {
               ]
             : []),
           {
-            visible: cmv.openDirectoryDiff,
-            title: l10n.openDirectoryDiff,
-            onClick: () => {
-              sendMessage({
-                command: "openDirectoryDiff",
-                repo: this.currentRepo!,
-                commitHash: hash
-              });
-            }
-          },
-          {
             visible: true,
             title: l10n.exportPatch + ELLIPSIS,
             onClick: () => {
@@ -1828,27 +1798,6 @@ class GitGraphView {
               visible: cmv.branch.checkout,
               onClick: () => this.checkoutBranchAction(sourceElem, refName)
             });
-            menu.push({
-              title: l10n.checkoutAndPull + ELLIPSIS,
-              visible: cmv.branch.checkoutAndPull,
-              onClick: () => {
-                showConfirmationDialog(
-                  l10n.dialogCheckoutAndPullConfirm.replace(
-                    "{0}",
-                    "<b><i>" + escapeHtml(refName) + "</i></b>"
-                  ),
-                  () => {
-                    sendMessage({
-                      command: "checkoutAndPullBranch",
-                      repo: this.currentRepo!,
-                      branchName: refName
-                    });
-                    showActionRunningDialog(l10n.pulling);
-                  },
-                  null
-                );
-              }
-            });
           }
           menu.push({
             title: l10n.renameBranch + ELLIPSIS,
@@ -2076,18 +2025,6 @@ class GitGraphView {
             });
           }
         }
-        // Select / unselect this branch in the multi-select Branches dropdown
-        //; shown for both local and remote branches.
-        menu.push({
-          title: l10n.selectInBranchesDropdown,
-          visible: !this.isBranchSelectedInDropdown(refName),
-          onClick: () => this.toggleBranchInDropdown(refName)
-        });
-        menu.push({
-          title: l10n.unselectInBranchesDropdown,
-          visible: this.isBranchSelectedInDropdown(refName),
-          onClick: () => this.toggleBranchInDropdown(refName)
-        });
         // Create a pull request from this branch on its remote.
         if (this.remotes.length > 0) {
           menu.push({
@@ -3352,18 +3289,11 @@ window.addEventListener("message", (event) => {
     case "checkoutBranch":
       refreshGraphOrDisplayError(msg.status, l10n.unableToCheckoutBranch);
       break;
-    case "checkoutAndPullBranch":
-      refreshGraphOrDisplayError(msg.status, l10n.unableToCheckoutAndPull);
-      break;
     case "checkoutCommit":
       refreshGraphOrDisplayError(msg.status, l10n.unableToCheckoutCommit);
       break;
     case "dropCommit":
       refreshGraphOrDisplayError(msg.status, l10n.unableToDrop);
-      break;
-    case "openDirectoryDiff":
-      // No graph change on success; only surface failures (e.g. no difftool).
-      if (msg.status !== null) showErrorDialog(l10n.unableToOpenDirectoryDiff, msg.status, null);
       break;
     case "applyStash":
       refreshGraphOrDisplayError(msg.status, l10n.unableToApplyStash);
