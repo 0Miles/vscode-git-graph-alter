@@ -162,9 +162,15 @@
       },
       {
         "category": "Git Graph Alter",
-        "command": "git-graph-alter.branches.toggleRemoteBranches",
-        "title": "%command.branches.toggleRemoteBranches%",
-        "icon": "$(cloud)"
+        "command": "git-graph-alter.branches.showRemoteBranches",
+        "title": "%command.branches.showRemoteBranches%",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.hideRemoteBranches",
+        "title": "%command.branches.hideRemoteBranches%",
+        "icon": "$(eye)"
       },
       {
         "category": "Git Graph Alter",
@@ -233,8 +239,13 @@
           "group": "navigation@1"
         },
         {
-          "command": "git-graph-alter.branches.toggleRemoteBranches",
-          "when": "view == git-graph-alter.branches",
+          "command": "git-graph-alter.branches.showRemoteBranches",
+          "when": "view == git-graph-alter.branches && !git-graph-alter.branchView.showingRemote",
+          "group": "navigation@2"
+        },
+        {
+          "command": "git-graph-alter.branches.hideRemoteBranches",
+          "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingRemote",
           "group": "navigation@2"
         }
       ],
@@ -264,6 +275,15 @@
           "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current|remote)$/",
           "group": "3_copy@1"
         }
+      ],
+      "commandPalette": [
+        { "command": "git-graph-alter.branches.showRemoteBranches", "when": "false" },
+        { "command": "git-graph-alter.branches.hideRemoteBranches", "when": "false" },
+        { "command": "git-graph-alter.branches.checkout", "when": "false" },
+        { "command": "git-graph-alter.branches.merge", "when": "false" },
+        { "command": "git-graph-alter.branches.rename", "when": "false" },
+        { "command": "git-graph-alter.branches.delete", "when": "false" },
+        { "command": "git-graph-alter.branches.copyName", "when": "false" }
       ]
     },
     "configuration": {
