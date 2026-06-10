@@ -74,7 +74,6 @@ code {
 #conflictBanner .roundedBtn {
   display: inline-block;
   padding: 1px 12px;
-  border-radius: 11px;
 }
 #conflictBanner .roundedBtn.disabled {
   opacity: 0.5;
@@ -167,7 +166,7 @@ code {
 #commitTable tr.commit.contextMenuActive td,
 #commitTable tr.commit.dialogActive td,
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: rgba(128, 128, 128, 0.15);
+  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15));
 }
 #commitTable tr.commit:hover td {
   cursor: pointer;
@@ -203,7 +202,7 @@ code {
   padding: 0 4px;
 }
 #commitTable th {
-  border-bottom: 1px solid rgba(128, 128, 128, 0.5);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.5));
   line-height: 18px;
   padding: 6px 12px;
 }
@@ -236,7 +235,7 @@ code {
 }
 .resizeCol.left {
   left: 0px;
-  border-left: 1px solid rgba(128, 128, 128, 0.25);
+  border-left: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
 }
 .resizeCol.right {
   right: 0px;
@@ -248,7 +247,7 @@ code {
   vertical-align: top;
 }
 #commitDetails td {
-  background-color: rgba(128, 128, 128, 0.1);
+  background-color: var(--vscode-list-inactiveSelectionBackground, rgba(128, 128, 128, 0.1));
   position: relative;
   font-size: 13px;
   line-height: 18px;
@@ -262,13 +261,13 @@ code {
   right: 0;
   bottom: 0;
   height: 2px;
-  background-color: rgba(128, 128, 128, 0.2);
+  background-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
 }
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: rgba(128, 128, 128, 0.25);
+  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25));
 }
 #commitTable tr.commit.commitDetailsOpen:hover td {
-  background-color: rgba(128, 128, 128, 0.35);
+  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.35));
 }
 /* Docked-to-bottom Commit Details View: a fixed panel below the graph
    rather than a row inserted into the table. Its inner panels are positioned
@@ -281,7 +280,7 @@ code {
   height: 252px;
   z-index: 80;
   background-color: var(--vscode-editor-background);
-  border-top: 2px solid rgba(128, 128, 128, 0.2);
+  border-top: 2px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
   font-size: 13px;
   line-height: 18px;
   white-space: normal;
@@ -328,8 +327,8 @@ body.cdvDocked #content {
   overflow-x: hidden;
   overflow-y: auto;
   text-overflow: ellipsis;
-  border-left: 1px solid rgba(128, 128, 128, 0.2);
-  border-right: 1px solid rgba(128, 128, 128, 0.2);
+  border-left: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
+  border-right: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
   user-select: text;
 }
 .commitDetailsSummaryTop {
@@ -365,7 +364,7 @@ body.cdvDocked #content {
   top: 0;
   bottom: 2px;
   left: 45%;
-  border-right: 1px solid rgba(128, 128, 128, 0.2);
+  border-right: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
   overflow-x: hidden;
   overflow-y: scroll;
   padding-top: 4px;
@@ -489,7 +488,7 @@ svg.fileIcon {
   margin-right: 5px;
   background-color: rgba(128, 128, 128, 0.15);
   border-radius: 5px;
-  border: 1px solid rgba(128, 128, 128, 0.75);
+  border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.75));
   vertical-align: top;
   font-size: 12px;
   cursor: default;
@@ -522,8 +521,19 @@ body.tagLabelsRightAligned .gitRef.tag {
   margin-right: 0;
 }
 .gitRef.stash {
-  background-color: rgba(255, 184, 0, 0.12);
-  border-color: rgba(255, 184, 0, 0.6);
+  /* Keep the original faint-gold chip look, but derive the hue from the active
+     theme's warning colour (an opaque token) by mixing it down to a translucent
+     tint/border instead of using it solid. */
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-statusBarItem-warningBackground, rgb(255, 184, 0)) 15%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--vscode-statusBarItem-warningBackground, rgb(255, 184, 0)) 60%,
+    transparent
+  );
   font-style: italic;
 }
 /* A remote branch folded into its local head's label: an italic chip
@@ -534,7 +544,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   margin: 0;
   padding: 0 5px;
   border: none;
-  border-left: 1px solid rgba(128, 128, 128, 0.45);
+  border-left: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.45));
   border-radius: 0;
   background-color: transparent;
   font-style: italic;
@@ -556,7 +566,7 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 #loadingHeader svg {
   display: inline;
-  fill: rgb(128, 128, 128);
+  fill: var(--vscode-icon-foreground, rgb(128, 128, 128));
   margin-right: 10px;
   vertical-align: top;
   animation: loadingIconAnimation 2s linear infinite;
@@ -584,7 +594,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   height: 32px;
   box-sizing: border-box;
   padding: 0 10px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.5);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.5));
   font-size: 13px;
 }
 /* Each button is a 20x20 positioned box so its inner <svg> can be offset
@@ -643,11 +653,20 @@ body.tagLabelsRightAligned .gitRef.tag {
   width: 16px !important;
   height: 16px !important;
 }
+/* Native-style hover affordance: a subtle rounded background behind the icon,
+   matching VS Code's editor/panel toolbar action buttons. */
+#findBtn:hover,
+#terminalBtn:hover,
+#blinkHeadBtn:hover,
+#fetchBtn:hover,
+#refreshBtn:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+  border-radius: 5px;
+}
 #loadMoreCommitsBtn {
   width: 180px;
   height: 28px;
   margin: 10px auto;
-  border-radius: 14px;
   line-height: 28px;
 }
 
@@ -696,7 +715,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   left: 50%;
   top: 50%;
   transform: translateX(-50%) translateY(-50%);
-  border: 1px solid rgba(128, 128, 128, 0.5);
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.5)));
   border-radius: 5px;
   text-align: center;
   max-width: 360px;
@@ -794,7 +813,6 @@ body.tagLabelsRightAligned .gitRef.tag {
   padding: 0 15px;
   margin: 10px 6px 0 6px;
   height: 22px;
-  border-radius: 11px;
 }
 #dialog .errorReason {
   display: inline-block;
@@ -835,7 +853,6 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 #dialog.noInput #dialogAction,
 #dialog.inputInvalid #dialogAction {
-  background-color: rgba(128, 128, 128, 0.2);
   opacity: 0.5;
 }
 #dialog.noInput #dialogAction {
@@ -846,7 +863,7 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 #dialog svg {
   display: inline;
-  fill: rgb(128, 128, 128);
+  fill: var(--vscode-icon-foreground, rgb(128, 128, 128));
   margin-right: 3px;
   line-height: 20px;
   vertical-align: sub;
@@ -864,10 +881,18 @@ body.tagLabelsRightAligned .gitRef.tag {
 
 @keyframes headPulse {
   0% {
-    background-color: oklch(87.44% 0.2383 150 / 0.1);
+    background-color: color-mix(
+      in srgb,
+      var(--vscode-gitDecoration-addedResourceForeground, oklch(87.44% 0.2383 150)) 10%,
+      transparent
+    );
   }
   50% {
-    background-color: oklch(87.44% 0.2383 150 / 0.5);
+    background-color: color-mix(
+      in srgb,
+      var(--vscode-gitDecoration-addedResourceForeground, oklch(87.44% 0.2383 150)) 50%,
+      transparent
+    );
   }
   100% {
     background-color: transparent;
@@ -875,7 +900,7 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 #actionRunning svg {
   display: inline-block;
-  fill: rgb(128, 128, 128);
+  fill: var(--vscode-icon-foreground, rgb(128, 128, 128));
   margin-right: 10px;
   vertical-align: top;
   animation: loadingIconAnimation 2s linear infinite;
@@ -883,17 +908,34 @@ body.tagLabelsRightAligned .gitRef.tag {
   height: 24px !important;
 }
 
-/* Buttons */
+/* Buttons — styled to mirror VS Code's native button component, reusing the
+   button theme variables so they stay consistent across colour themes. The
+   base is the neutral (secondary) variant; primary actions are promoted by id
+   below. */
 .roundedBtn {
   display: block;
-  background-color: rgba(128, 128, 128, 0.1);
-  border: 1px solid rgba(128, 128, 128, 0.5);
+  background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.1));
+  color: var(--vscode-button-secondaryForeground, inherit);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 2px;
   font-size: 13px;
   text-align: center;
   cursor: pointer;
 }
 .roundedBtn:hover {
-  background-color: rgba(128, 128, 128, 0.2);
+  background-color: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.2));
+}
+/* Primary actions: confirm / execute (dialog action, conflict continue). The
+   hover highlight is suppressed while the action is disabled (no/invalid input)
+   so it matches VS Code's native disabled-button behaviour. */
+#dialogAction,
+#conflictContinue {
+  background-color: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #ffffff);
+}
+#dialog:not(.noInput):not(.inputInvalid) #dialogAction:hover,
+#conflictContinue:not(.disabled):hover {
+  background-color: var(--vscode-button-hoverBackground, #1177bb);
 }
 /* Busy indicator while a refresh/load is in progress: spin the icon. */
 #refreshBtn.refreshing {
