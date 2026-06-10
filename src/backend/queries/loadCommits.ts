@@ -261,6 +261,17 @@ export async function loadCommits(
     for (const stash of stashes) {
       let idx = commits.findIndex((c) => c.date < stash.date);
       if (idx === -1) idx = commits.length;
+      // The graph layout assumes a commit's parents appear below it (a higher
+      // index). Placing a stash purely by date can drop it *below* its base
+      // commit — the stash date (%ct) and the commits' date basis (%at/%ct, per
+      // dateType) can disagree, topo ordering isn't date-sorted at all, and
+      // clock skew happens — which makes the stash's parent point upward and
+      // hangs the layout walk (a frozen graph). Clamp the stash to sit at or
+      // above its base so that invariant always holds.
+      if (stash.baseHash !== null) {
+        const baseIdx = commits.findIndex((c) => c.hash === stash.baseHash);
+        if (baseIdx !== -1 && baseIdx < idx) idx = baseIdx;
+      }
       commits.splice(idx, 0, {
         hash: stash.hash,
         parentHashes: stash.baseHash !== null ? [stash.baseHash] : [],

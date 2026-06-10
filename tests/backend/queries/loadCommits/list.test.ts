@@ -859,6 +859,67 @@ describe("loadCommits", () => {
     }
   });
 
+  it("keeps a stash above its base commit even when their dates disagree (no graph freeze)", async () => {
+    // Regression: the stash date is always its committer date (%ct), but commits
+    // use the author date (%at) under dateType "Author Date". A base commit with
+    // a far-future author date therefore sorts *after* the (now-dated) stash, so
+    // a naive date-based insertion drops the stash below its own base. That makes
+    // the stash's only parent point upward in the list, which the graph layout
+    // (parents are assumed below their children) can't walk — it spins forever
+    // and freezes the webview. loadCommits must clamp the stash above its base.
+    const r = makeRepo();
+    try {
+      // Base commit with a far-future *author* date (committer date too, so it is
+      // still HEAD); the stash created on it gets a normal, much earlier %ct.
+      fs.writeFileSync(path.join(r, "a.txt"), "a");
+      cp.execFileSync("git", ["add", "."], { cwd: r });
+      cp.execFileSync("git", ["commit", "-m", "future-dated base"], {
+        cwd: r,
+        env: {
+          ...process.env,
+          GIT_AUTHOR_DATE: "2099-01-01T00:00:00",
+          GIT_COMMITTER_DATE: "2099-01-01T00:00:00"
+        }
+      });
+      const baseHash = cp.execFileSync("git", ["rev-parse", "HEAD"], { cwd: r }).toString().trim();
+      fs.writeFileSync(path.join(r, "a.txt"), "a-modified");
+      cp.execFileSync("git", ["stash", "push", "-m", "WIP work"], { cwd: r });
+      const stashHash = cp
+        .execFileSync("git", ["rev-parse", "stash@{0}"], { cwd: r })
+        .toString()
+        .trim();
+
+      const result = await loadCommits(simpleGit(r), {
+        branchNames: [""],
+        maxCommits: 300,
+        showRemoteBranches: false,
+        hard: false,
+        dateType: "Author Date",
+        showUncommittedChanges: false,
+        commitOrder: "date",
+        onlyFollowFirstParent: false,
+        showUntrackedFiles: true,
+        showCommitsOnlyReferencedByTags: true,
+        showRemoteHeads: true,
+        includeCommitsMentionedByReflogs: false,
+        showSignatureStatus: false,
+        showStashes: true,
+        useMailmap: false,
+        hiddenRemotes: []
+      });
+
+      const stashIdx = result.commits.findIndex((c) => c.hash === stashHash);
+      const baseIdx = result.commits.findIndex((c) => c.hash === baseHash);
+      expect(stashIdx).toBeGreaterThanOrEqual(0);
+      expect(baseIdx).toBeGreaterThanOrEqual(0);
+      // The stash must sit above (a lower index than) its base, and list it as parent.
+      expect(stashIdx).toBeLessThan(baseIdx);
+      expect(result.commits[stashIdx].parentHashes).toContain(baseHash);
+    } finally {
+      fs.rmSync(r, { recursive: true, force: true });
+    }
+  });
+
   it("hides the branches of remotes listed in hiddenRemotes", async () => {
     const r = makeRepo();
     try {

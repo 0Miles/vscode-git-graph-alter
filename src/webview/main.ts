@@ -540,32 +540,40 @@ class GitGraphView {
       }
     }
 
-    this.graph.loadCommits(this.commits, this.commitHead, this.commitLookup);
+    // Building the graph layout and rendering the table must never leave the
+    // refresh callback unfired: if anything in here throws, loadCommitsCallback
+    // would stay set and every later refresh/commit would be silently dropped
+    // (the busy indicator never clears), freezing the view until the tab is
+    // reopened. The finally guarantees the callback always runs.
+    try {
+      this.graph.loadCommits(this.commits, this.commitHead, this.commitLookup);
 
-    if (this.expandedCommit !== null && !expandedCommitVisible) {
-      this.clearExpandedCommit();
-      this.saveState();
+      if (this.expandedCommit !== null && !expandedCommitVisible) {
+        this.clearExpandedCommit();
+        this.saveState();
+      }
+      this.render();
+
+      // Restore the pre-refresh scroll offset now the table has its full height
+      // back; this takes precedence over the one-time scroll-to-head.
+      if (this.pendingScrollRestore !== null) {
+        window.scrollTo(0, this.pendingScrollRestore);
+        this.pendingScrollRestore = null;
+      } else if (
+        // Scroll to HEAD once after the first load that contains it, if configured.
+        this.config.onLoadScrollToHead &&
+        !this.hasScrolledToHeadOnLoad &&
+        this.commitHead !== null &&
+        this.commitLookup[this.commitHead] !== undefined
+      ) {
+        this.hasScrolledToHeadOnLoad = true;
+        this.scrollToHead(false);
+      }
+
+      this.fetchAvatars(avatarsNeeded);
+    } finally {
+      this.triggerLoadCommitsCallback(true);
     }
-    this.render();
-
-    // Restore the pre-refresh scroll offset now the table has its full height
-    // back; this takes precedence over the one-time scroll-to-head.
-    if (this.pendingScrollRestore !== null) {
-      window.scrollTo(0, this.pendingScrollRestore);
-      this.pendingScrollRestore = null;
-    } else if (
-      // Scroll to HEAD once after the first load that contains it, if configured.
-      this.config.onLoadScrollToHead &&
-      !this.hasScrolledToHeadOnLoad &&
-      this.commitHead !== null &&
-      this.commitLookup[this.commitHead] !== undefined
-    ) {
-      this.hasScrolledToHeadOnLoad = true;
-      this.scrollToHead(false);
-    }
-
-    this.triggerLoadCommitsCallback(true);
-    this.fetchAvatars(avatarsNeeded);
   }
   private triggerLoadCommitsCallback(changes: boolean) {
     if (this.loadCommitsCallback !== null) {
