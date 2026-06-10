@@ -1622,12 +1622,18 @@ class GitGraphView {
             title: l10n.stashRename + ELLIPSIS,
             visible: true,
             onClick: () => {
+              // Pre-fill with the stash's current displayed name (its commit
+              // subject), taken from the loaded stash node for this ref.
+              const currentMessage =
+                this.commits.find((c) =>
+                  c.refs.some((r) => r.type === "stash" && r.name === refName)
+                )?.message ?? "";
               showFormDialog(
                 l10n.dialogStashRenameTitle.replace(
                   "{0}",
                   "<b><i>" + escapeHtml(refName) + "</i></b>"
                 ),
-                [{ type: "text", name: "", default: "", placeholder: null }],
+                [{ type: "text", name: "", default: currentMessage, placeholder: null }],
                 l10n.dialogStashRenameSubmit,
                 (values) => {
                   const message = values[0].trim();
