@@ -52,7 +52,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
 
   constructor(
     private readonly dataService: BranchDataService,
-    private readonly getShowRemote: () => boolean
+    private readonly resolveShowRemote: (repo: string) => boolean
   ) {}
 
   getRepo(): string | null {
@@ -81,7 +81,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
     try {
       const { branches, head, isRepo } = await this.dataService.listBranches(
         repo,
-        this.getShowRemote()
+        this.resolveShowRemote(repo)
       );
       if (id !== this.fetchId) return; // superseded by a newer fetch
       this.roots = isRepo ? buildBranchTree(branches, head) : [];
@@ -151,10 +151,12 @@ export type BranchesView = ReturnType<typeof createBranchesView>;
 export function createBranchesView(deps: {
   dataService: BranchDataService;
   filterStore: BranchFilterStore;
-  initialShowRemote: boolean;
+  /** Resolve the "show remote branches" state for a repo (per-repo override or
+   *  the global default). Re-read on every reload so the side-view's toggle
+   *  takes effect immediately. */
+  resolveShowRemote: (repo: string) => boolean;
 }) {
-  let showRemote = deps.initialShowRemote;
-  const provider = new BranchesProvider(deps.dataService, () => showRemote);
+  const provider = new BranchesProvider(deps.dataService, deps.resolveShowRemote);
   const treeView = vscode.window.createTreeView<BranchItem>("git-graph-alter.branches", {
     treeDataProvider: provider,
     canSelectMany: true,
@@ -194,10 +196,6 @@ export function createBranchesView(deps: {
     },
     getActiveRepo: (): string | null => provider.getRepo(),
     refresh: (): void => provider.refresh(),
-    toggleShowRemote: (): void => {
-      showRemote = !showRemote;
-      provider.refresh();
-    },
     dispose: (): void => {
       if (debounce !== undefined) clearTimeout(debounce);
       selectionSub.dispose();

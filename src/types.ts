@@ -328,6 +328,13 @@ export type ResponseSetBranchFilter = {
   branches: string[];
 };
 
+/** Push the "Show Remote Branches" state into the graph (driven by the Branches
+ *  side-view's toggle, which is now the sole control). */
+export type ResponseSetShowRemoteBranches = {
+  command: "setShowRemoteBranches";
+  value: boolean;
+};
+
 export type RequestMessage =
   | ActionRequest
   | QueryRequest
@@ -364,4 +371,5 @@ export type ResponseMessage =
   | ResponseExportPatch
   | ResponseRefresh
   | ResponseSetRepo
-  | ResponseSetBranchFilter;
+  | ResponseSetBranchFilter
+  | ResponseSetShowRemoteBranches;

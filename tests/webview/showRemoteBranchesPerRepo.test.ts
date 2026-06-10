@@ -56,16 +56,19 @@ const viewState: GG.GitGraphViewState = {
 };
 
 describe("showRemoteBranches per-repo override", () => {
+  let sentMessages: GG.RequestMessage[];
   beforeAll(async () => {
     vi.resetModules();
-    createVscodeMock();
+    sentMessages = createVscodeMock().sentMessages;
     setupHtml(viewState);
     await import("@/webview/main");
   });
 
-  it("checks the box from the per-repo override, ignoring the global setting", () => {
-    const checkbox = document.getElementById("showRemoteBranchesCheckbox") as HTMLInputElement;
-    expect(checkbox).not.toBeNull();
-    expect(checkbox.checked).toBe(true); // per-repo override wins over global false
+  it("requests branches with remotes from the per-repo override, ignoring the global setting", () => {
+    const msg = sentMessages.find((m) => m.command === "loadBranches") as
+      | Extract<GG.RequestMessage, { command: "loadBranches" }>
+      | undefined;
+    expect(msg).toBeDefined();
+    expect(msg!.showRemoteBranches).toBe(true); // per-repo override wins over global false
   });
 });

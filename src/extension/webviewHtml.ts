@@ -91,7 +91,6 @@ export function buildWebviewHtml(opts: {
   if (numRepos > 0) {
     body = `<body style="${colorVars}">
 		<div id="controls">
-			<label id="showRemoteBranchesControl"><input type="checkbox" id="showRemoteBranchesCheckbox" value="1" checked>${l10nStrings.showRemoteBranches}</label>
       <div id="findBtn" class="iconBtn" title="${l10nStrings.find}"></div>
       <div id="terminalBtn" class="iconBtn" title="${l10nStrings.openTerminal}"></div>
       <div id="blinkHeadBtn" class="iconBtn" title="${l10nStrings.locateHead}"></div>

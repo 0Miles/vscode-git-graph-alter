@@ -55,16 +55,21 @@ const viewState: GG.GitGraphViewState = {
 };
 
 describe("showRemoteBranches default", () => {
+  let sentMessages: GG.RequestMessage[];
   beforeAll(async () => {
     vi.resetModules();
-    createVscodeMock();
+    sentMessages = createVscodeMock().sentMessages;
     setupHtml(viewState);
     await import("@/webview/main");
   });
 
-  it("unchecks the Show Remote Branches box when the setting is false", () => {
-    const checkbox = document.getElementById("showRemoteBranchesCheckbox") as HTMLInputElement;
-    expect(checkbox).not.toBeNull();
-    expect(checkbox.checked).toBe(false);
+  // The toggle now lives in the Branches side-view; the graph just requests
+  // branches with the resolved showRemoteBranches value.
+  it("requests branches without remotes when the global setting is false", () => {
+    const msg = sentMessages.find((m) => m.command === "loadBranches") as
+      | Extract<GG.RequestMessage, { command: "loadBranches" }>
+      | undefined;
+    expect(msg).toBeDefined();
+    expect(msg!.showRemoteBranches).toBe(false);
   });
 });
