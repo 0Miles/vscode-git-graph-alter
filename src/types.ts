@@ -28,13 +28,11 @@ export type ContextMenuActionsVisibility = {
     reset: boolean;
     rebase: boolean;
     drop: boolean;
-    openDirectoryDiff: boolean;
     copyHash: boolean;
     copySubject: boolean;
   };
   branch: {
     checkout: boolean;
-    checkoutAndPull: boolean;
     rename: boolean;
     push: boolean;
     createArchive: boolean;

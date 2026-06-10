@@ -53,22 +53,6 @@ export async function resetFileToRevision(
   await git.raw(["checkout", input.commitHash, "--", input.filePath]);
 }
 
-export async function openDirectoryDiff(
-  git: SimpleGit,
-  input: ActionPayload<"openDirectoryDiff">
-): Promise<void> {
-  // Open the commit's changes (vs its parent) in the user's configured GUI diff
-  // tool as a directory diff. --no-prompt skips the per-file launch prompt;
-  // errors (e.g. no difftool configured) propagate to the caller.
-  await git.raw([
-    "difftool",
-    "--dir-diff",
-    "--no-prompt",
-    input.commitHash + "^",
-    input.commitHash
-  ]);
-}
-
 export async function resetToCommit(
   git: SimpleGit,
   input: ActionPayload<"resetToCommit">

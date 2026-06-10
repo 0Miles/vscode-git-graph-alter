@@ -12,13 +12,11 @@ export const DEFAULT_CONTEXT_MENU_ACTIONS_VISIBILITY: ContextMenuActionsVisibili
     reset: true,
     rebase: true,
     drop: true,
-    openDirectoryDiff: true,
     copyHash: true,
     copySubject: true
   },
   branch: {
     checkout: true,
-    checkoutAndPull: true,
     rename: true,
     push: true,
     createArchive: true,

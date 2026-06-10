@@ -12,7 +12,6 @@ type ActionPayloads = {
     force: boolean;
   };
   checkoutBranch: { branchName: string; remoteBranch: string | null };
-  checkoutAndPullBranch: { branchName: string };
   checkoutCommit: { commitHash: string };
   cherrypickCommit: {
     commitHash: string;
@@ -22,7 +21,6 @@ type ActionPayloads = {
   };
   createBranch: { commitHash: string; branchName: string; checkout: boolean; force: boolean };
   dropCommit: { commitHash: string };
-  openDirectoryDiff: { commitHash: string };
   resetFileToRevision: { commitHash: string; filePath: string };
   applyStash: { selector: string; reinstateIndex: boolean };
   popStash: { selector: string; reinstateIndex: boolean };
