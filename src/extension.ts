@@ -1,9 +1,11 @@
+import type { SimpleGit } from "simple-git";
 import * as vscode from "vscode";
 
 import { AvatarManager } from "./avatarManager";
-import { createBranch } from "./backend/actions/branch";
+import { checkoutBranch, createBranch, deleteBranch, renameBranch } from "./backend/actions/branch";
 import { resetToCommit } from "./backend/actions/commit";
 import { fetchFromRemotes, fetchRemote, listRemoteNames } from "./backend/actions/fetch";
+import { mergeBranch } from "./backend/actions/merge";
 import {
   addRemote,
   getRemoteUrl,
@@ -22,6 +24,9 @@ import { repoContainingPath, resolveToKnownRepo } from "./backend/utils/repoMatc
 import { config } from "./config";
 import { decodeDiffDocUri, DiffDocProvider } from "./diffDocProvider";
 import { AskpassManager } from "./extension/askpass/askpassManager";
+import { createBranchDataService } from "./extension/branchDataService";
+import { type BranchActionTarget, branchActionTarget, createBranchesView } from "./extension/branchesView";
+import { createBranchFilterStore } from "./extension/branchFilterStore";
 import { createLogger } from "./extension/logger";
 import { registerMessageHandlers } from "./extension/messageHandler";
 import { createRepoManager } from "./extension/repoManager";
@@ -60,6 +65,47 @@ export function activate(context: vscode.ExtensionContext) {
   const scmRepoTracker = createScmRepoTracker();
   let currentPanel: WebviewPanel | undefined;
   let currentBridge: WebviewBridge | undefined;
+
+  // Branches side-view: a native TreeView (in the Source Control container) that
+  // replaces the in-graph branch dropdown. Its selection drives a per-repo
+  // filter — the single source of truth shared with the graph panel; its data
+  // comes from a service decoupled from the panel's `gitClient` so it can read
+  // and operate on the active repo without racing the panel.
+  const branchFilterStore = createBranchFilterStore();
+  const branchDataService = createBranchDataService({
+    gitPath: config.gitPath,
+    gitEnv: askpassManager.getEnv()
+  });
+  const branchesView = createBranchesView({
+    dataService: branchDataService,
+    filterStore: branchFilterStore,
+    initialShowRemote: config.showRemoteBranches()
+  });
+  branchesView.setActiveRepo(extensionState.getLastActiveRepo());
+  context.subscriptions.push(branchesView, branchFilterStore);
+
+  const refreshGraphAndSidebar = () => {
+    currentBridge?.post({ command: "refresh" });
+    branchesView.refresh();
+  };
+
+  // Run a git operation from the side-view context menu against the item's repo
+  // (decoupled from the panel's gitClient), surfacing errors and refreshing both
+  // the side-view and the graph afterwards.
+  const runBranchAction = async (
+    item: unknown,
+    errorKey: string,
+    op: (git: SimpleGit, target: BranchActionTarget) => Promise<void>
+  ): Promise<void> => {
+    const target = branchActionTarget(item);
+    if (target === null) return;
+    try {
+      await op(branchDataService.getGitInstance(target.repo), target);
+      refreshGraphAndSidebar();
+    } catch (e: unknown) {
+      void vscode.window.showErrorMessage(l10n.t(errorKey) + ": " + formatGitError(e));
+    }
+  };
 
   void (async () => {
     repoManager.removeReposNotInWorkspace();
@@ -129,6 +175,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Persist first so a freshly-created panel reads the right repo during its
     // initial `loadRepos` handshake — avoids racing the webview boot.
     if (repoToOpen) extensionState.setLastActiveRepo(repoToOpen);
+    branchesView.setActiveRepo(repoToOpen ?? extensionState.getLastActiveRepo());
 
     const hadPanel = currentPanel !== undefined;
     if (currentPanel) {
@@ -149,18 +196,23 @@ export function activate(context: vscode.ExtensionContext) {
       );
       let bridge!: WebviewBridge;
       const repoFileWatcher = new RepoFileWatcher(() => {
-        if (panel.visible) bridge.post({ command: "refresh" });
+        if (panel.visible) {
+          bridge.post({ command: "refresh" });
+          branchesView.refresh();
+        }
       });
       bridge = webviewBridgeFactory(panel.webview, repoFileWatcher);
       currentBridge = bridge;
       avatarManager.registerBridge(bridge.post.bind(bridge));
-      const { onPanelShown } = registerMessageHandlers(bridge, {
+      const messageHandlers = registerMessageHandlers(bridge, {
         config,
         gitClient,
         repoManager,
         extensionState,
         avatarManager,
-        repoFileWatcher
+        repoFileWatcher,
+        branchFilterStore,
+        onSelectRepo: (repo) => branchesView.setActiveRepo(repo)
       });
       currentPanel = createWebviewPanel({
         panel,
@@ -174,8 +226,9 @@ export function activate(context: vscode.ExtensionContext) {
         onDispose: () => {
           currentPanel = undefined;
           currentBridge = undefined;
+          messageHandlers.dispose();
         },
-        onPanelShown
+        onPanelShown: messageHandlers.onPanelShown
       });
     }
 
@@ -202,6 +255,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (!config.followSourceControlSelection()) return;
       const selected = toKnownRepos(selectedPaths);
       if (selected.length === 0) return;
+      branchesView.setActiveRepo(selected[0]);
       if (!currentPanel) {
         void openGraphView(selected[0]);
         return;
@@ -274,6 +328,74 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("git-graph-alter.sidebar.openGraph", (rawRepoPath?: string) =>
       openGraphView(rawRepoPath)
     ),
+    // --- Branches side-view commands ---
+    vscode.commands.registerCommand("git-graph-alter.branches.showAll", () => {
+      const repo = branchesView.getActiveRepo();
+      if (repo !== null) branchFilterStore.set(repo, []);
+    }),
+    vscode.commands.registerCommand("git-graph-alter.branches.toggleRemoteBranches", () => {
+      branchesView.toggleShowRemote();
+    }),
+    vscode.commands.registerCommand("git-graph-alter.branches.checkout", (item: unknown) =>
+      runBranchAction(item, "error.unableToCheckoutBranch", async (git, target) => {
+        if (target.isRemote) {
+          // remotes/origin/feat → create local `feat` tracking `origin/feat`.
+          const stripped = target.branch.slice("remotes/".length);
+          const localName = stripped.split("/").slice(1).join("/");
+          await checkoutBranch(git, { branchName: localName, remoteBranch: stripped });
+        } else {
+          await checkoutBranch(git, { branchName: target.branch, remoteBranch: null });
+        }
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.branches.merge", (item: unknown) =>
+      runBranchAction(item, "error.unableToMergeBranch", (git, target) =>
+        mergeBranch(
+          git,
+          {
+            branchName: target.branch,
+            createNewCommit: config.dialogMergeNoFastForward(),
+            squash: false,
+            noCommit: false
+          },
+          config.squashMergeMessageFormat(),
+          config.signCommits()
+        )
+      )
+    ),
+    vscode.commands.registerCommand("git-graph-alter.branches.rename", (item: unknown) =>
+      runBranchAction(item, "error.unableToRenameBranch", async (git, target) => {
+        const newName = (
+          await vscode.window.showInputBox({
+            prompt: l10n.t("branchView.renamePrompt", target.branch),
+            value: target.branch,
+            ignoreFocusOut: true
+          })
+        )?.trim();
+        if (!newName || newName === target.branch) return; // cancelled / unchanged
+        await renameBranch(git, { oldName: target.branch, newName });
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.branches.delete", (item: unknown) =>
+      runBranchAction(item, "error.unableToDeleteBranch", async (git, target) => {
+        const yes = l10n.t("branchView.deleteConfirmYes");
+        const confirm = await vscode.window.showWarningMessage(
+          l10n.t("branchView.deleteConfirm", target.branch),
+          { modal: true },
+          yes
+        );
+        if (confirm !== yes) return; // cancelled
+        await deleteBranch(git, {
+          branchName: target.branch,
+          forceDelete: config.dialogDeleteBranchForceDelete(),
+          deleteOnRemotes: false
+        });
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.branches.copyName", (item: unknown) => {
+      const target = branchActionTarget(item);
+      if (target !== null) void vscode.env.clipboard.writeText(target.branch);
+    }),
     vscode.commands.registerCommand("git-graph-alter.clearAvatarCache", () => {
       avatarManager.clearCache();
     }),

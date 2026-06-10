@@ -107,5 +107,14 @@
   "config.dialog.merge.squashMessageFormat.gitSquashMsg": "使用 Git 產生的詳細 squash commit 訊息（儲存在 .git/SQUASH_MSG 的 squash commit 清單）",
   "config.dialog.resetCurrentBranch.mode": "Reset 目前 branch 到 commit 對話框中預設選取的 reset 模式（soft、mixed 或 hard）。",
   "config.deprecatedRenamed": "此設定已重新命名並分組。為維持向後相容仍會讀取它——請遷移至新的分組設定。",
-  "config.followSourceControlSelection": "啟用後，Git Graph 會跟隨在原始檔控制檢視中選取的存放庫，開啟或切換圖表至該存放庫。當選取多個存放庫時，圖表控制列會顯示存放庫下拉框供你選擇要顯示哪一個。預設：啟用"
+  "config.followSourceControlSelection": "啟用後，Git Graph 會跟隨在原始檔控制檢視中選取的存放庫，開啟或切換圖表至該存放庫。當選取多個存放庫時，圖表控制列會顯示存放庫下拉框供你選擇要顯示哪一個。預設：啟用",
+  "view.branches": "分支",
+  "view.branches.welcome": "未選取存放庫。\n[開啟 Git Graph](command:git-graph-alter.view)",
+  "command.branches.showAll": "顯示所有 branch",
+  "command.branches.toggleRemoteBranches": "切換遠端 branch",
+  "command.branches.checkout": "Checkout",
+  "command.branches.merge": "合併到目前 branch",
+  "command.branches.rename": "重新命名 branch…",
+  "command.branches.delete": "刪除 branch…",
+  "command.branches.copyName": "複製 branch 名稱"
 }

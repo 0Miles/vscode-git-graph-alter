@@ -117,10 +117,10 @@ async function getLog(
     commitOrderFlag[commitOrder]
   ];
   if (onlyFollowFirstParent) args.push("--first-parent");
-  // The branch dropdown may now select several refs. A selection that is
-  // empty or contains the "" sentinel means "all branches"; otherwise entries
-  // are specific branch names and/or `glob:<pattern>` markers, combined into a
-  // single `git log` invocation.
+  // The branch filter (from the Branches side-view) may select several refs. A
+  // selection that is empty or contains the "" sentinel means "all branches";
+  // otherwise entries are specific branch names and/or `glob:<pattern>` markers,
+  // combined into a single `git log` invocation.
   const globs = branches.filter((b) => b.startsWith("glob:")).map((b) => b.slice(5));
   const named = branches.filter((b) => b !== "" && !b.startsWith("glob:"));
   const showAll = branches.length === 0 || branches.indexOf("") > -1;

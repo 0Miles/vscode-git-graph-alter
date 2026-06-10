@@ -91,7 +91,6 @@ export function buildWebviewHtml(opts: {
   if (numRepos > 0) {
     body = `<body style="${colorVars}">
 		<div id="controls">
-			<span id="branchControl"><span class="unselectable">${l10nStrings.branch}: </span><div id="branchSelect" class="dropdown"></div></span>
 			<label id="showRemoteBranchesControl"><input type="checkbox" id="showRemoteBranchesCheckbox" value="1" checked>${l10nStrings.showRemoteBranches}</label>
       <div id="findBtn" class="iconBtn" title="${l10nStrings.find}"></div>
       <div id="terminalBtn" class="iconBtn" title="${l10nStrings.openTerminal}"></div>
@@ -137,7 +136,6 @@ export function buildWebviewHtml(opts: {
 			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}'; img-src data:;">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<link rel="stylesheet" type="text/css" href="${mediaUri("main.css")}">
-			<link rel="stylesheet" type="text/css" href="${mediaUri("dropdown.css")}">
 			<title>${l10n.t("outputChannel.text")}</title>
 			<style>${colorParams}"</style>
 		</head>

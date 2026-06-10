@@ -90,7 +90,8 @@ describe("contextMenuActionsVisibility gating", () => {
       branches: ["main"],
       head: "main",
       hard: true,
-      isRepo: true
+      isRepo: true,
+      filter: []
     });
     receive({
       command: "loadCommits",

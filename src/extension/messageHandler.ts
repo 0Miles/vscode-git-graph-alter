@@ -54,6 +54,8 @@ import * as l10n from "@/l10n";
 import { RepoFileWatcher } from "@/repoFileWatcher";
 import { RequestMessage, ResponseMessage } from "@/types";
 
+import { resolveBranchFilter } from "./branchFilter";
+import { BranchFilterStore } from "./branchFilterStore";
 import { RepoManager } from "./repoManager";
 import { WebviewBridge } from "./webviewBridge";
 
@@ -107,11 +109,30 @@ export function registerMessageHandlers(
     extensionState: ExtensionState;
     avatarManager: AvatarManager;
     repoFileWatcher: RepoFileWatcher;
+    branchFilterStore: BranchFilterStore;
+    /** Called when the webview switches repo, so the Branches side-view can
+     *  follow the same repo. */
+    onSelectRepo: (repo: string) => void;
   }
 ) {
-  const { config, gitClient, repoManager, extensionState, avatarManager, repoFileWatcher } = deps;
+  const {
+    config,
+    gitClient,
+    repoManager,
+    extensionState,
+    avatarManager,
+    repoFileWatcher,
+    branchFilterStore,
+    onSelectRepo
+  } = deps;
 
   let currentRepo: string | null = null;
+
+  // Push filter changes (from the side-view / "Show All") into the graph, but
+  // only those for the repo this panel is showing.
+  const filterSub = branchFilterStore.onDidChangeFilter(({ repo, branches }) => {
+    if (repo === currentRepo) bridge.post({ command: "setBranchFilter", branches });
+  });
 
   function registerAction<T extends RequestMessage["command"]>(
     command: T,
@@ -209,15 +230,27 @@ export function registerMessageHandlers(
   });
 
   bridge.onMessage("loadBranches", async (msg) => {
-    bridge.post({
-      command: "loadBranches",
-      ...(await loadBranches(gitClient.getInstance(), {
-        showRemoteBranches: msg.showRemoteBranches,
-        hard: msg.hard,
-        currentRepo: currentRepo!,
-        gitPath: config.gitPath()
-      }))
+    const result = await loadBranches(gitClient.getInstance(), {
+      showRemoteBranches: msg.showRemoteBranches,
+      hard: msg.hard,
+      currentRepo: currentRepo!,
+      gitPath: config.gitPath()
     });
+    // Resolve the filter to apply: an existing side-view selection (pruned to
+    // the branches that still exist), else the configured default. Seed it back
+    // silently — the value travels to the graph in this same response, so firing
+    // the store event would only cause a redundant reload.
+    const filter = resolveBranchFilter(
+      branchFilterStore.has(currentRepo!) ? branchFilterStore.get(currentRepo!) : undefined,
+      result.branches,
+      result.head,
+      {
+        showSpecificBranches: config.showSpecificBranches(),
+        showCurrentBranchByDefault: config.showCurrentBranchByDefault()
+      }
+    );
+    branchFilterStore.set(currentRepo!, filter, { silent: true });
+    bridge.post({ command: "loadBranches", ...result, filter });
   });
 
   bridge.onMessage("loadRemotes", async () => {
@@ -325,6 +358,7 @@ export function registerMessageHandlers(
     gitClient.setRepo(msg.repo);
     extensionState.setLastActiveRepo(msg.repo);
     repoFileWatcher.start(msg.repo);
+    onSelectRepo(msg.repo);
   });
 
   bridge.onMessage("loadRepos", async (msg) => {
@@ -483,6 +517,7 @@ export function registerMessageHandlers(
   return {
     onPanelShown: () => {
       currentRepo = null;
-    }
+    },
+    dispose: () => filterSub.dispose()
   };
 }

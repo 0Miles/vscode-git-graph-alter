@@ -40,7 +40,15 @@ suite("branch loading flow (integration)", () => {
       repoManager: { getRepos: () => ({}), setRepoState: noop } as never,
       extensionState: { setLastActiveRepo: noop, getLastActiveRepo: () => null } as never,
       avatarManager: { fetchAvatarImage: noop } as never,
-      repoFileWatcher: { start: noop, mute: noop, unmute: noop } as never
+      repoFileWatcher: { start: noop, mute: noop, unmute: noop } as never,
+      branchFilterStore: {
+        has: () => false,
+        get: () => [],
+        set: () => false,
+        onDidChangeFilter: () => ({ dispose: noop }),
+        dispose: noop
+      } as never,
+      onSelectRepo: noop
     };
     registerMessageHandlers(bridge, deps);
 
@@ -89,7 +97,15 @@ suite("branch loading flow (integration)", () => {
       repoManager: { getRepos: () => ({}), setRepoState: noop } as never,
       extensionState: { setLastActiveRepo: noop, getLastActiveRepo: () => null } as never,
       avatarManager: { fetchAvatarImage: noop } as never,
-      repoFileWatcher: { start: noop, mute: noop, unmute: noop } as never
+      repoFileWatcher: { start: noop, mute: noop, unmute: noop } as never,
+      branchFilterStore: {
+        has: () => false,
+        get: () => [],
+        set: () => false,
+        onDidChangeFilter: () => ({ dispose: noop }),
+        dispose: noop
+      } as never,
+      onSelectRepo: noop
     };
     registerMessageHandlers(bridge, deps);
 

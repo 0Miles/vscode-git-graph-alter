@@ -334,5 +334,9 @@
   "dialog.pushForce.force": "强制",
   "dialog.pushForce.lease": "带租约强制（force with lease）",
   "detail.commitDate": "Commit 日期：",
-  "detail.comparingCommits": "正在显示从 {0} 到 {1} 的所有更改。"
+  "detail.comparingCommits": "正在显示从 {0} 到 {1} 的所有更改。",
+  "branchView.current": "当前",
+  "branchView.renamePrompt": "输入分支 '{0}' 的新名称：",
+  "branchView.deleteConfirm": "确定要删除分支 '{0}' 吗？",
+  "branchView.deleteConfirmYes": "删除分支"
 }

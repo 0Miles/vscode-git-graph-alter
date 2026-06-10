@@ -10,7 +10,6 @@ import type {
   GitTagDetails
 } from "@/backend/types";
 
-import { Dropdown } from "./dropdown";
 import { Graph } from "./graph";
 import { getMonth, pad2 } from "./utils/date";
 import { addListenerToClass, blinkHeadRow, insertAfter } from "./utils/dom";
@@ -64,9 +63,9 @@ class GitGraphView {
   private commitHead: string | null = null;
   private commitLookup: { [hash: string]: number } = {};
   private avatars: AvatarImageCollection = {};
-  // The branch dropdown is multi-select: a list of selected refs. A single
-  // "" means "show all branches"; entries may also be `glob:<pattern>` markers.
-  // null until the first loadBranches resolves the default selection.
+  // The branch filter, owned by the extension host (the Branches side-view) and
+  // pushed in via `loadBranches`/`setBranchFilter`. A list of selected refs; an
+  // empty list means "show all branches". null until the first load resolves it.
   private currentBranches: string[] | null = null;
   private currentRepo!: string;
   // The last branch-deletion request, so a failed non-force delete can offer a
@@ -90,7 +89,6 @@ class GitGraphView {
 
   private tableElem: HTMLElement;
   private footerElem: HTMLElement;
-  private branchDropdown: Dropdown;
   private showRemoteBranchesElem: HTMLInputElement;
   private scrollShadowElem: HTMLElement;
 
@@ -114,34 +112,6 @@ class GitGraphView {
     this.graph = new Graph("commitGraph", this.config);
     this.tableElem = document.getElementById("commitTable")!;
     this.footerElem = document.getElementById("footer")!;
-    this.branchDropdown = new Dropdown(
-      "branchSelect",
-      false,
-      true,
-      l10n.branch,
-      (values) => {
-        // Resolve the raw toggle into a valid selection. Only re-sync the dropdown
-        // when the exclusivity rules actually changed the toggle (e.g. picking
-        // "Show All" / a glob), to avoid a redundant second render of the options.
-        const resolved = this.resolveBranchSelection(values);
-        this.currentBranches = resolved;
-        if (!arraysEqual(resolved, values, (a, b) => a === b)) {
-          this.branchDropdown.selectValues(resolved);
-        }
-        this.reloadForBranchChange();
-      },
-      (value) => {
-        // Double-clicking "Show All Branches" selects every branch, or returns to
-        // "Show All" when they're all already selected.
-        if (value !== "") return;
-        const all = this.gitBranches.slice();
-        const allSelected =
-          all.length > 0 && all.every((b) => (this.currentBranches ?? []).indexOf(b) > -1);
-        this.currentBranches = allSelected || all.length === 0 ? [""] : all;
-        this.branchDropdown.selectValues(this.currentBranches);
-        this.reloadForBranchChange();
-      }
-    );
     this.showRemoteBranchesElem = <HTMLInputElement>(
       document.getElementById("showRemoteBranchesCheckbox")!
     );
@@ -231,7 +201,13 @@ class GitGraphView {
         this.maxCommits = prevState.maxCommits;
         this.expandedCommit = prevState.expandedCommit;
         this.avatars = prevState.avatars;
-        this.loadBranches(prevState.gitBranches, prevState.gitBranchHead, true, true);
+        this.loadBranches(
+          prevState.gitBranches,
+          prevState.gitBranchHead,
+          true,
+          true,
+          prevState.currentBranches ?? []
+        );
         this.loadCommits(
           prevState.commits,
           prevState.commitHead,
@@ -359,101 +335,43 @@ class GitGraphView {
     this.requestLoadCommits(true, () => this.setRefreshing(false));
   }
 
-  /** The branch selection shown when a repo is first opened: the union of
-   *  the configured `showSpecificBranches` (that exist) and, if enabled, the
-   *  checked-out branch; falls back to "Show All" when neither applies. */
-  private defaultBranchSelection(): string[] {
-    const initial: string[] = [];
-    for (const b of this.config.showSpecificBranches) {
-      if (this.gitBranches.indexOf(b) > -1 && initial.indexOf(b) === -1) initial.push(b);
-    }
-    if (
-      this.config.showCurrentBranchByDefault &&
-      this.gitBranchHead !== null &&
-      initial.indexOf(this.gitBranchHead) === -1
-    ) {
-      initial.push(this.gitBranchHead);
-    }
-    return initial.length > 0 ? initial : [""];
-  }
-
-  /** Resolve a raw multi-select branch choice into a valid selection.
-   *  "Show All Branches" ("") and glob patterns are mutually exclusive with each
-   *  other and with specific branches: adding one of them clears the rest, and
-   *  adding a specific branch drops any "" / glob entry. */
-  private resolveBranchSelection(values: string[]): string[] {
-    const prev = this.currentBranches ?? [];
-    const added = values.filter((v) => prev.indexOf(v) === -1);
-    const exclusiveAdded = added.find((v) => v === "" || v.startsWith("glob:"));
-    if (exclusiveAdded !== undefined) return [exclusiveAdded];
-    const named = values.filter((v) => v !== "" && !v.startsWith("glob:"));
-    return named.length > 0 ? named : [""];
-  }
-
-  /** Normalise an arbitrary set of selected refs (e.g. restored from persisted
-   *  state) to a valid, mutually-exclusive selection: "Show All" wins, then
-   *  specific branches, then a single glob; empty falls back to "Show All". */
-  private normalizeBranchSelection(values: string[]): string[] {
-    if (values.indexOf("") > -1) return [""];
-    const named = values.filter((v) => !v.startsWith("glob:"));
-    if (named.length > 0) return named;
-    return values.length > 0 ? [values[0]] : [""];
-  }
-
   public loadBranches(
     branchOptions: string[],
     branchHead: string | null,
     hard: boolean,
-    isRepo: boolean
+    isRepo: boolean,
+    filter: string[]
   ) {
     if (!isRepo) {
       this.triggerLoadBranchesCallback(false, isRepo);
       return;
     }
-    if (
-      !hard &&
+    const branchesUnchanged =
       arraysEqual(this.gitBranches, branchOptions, (a, b) => a === b) &&
-      this.gitBranchHead === branchHead
-    ) {
+      this.gitBranchHead === branchHead;
+    const filterUnchanged = arraysEqual(this.currentBranches ?? [], filter, (a, b) => a === b);
+    if (!hard && branchesUnchanged && filterUnchanged) {
       this.triggerLoadBranchesCallback(false, isRepo);
       return;
     }
 
     this.gitBranches = branchOptions;
     this.gitBranchHead = branchHead;
-
-    let options = [{ name: l10n.showAll, value: "" }];
-    // Custom glob patterns appear as dropdown entries; selecting one shows only
-    // the branches matching the glob (value carries a "glob:" marker).
-    for (const pattern of this.config.customBranchGlobPatterns) {
-      options.push({ name: pattern.name, value: "glob:" + pattern.glob });
-    }
-    for (let i = 0; i < this.gitBranches.length; i++) {
-      options.push({
-        name:
-          this.gitBranches[i].indexOf("remotes/") === 0
-            ? this.gitBranches[i].substring(8)
-            : this.gitBranches[i],
-        value: this.gitBranches[i]
-      });
-    }
-
-    // Drop any selected entries that aren't offered any more — branches that no
-    // longer exist, or glob patterns removed from the config. Normalise
-    // the survivors for exclusivity (in case stale/persisted state mixed them),
-    // and fall back to the configured default when nothing valid remains. Done
-    // against the built option set so the dropdown selection can't desync from
-    // `currentBranches`.
-    const optionValues = new Set(options.map((o) => o.value));
-    const keep =
-      this.currentBranches === null ? [] : this.currentBranches.filter((b) => optionValues.has(b));
-    this.currentBranches =
-      keep.length === 0 ? this.defaultBranchSelection() : this.normalizeBranchSelection(keep);
+    // The branch filter is owned by the extension host (the Branches side-view);
+    // apply whatever it resolved for this repo. An empty list means "show all".
+    this.currentBranches = filter;
     this.saveState();
 
-    this.branchDropdown.setOptions(options, this.currentBranches);
-
     this.triggerLoadBranchesCallback(true, isRepo);
+  }
+
+  /** Apply a branch filter pushed from the extension host — a selection change
+   *  in the Branches side-view, or its "Show All" action. An empty list means
+   *  show all. Deduped against the current filter to avoid a redundant reload. */
+  public setBranchFilter(branches: string[]) {
+    if (arraysEqual(this.currentBranches ?? [], branches, (a, b) => a === b)) return;
+    this.currentBranches = branches;
+    this.reloadForBranchChange();
   }
   private triggerLoadBranchesCallback(changes: boolean, isRepo: boolean) {
     if (this.loadBranchesCallback !== null) {
@@ -2468,7 +2386,6 @@ class GitGraphView {
       let ff = getVSCodeStyle("--vscode-editor-font-family");
       if (ff !== fontFamily) {
         fontFamily = ff;
-        this.branchDropdown.refresh();
       }
       updateSelectionBackground();
     }).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
@@ -3438,7 +3355,10 @@ window.addEventListener("message", (event) => {
       gitGraph.loadAvatar(msg.email, msg.image);
       break;
     case "loadBranches":
-      gitGraph.loadBranches(msg.branches, msg.head, msg.hard, msg.isRepo);
+      gitGraph.loadBranches(msg.branches, msg.head, msg.hard, msg.isRepo, msg.filter);
+      break;
+    case "setBranchFilter":
+      gitGraph.setBranchFilter(msg.branches);
       break;
     case "loadCommits":
       gitGraph.loadCommits(msg.commits, msg.head, msg.moreCommitsAvailable, msg.hard);
