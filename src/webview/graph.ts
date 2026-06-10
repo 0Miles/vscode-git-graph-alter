@@ -527,6 +527,11 @@ export class Graph {
           break;
         }
       }
+      // The downward scan never found a point connecting to the parent — only
+      // possible when the parent vertex sits *above* this one (e.g. a stash
+      // placed by date above its base commit). Mark the parent processed anyway
+      // so findStart() makes progress instead of looping on this vertex forever.
+      if (!foundPointToParent) vertex.registerParentProcessed();
     } else {
       // Branch is normal
       let branch = new Branch(this.getAvailableColour(startAt));
@@ -550,10 +555,12 @@ export class Graph {
           if (parentVertex === null || parentVertexOnBranch) break;
         }
       }
-      // Reached the bottom of the graph with an off-graph parent (the null
-      // vertex) still pending: mark it processed so the branch ends here and
-      // findStart doesn't loop on it.
-      if (i === this.vertices.length && parentVertex !== null && parentVertex.getId() === -1) {
+      // Reached the bottom of the graph with a parent still pending: either an
+      // off-graph parent (the null vertex), or a parent lying *above* this
+      // vertex so the downward scan never reached it (e.g. a stash placed by
+      // date above its base commit). Either way mark it processed so the branch
+      // ends here and findStart doesn't loop on this vertex forever.
+      if (i === this.vertices.length && parentVertex !== null) {
         vertex.registerParentProcessed();
       }
       branch.setEnd(i);
