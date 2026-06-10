@@ -195,8 +195,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Follow the repo focused in the native Source Control view (`Repository.ui.selected`, which the
   // git API drives from the single focused repo). Open the graph on it, or switch an already-open
-  // graph to it in place — without stealing focus. The initial selection is captured silently by
-  // the tracker, so this only fires on a deliberate selection change.
+  // graph to it in place, revealing the graph panel so it gains focus. The initial selection is
+  // captured silently by the tracker, so this only fires on a deliberate selection change.
   context.subscriptions.push(
     scmRepoTracker.onDidChangeSelection((selectedPaths) => {
       if (!config.followSourceControlSelection()) return;
@@ -207,13 +207,15 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       // `loadRepos` refreshes the repo set; `setRepo` then switches unconditionally (it alone won't,
-      // as it keeps a still-valid current repo). Neither reveals the panel, so focus isn't stolen.
+      // as it keeps a still-valid current repo). Then reveal the panel to bring the graph to the
+      // front and focus it on the newly-selected repo.
       currentBridge?.post({
         command: "loadRepos",
         repos: repoManager.getRepos(),
         lastActiveRepo: selected[0]
       });
       currentBridge?.post({ command: "setRepo", repo: selected[0] });
+      currentPanel.reveal();
     })
   );
 
