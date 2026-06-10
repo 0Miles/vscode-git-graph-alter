@@ -111,11 +111,3 @@ export async function checkoutBranch(
   }
 }
 
-export async function checkoutAndPullBranch(
-  git: SimpleGit,
-  input: ActionPayload<"checkoutAndPullBranch">
-): Promise<void> {
-  await git.checkout(input.branchName);
-  // Pull from the branch's configured upstream (errors if none is set).
-  await git.pull();
-}

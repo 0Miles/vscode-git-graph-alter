@@ -5,7 +5,6 @@ import * as vscode from "vscode";
 import { AvatarManager } from "@/avatarManager";
 import { createArchive } from "@/backend/actions/archive";
 import {
-  checkoutAndPullBranch,
   checkoutBranch,
   createBranch,
   deleteBranch,
@@ -20,7 +19,6 @@ import {
   checkoutCommit,
   cherrypickCommit,
   dropCommit,
-  openDirectoryDiff,
   resetFileToRevision,
   resetToCommit,
   revertCommit
@@ -145,15 +143,11 @@ export function registerMessageHandlers(
   registerAction("pullBranch", (msg) => pullBranch(gitClient.getInstance(), msg));
   registerAction("renameBranch", (msg) => renameBranch(gitClient.getInstance(), msg));
   registerAction("checkoutBranch", (msg) => checkoutBranch(gitClient.getInstance(), msg));
-  registerAction("checkoutAndPullBranch", (msg) =>
-    checkoutAndPullBranch(gitClient.getInstance(), msg)
-  );
   registerAction("checkoutCommit", (msg) => checkoutCommit(gitClient.getInstance(), msg));
   registerAction("cherrypickCommit", (msg) =>
     cherrypickCommit(gitClient.getInstance(), msg, config.signCommits())
   );
   registerAction("dropCommit", (msg) => dropCommit(gitClient.getInstance(), msg));
-  registerAction("openDirectoryDiff", (msg) => openDirectoryDiff(gitClient.getInstance(), msg));
   registerAction("resetFileToRevision", (msg) => resetFileToRevision(gitClient.getInstance(), msg));
   registerAction("revertCommit", (msg) =>
     revertCommit(gitClient.getInstance(), msg, config.signCommits())
