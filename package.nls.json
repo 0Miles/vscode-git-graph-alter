@@ -78,7 +78,7 @@
   "config.tabIconColourTheme.colour": "Show a colour icon which suits most Visual Studio Code colour themes",
   "config.tabIconColourTheme.grey": "Show a grey icon which suits Visual Studio Code colour themes that are predominantly grayscale",
   "config.showTags": "Show tags on the Git Graph View. Default: true (enabled)",
-  "config.showStashes": "Show stashes on the Git Graph View (as nodes branching off the commit they were created on). Default: false",
+  "config.showStashes": "Show stashes on the Git Graph View (as nodes branching off the commit they were created on). Default: true",
   "config.showUntrackedFiles": "Show untracked files in the uncommitted changes on the Git Graph View. Default: true (enabled)",
   "config.dateFormat.isoDateTime": "Show the ISO date and time, for example \"2019-03-19 21:34:00\"",
   "config.dateFormat.isoDateOnly": "Show the ISO date only, for example \"2019-03-19\"",

@@ -184,7 +184,7 @@ export const config = {
     getConfig("history.showSignatures",
       false
     ),
-  showStashes: (): boolean => getConfig("show.stashes", false),
+  showStashes: (): boolean => getConfig("show.stashes", true),
   showCurrentBranchByDefault: (): boolean =>
     getConfig("onOpen.selectCheckedOutBranch", false),
   // Where the open (hollow) circle for uncommitted changes is drawn —

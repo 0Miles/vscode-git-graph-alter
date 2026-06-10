@@ -912,7 +912,7 @@
         },
         "git-graph-alter.show.stashes": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "%config.showStashes%"
         },
         "git-graph-alter.show.tags": {
