@@ -112,6 +112,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
   };
 
+  // Toggle "show remote branches" for the active repo. Bound to both the Show
+  // and Hide commands (the title button swaps between them by state), persists
+  // per-repo, re-lists the side-view, and pushes the new value into the graph.
+  const toggleRemoteBranches = (): void => {
+    const repo = branchesView.getActiveRepo();
+    if (repo === null) return;
+    const state = repoManager.getRepos()[repo];
+    if (state === undefined) return;
+    const next = !(state.showRemoteBranches ?? config.showRemoteBranches());
+    repoManager.setRepoState(repo, { ...state, showRemoteBranches: next });
+    branchesView.refresh();
+    currentBridge?.post({ command: "setShowRemoteBranches", value: next });
+  };
+
   void (async () => {
     repoManager.removeReposNotInWorkspace();
     if (!(await repoManager.checkReposExist())) repoManager.sendRepos();
@@ -336,20 +350,19 @@ export function activate(context: vscode.ExtensionContext) {
     // --- Branches side-view commands ---
     vscode.commands.registerCommand("git-graph-alter.branches.showAll", () => {
       const repo = branchesView.getActiveRepo();
-      if (repo !== null) branchFilterStore.set(repo, []);
-    }),
-    vscode.commands.registerCommand("git-graph-alter.branches.toggleRemoteBranches", () => {
-      const repo = branchesView.getActiveRepo();
       if (repo === null) return;
-      const state = repoManager.getRepos()[repo];
-      if (state === undefined) return;
-      const next = !(state.showRemoteBranches ?? config.showRemoteBranches());
-      // Persist per-repo, re-list the side-view, and push the new state into the
-      // graph (the graph's checkbox is gone — this toggle is the sole control).
-      repoManager.setRepoState(repo, { ...state, showRemoteBranches: next });
-      branchesView.refresh();
-      currentBridge?.post({ command: "setShowRemoteBranches", value: next });
+      branchFilterStore.set(repo, []); // graph: show all
+      branchesView.clearSelection(); // side-view: clear the visual selection
     }),
+    // The title button shows whichever of these matches the current state.
+    vscode.commands.registerCommand(
+      "git-graph-alter.branches.showRemoteBranches",
+      toggleRemoteBranches
+    ),
+    vscode.commands.registerCommand(
+      "git-graph-alter.branches.hideRemoteBranches",
+      toggleRemoteBranches
+    ),
     vscode.commands.registerCommand("git-graph-alter.branches.checkout", (item: unknown) =>
       runBranchAction(item, "error.unableToCheckoutBranch", async (git, target) => {
         if (target.isRemote) {

@@ -571,59 +571,34 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 
 /* Controls */
+/* Control bar: a thin strip of icon buttons, right-aligned in a flex row. The
+   branch dropdown and the show-remote checkbox moved to the Branches side-view,
+   so the bar no longer has any inline content to give it height — hence the
+   explicit height and flex layout. */
 #controls {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   position: relative;
-  left: 0;
-  right: 0;
-  top: 0;
-  padding: 4px 160px 4px 0;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 10px;
   border-bottom: 1px solid rgba(128, 128, 128, 0.5);
-  line-height: 32px;
-  text-align: center;
-  font-weight: 700;
   font-size: 13px;
 }
-#branchControl,
-#showRemoteBranchesControl {
-  white-space: nowrap;
-  margin: 0 10px;
-}
-#branchSelect {
-  margin-left: 3px;
-}
-#showRemoteBranchesCheckbox {
-  width: 14px;
-  vertical-align: text-top;
-}
-/* Control-bar icon buttons: small SVG icons absolutely positioned along the
-   right edge of the control bar. */
+/* Each button is a 20x20 positioned box so its inner <svg> can be offset
+   within it (the svgs are absolutely positioned). */
 #findBtn,
 #terminalBtn,
 #blinkHeadBtn,
 #fetchBtn,
 #refreshBtn {
-  position: absolute;
-  top: 50%;
+  position: relative;
+  flex: 0 0 auto;
   width: 20px;
   height: 20px;
-  margin-top: -10px;
   cursor: pointer;
-}
-#findBtn {
-  right: 130px;
-}
-#terminalBtn {
-  right: 100px;
-}
-#blinkHeadBtn {
-  right: 70px;
-}
-#fetchBtn {
-  right: 40px;
-}
-#refreshBtn {
-  right: 10px;
 }
 #findBtn svg,
 #terminalBtn svg,
@@ -676,13 +651,6 @@ body.tagLabelsRightAligned .gitRef.tag {
   line-height: 28px;
 }
 
-#controls select:focus,
-#controls input:focus {
-  outline: none;
-}
-#controls label {
-  cursor: pointer;
-}
 
 /* Context Menu */
 #contextMenu {
@@ -943,8 +911,7 @@ body.tagLabelsRightAligned .gitRef.tag {
 .gitRef,
 #loadingHeader,
 .unselectable,
-.roundedBtn,
-#controls label {
+.roundedBtn {
   user-select: none;
 }
 

@@ -11,7 +11,8 @@ import { type BranchTreeLeaf, type BranchTreeNode, buildBranchTree } from "./bra
 class BranchItem extends vscode.TreeItem {
   constructor(
     public readonly node: BranchTreeNode,
-    public readonly repo: string
+    public readonly repo: string,
+    selectionGen: number
   ) {
     super(
       node.name,
@@ -20,12 +21,17 @@ class BranchItem extends vscode.TreeItem {
         : vscode.TreeItemCollapsibleState.None
     );
     if (node.type === "folder") {
-      // A stable id keeps expansion/selection across refreshes.
+      // A stable folder id keeps expansion across refreshes (and across the
+      // "Show All" selection reset, which only re-keys leaves).
       this.id = repo + "::folder::" + node.path;
       this.contextValue = "branch-folder";
       this.iconPath = vscode.ThemeIcon.Folder;
     } else {
-      this.id = repo + "::branch::" + node.branch;
+      // The selection generation is part of the leaf id so "Show All" can clear
+      // the visual selection by bumping it: VSCode drops the selection of ids
+      // that no longer exist. Within a generation the id is stable, so a normal
+      // refresh (after a git op) preserves the selection.
+      this.id = "branch::" + selectionGen + "::" + repo + "::" + node.branch;
       this.contextValue = node.isRemote
         ? "branch-remote"
         : node.isHead
@@ -49,6 +55,8 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   private repo: string | null = null;
   // Guards against an in-flight fetch being overwritten by a slower earlier one.
   private fetchId = 0;
+  // Bumped by "Show All" to re-key leaf items and so clear the visual selection.
+  private selectionGen = 0;
 
   constructor(
     private readonly dataService: BranchDataService,
@@ -73,6 +81,12 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   private async reload(): Promise<void> {
     const id = ++this.fetchId;
     const repo = this.repo;
+    // Keep the title toggle's icon in sync with the active repo's state.
+    void vscode.commands.executeCommand(
+      "setContext",
+      "git-graph-alter.branchView.showingRemote",
+      repo !== null && this.resolveShowRemote(repo)
+    );
     if (repo === null) {
       this.roots = [];
       this._onDidChangeTreeData.fire();
@@ -104,7 +118,14 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
         : element.node.type === "folder"
           ? element.node.children
           : [];
-    return nodes.map((node) => new BranchItem(node, this.repo!));
+    return nodes.map((node) => new BranchItem(node, this.repo!, this.selectionGen));
+  }
+
+  /** Clear the visual selection by re-keying leaf items (VSCode drops selection
+   *  of ids that no longer exist); folder expansion is preserved. */
+  clearSelection(): void {
+    this.selectionGen++;
+    this._onDidChangeTreeData.fire();
   }
 
   dispose(): void {
@@ -196,6 +217,7 @@ export function createBranchesView(deps: {
     },
     getActiveRepo: (): string | null => provider.getRepo(),
     refresh: (): void => provider.refresh(),
+    clearSelection: (): void => provider.clearSelection(),
     dispose: (): void => {
       if (debounce !== undefined) clearTimeout(debounce);
       selectionSub.dispose();
