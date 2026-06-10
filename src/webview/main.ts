@@ -684,7 +684,8 @@ class GitGraphView {
           .join("") +
         "</ul>";
     } else {
-      html += '<div class="conflictBannerAllResolved">' + escapeHtml(l10n.conflictAllResolved) + "</div>";
+      html +=
+        '<div class="conflictBannerAllResolved">' + escapeHtml(l10n.conflictAllResolved) + "</div>";
     }
     banner.className = "active";
     banner.innerHTML = html;
@@ -694,9 +695,7 @@ class GitGraphView {
     if (!hasConflicts) {
       document
         .getElementById("conflictContinue")
-        ?.addEventListener("click", () =>
-          sendMessage({ command: "continueOperation", repo })
-        );
+        ?.addEventListener("click", () => sendMessage({ command: "continueOperation", repo }));
     }
     document
       .getElementById("conflictAbort")
@@ -2943,7 +2942,8 @@ class GitGraphView {
     const heightGrip = document.getElementById("detailsResizeGrip");
     if (summary === null || files === null || divider === null || heightGrip === null) return;
 
-    if (typeof repoState.detailsPanelHeight === "number") row.style.height = repoState.detailsPanelHeight + "px";
+    if (typeof repoState.detailsPanelHeight === "number")
+      row.style.height = repoState.detailsPanelHeight + "px";
     let ratio = typeof repoState.detailsDivider === "number" ? repoState.detailsDivider : 0.45;
     const applyDivider = () => {
       const pct = (ratio * 100).toFixed(2) + "%";
@@ -3677,14 +3677,31 @@ function showContextMenu(e: MouseEvent, rawItems: ContextMenuElement[], sourceEl
   contextMenu.className = "active";
   contextMenu.innerHTML = html;
   let bounds = contextMenu.getBoundingClientRect();
-  contextMenu.style.left =
-    (event.pageX - window.pageXOffset + bounds.width < window.innerWidth
+  // Prefer opening down/right of the cursor, flipping up/left when that side
+  // would overflow the viewport.
+  let left =
+    event.pageX - window.pageXOffset + bounds.width < window.innerWidth
       ? event.pageX - 2
-      : event.pageX - bounds.width + 2) + "px";
-  contextMenu.style.top =
-    (event.pageY - window.pageYOffset + bounds.height < window.innerHeight
+      : event.pageX - bounds.width + 2;
+  let top =
+    event.pageY - window.pageYOffset + bounds.height < window.innerHeight
       ? event.pageY - 2
-      : event.pageY - bounds.height + 2) + "px";
+      : event.pageY - bounds.height + 2;
+  // Clamp into the visible viewport: when the flipped side also lacks room (a
+  // menu taller/wider than the space to that edge), the raw position spills past
+  // the top/left edge and clips the leading items. Pin it inside instead, so a
+  // menu larger than the viewport stays anchored to the top/left and its first
+  // items remain reachable.
+  left = Math.max(
+    window.pageXOffset + 2,
+    Math.min(left, window.pageXOffset + window.innerWidth - bounds.width - 2)
+  );
+  top = Math.max(
+    window.pageYOffset + 2,
+    Math.min(top, window.pageYOffset + window.innerHeight - bounds.height - 2)
+  );
+  contextMenu.style.left = left + "px";
+  contextMenu.style.top = top + "px";
   contextMenu.style.opacity = "1";
 
   addListenerToClass("contextMenuItem", "click", (ev) => {
