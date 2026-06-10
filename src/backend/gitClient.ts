@@ -25,9 +25,11 @@ function gitOptions(repoPath: string, gitPath: string): Partial<SimpleGitOptions
       "color.log=false",
       "log.showSignature=false"
     ],
-    // Allow the GIT_ASKPASS helper we set below; simple-git blocks askpass
-    // env/config by default.
-    unsafe: { allowUnsafeAskPass: true }
+    // Allow the GIT_ASKPASS helper we set below, and the GIT_EDITOR /
+    // GIT_SEQUENCE_EDITOR we set on the instance (commands we control, not
+    // external input). simple-git blocks askpass/editor env by default — and
+    // without allowUnsafeEditor it rejects EVERY command once GIT_EDITOR is set.
+    unsafe: { allowUnsafeAskPass: true, allowUnsafeEditor: true }
   };
 }
 
