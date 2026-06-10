@@ -145,6 +145,7 @@
   "dialog.yesReset": "Yes, reset",
   "dialog.cancel": "Cancel",
   "dialog.dismiss": "Dismiss",
+  "dialog.rememberChoice": "Remember my choice",
   "error.unableToLoadCommitDetails": "Unable to load commit details",
   "type.commitHash": "Commit Hash",
   "type.commitSubject": "Commit Subject",

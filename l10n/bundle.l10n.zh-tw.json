@@ -145,6 +145,7 @@
   "dialog.yesReset": "是， reset",
   "dialog.cancel": "取消",
   "dialog.dismiss": "關閉",
+  "dialog.rememberChoice": "記住我的選擇",
   "error.unableToLoadCommitDetails": "無法載入 commit 詳情",
   "type.commitHash": "Commit 雜湊",
   "type.commitSubject": "Commit 主旨",

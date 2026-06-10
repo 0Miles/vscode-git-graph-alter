@@ -20,6 +20,7 @@ const viewState: GG.GitGraphViewState = {
   dialogMergeNoFastForward: true,
   dialogMergeSquash: false,
   dialogResetMode: "mixed",
+  dialogMemory: {},
   customBranchGlobPatterns: [],
   contextMenuActionsVisibility: DEFAULT_CONTEXT_MENU_ACTIONS_VISIBILITY,
   customEmojiShortcodeMappings: {},

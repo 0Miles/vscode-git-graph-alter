@@ -73,11 +73,16 @@ declare global {
     name: string;
     options: { name: string; value: string }[];
     default: string;
+    /** When true, this option is included in the dialog's "Remember my choice"
+     *  memory. Ignored unless the dialog is opened with a rememberKey. */
+    remember?: boolean;
   }
   interface DialogCheckboxInput {
     type: "checkbox";
     name: string;
     value: boolean;
+    /** See DialogSelectInput.remember. */
+    remember?: boolean;
   }
   type DialogInput = DialogTextInput | DialogTextRefInput | DialogSelectInput | DialogCheckboxInput;
   type DialogInputValue = string | boolean;

@@ -10,6 +10,7 @@ import type {
   GitTagDetails
 } from "@/backend/types";
 
+import { applyDialogMemory, extractDialogMemory } from "./dialogMemory";
 import { Graph } from "./graph";
 import { getMonth, pad2 } from "./utils/date";
 import { addListenerToClass, blinkHeadRow, insertAfter } from "./utils/dom";
@@ -1230,9 +1231,15 @@ class GitGraphView {
                     {
                       type: "checkbox",
                       name: l10n.dialogCherryPickNoCommit,
-                      value: this.config.dialogCherryPickNoCommit
+                      value: this.config.dialogCherryPickNoCommit,
+                      remember: true
                     },
-                    { type: "checkbox", name: l10n.dialogCherryPickRecordOrigin, value: false }
+                    {
+                      type: "checkbox",
+                      name: l10n.dialogCherryPickRecordOrigin,
+                      value: false,
+                      remember: true
+                    }
                   ],
                   l10n.dialogYesCherryPick,
                   (values) => {
@@ -1245,7 +1252,8 @@ class GitGraphView {
                       recordOrigin: values[1] === "checked"
                     });
                   },
-                  sourceElem
+                  sourceElem,
+                  "cherryPick"
                 );
               } else {
                 let options = this.commits[this.commitLookup[hash]].parentHashes.map(
@@ -1265,9 +1273,15 @@ class GitGraphView {
                     {
                       type: "checkbox",
                       name: l10n.dialogCherryPickNoCommit,
-                      value: this.config.dialogCherryPickNoCommit
+                      value: this.config.dialogCherryPickNoCommit,
+                      remember: true
                     },
-                    { type: "checkbox", name: l10n.dialogCherryPickRecordOrigin, value: false }
+                    {
+                      type: "checkbox",
+                      name: l10n.dialogCherryPickRecordOrigin,
+                      value: false,
+                      remember: true
+                    }
                   ],
                   l10n.dialogYesCherryPick,
                   (values) => {
@@ -1280,7 +1294,8 @@ class GitGraphView {
                       recordOrigin: values[2] === "checked"
                     });
                   },
-                  sourceElem
+                  sourceElem,
+                  "cherryPick"
                 );
               }
             }
@@ -1351,14 +1366,16 @@ class GitGraphView {
                   {
                     type: "checkbox",
                     name: l10n.dialogMergeNoFastForward,
-                    value: this.config.dialogMergeNoFastForward
+                    value: this.config.dialogMergeNoFastForward,
+                    remember: true
                   },
                   {
                     type: "checkbox",
                     name: l10n.dialogMergeSquash,
-                    value: this.config.dialogMergeSquash
+                    value: this.config.dialogMergeSquash,
+                    remember: true
                   },
-                  { type: "checkbox", name: l10n.dialogMergeNoCommit, value: false }
+                  { type: "checkbox", name: l10n.dialogMergeNoCommit, value: false, remember: true }
                 ],
                 l10n.dialogYesMerge,
                 (values) => {
@@ -1371,7 +1388,8 @@ class GitGraphView {
                     noCommit: values[2] === "checked"
                   });
                 },
-                null
+                null,
+                "merge"
               );
             }
           },
@@ -1398,7 +1416,8 @@ class GitGraphView {
                     resetMode: <GitResetMode>mode
                   });
                 },
-                sourceElem
+                sourceElem,
+                "resetMode"
               );
             }
           },
@@ -1553,7 +1572,14 @@ class GitGraphView {
         const applyOrPop = (command: "applyStash" | "popStash", title: string) => {
           showFormDialog(
             title.replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>"),
-            [{ type: "checkbox", name: l10n.dialogStashReinstateIndex, value: false }],
+            [
+              {
+                type: "checkbox",
+                name: l10n.dialogStashReinstateIndex,
+                value: false,
+                remember: true
+              }
+            ],
             command === "popStash" ? l10n.stashPop : l10n.stashApply,
             (values) => {
               sendMessage({
@@ -1563,7 +1589,8 @@ class GitGraphView {
                 reinstateIndex: values[0] === "checked"
               });
             },
-            sourceElem
+            sourceElem,
+            "stashApplyPop"
           );
         };
         menu = [
@@ -1762,9 +1789,15 @@ class GitGraphView {
                         {
                           type: "checkbox",
                           name: l10n.dialogDeleteForceDelete,
-                          value: this.config.dialogDeleteBranchForceDelete
+                          value: this.config.dialogDeleteBranchForceDelete,
+                          remember: true
                         },
-                        { type: "checkbox", name: l10n.dialogDeleteOnRemotes, value: false }
+                        {
+                          type: "checkbox",
+                          name: l10n.dialogDeleteOnRemotes,
+                          value: false,
+                          remember: true
+                        }
                       ],
                       l10n.deleteBranch,
                       (values) => {
@@ -1774,7 +1807,8 @@ class GitGraphView {
                           values[1] === "checked"
                         );
                       },
-                      null
+                      null,
+                      "deleteBranch"
                     );
                   } else {
                     showCheckboxDialog(
@@ -1785,7 +1819,8 @@ class GitGraphView {
                       (forceDelete) => {
                         this.sendDeleteBranch(refName, forceDelete, false);
                       },
-                      null
+                      null,
+                      "deleteBranch"
                     );
                   }
                 }
@@ -1891,7 +1926,8 @@ class GitGraphView {
                     {
                       type: "checkbox",
                       name: l10n.dialogFetchIntoLocalBranchForce,
-                      value: false
+                      value: false,
+                      remember: true
                     }
                   ],
                   l10n.dialogFetchIntoLocalBranchSubmit,
@@ -1906,7 +1942,8 @@ class GitGraphView {
                     });
                     showActionRunningDialog(l10n.fetchingIntoLocalBranch);
                   },
-                  sourceElem
+                  sourceElem,
+                  "fetchIntoLocalBranch"
                 );
               }
             });
@@ -2119,10 +2156,16 @@ class GitGraphView {
         {
           type: "checkbox",
           name: l10n.dialogMergeNoFastForward,
-          value: this.config.dialogMergeNoFastForward
+          value: this.config.dialogMergeNoFastForward,
+          remember: true
         },
-        { type: "checkbox", name: l10n.dialogMergeSquash, value: this.config.dialogMergeSquash },
-        { type: "checkbox", name: l10n.dialogMergeNoCommit, value: false }
+        {
+          type: "checkbox",
+          name: l10n.dialogMergeSquash,
+          value: this.config.dialogMergeSquash,
+          remember: true
+        },
+        { type: "checkbox", name: l10n.dialogMergeNoCommit, value: false, remember: true }
       ],
       l10n.dialogYesMerge,
       (values) => {
@@ -2135,7 +2178,8 @@ class GitGraphView {
           noCommit: values[2] === "checked"
         });
       },
-      null
+      null,
+      "merge"
     );
   }
   /** Push a local branch to a remote. Pushes directly when a single remote
@@ -2170,7 +2214,8 @@ class GitGraphView {
         { name: l10n.dialogPushForceNone, value: "normal" },
         { name: l10n.dialogPushForceForce, value: "force" },
         { name: l10n.dialogPushForceLease, value: "forceWithLease" }
-      ]
+      ],
+      remember: true
     };
     const boldName = "<b><i>" + escapeHtml(branchName) + "</i></b>";
     if (this.remotes.length === 1) {
@@ -2179,7 +2224,8 @@ class GitGraphView {
         [forceInput],
         l10n.pushBranch,
         (values) => push([this.remotes[0]], toPushForceMode(values[0])),
-        null
+        null,
+        "pushBranchForce"
       );
     } else {
       // One checkbox per remote, so the branch can be pushed to several at once
@@ -2198,7 +2244,8 @@ class GitGraphView {
             this.remotes.filter((_, i) => values[i] === "checked"),
             toPushForceMode(values[this.remotes.length])
           ),
-        null
+        null,
+        "pushBranchForce"
       );
     }
   }
@@ -3151,6 +3198,9 @@ let contextMenu = document.getElementById("contextMenu")!,
 let dialog = document.getElementById("dialog")!,
   dialogBacking = document.getElementById("dialogBacking")!,
   dialogMenuSource: HTMLElement | null = null;
+// "Remember my choice" values per dialog key, seeded from the extension host at
+// load and updated optimistically on each confirm (the save message is one-way).
+let dialogMemory: GG.DialogMemoryStore = viewState.dialogMemory ?? {};
 let gitGraph = new GitGraphView(
   viewState.repos,
   viewState.lastActiveRepo,
@@ -3631,14 +3681,23 @@ function showCheckboxDialog(
   checkboxValue: boolean,
   actionName: string,
   actioned: (value: boolean) => void,
-  sourceElem: HTMLElement | null
+  sourceElem: HTMLElement | null,
+  rememberKey?: string
 ) {
   showFormDialog(
     message,
-    [{ type: "checkbox", name: checkboxLabel, value: checkboxValue }],
+    [
+      {
+        type: "checkbox",
+        name: checkboxLabel,
+        value: checkboxValue,
+        remember: rememberKey !== undefined
+      }
+    ],
     actionName,
     (values) => actioned(values[0] === "checked"),
-    sourceElem
+    sourceElem,
+    rememberKey
   );
 }
 function showSelectDialog(
@@ -3647,23 +3706,63 @@ function showSelectDialog(
   options: { name: string; value: string }[],
   actionName: string,
   actioned: (value: string) => void,
-  sourceElem: HTMLElement | null
+  sourceElem: HTMLElement | null,
+  rememberKey?: string
 ) {
   showFormDialog(
     message,
-    [{ type: "select", name: "", options: options, default: defaultValue }],
+    [
+      {
+        // A stable, non-displayed name (single selects never render their name)
+        // so the remembered value is keyed by name, not position — see
+        // dialogMemory.ts. Only meaningful when rememberKey is set.
+        type: "select",
+        name: "selection",
+        options: options,
+        default: defaultValue,
+        remember: rememberKey !== undefined
+      }
+    ],
     actionName,
     (values) => actioned(values[0]),
-    sourceElem
+    sourceElem,
+    rememberKey
   );
+}
+/** On confirm, persist or forget a dialog's remembered choices based on the
+ *  "Remember my choice" toggle. Updates the local copy optimistically; the save
+ *  message to the extension host is one-way (globalState, shared across repos). */
+function saveOrForgetDialogMemory(
+  rememberKey: string,
+  inputs: DialogInput[],
+  values: string[],
+  hadMemory: boolean
+) {
+  const rememberElem = <HTMLInputElement | null>document.getElementById("dialogRememberChoice");
+  if (rememberElem === null) return; // present whenever rememberKey is set; defensive
+  if (rememberElem.checked) {
+    const remembered = extractDialogMemory(inputs, values);
+    dialogMemory[rememberKey] = remembered;
+    sendMessage({ command: "saveDialogMemory", dialogKey: rememberKey, values: remembered });
+  } else if (hadMemory) {
+    delete dialogMemory[rememberKey];
+    sendMessage({ command: "saveDialogMemory", dialogKey: rememberKey, values: null });
+  }
 }
 function showFormDialog(
   message: string,
   inputs: DialogInput[],
   actionName: string,
   actioned: (values: string[]) => void,
-  sourceElem: HTMLElement | null
+  sourceElem: HTMLElement | null,
+  rememberKey?: string
 ) {
+  // With a rememberKey, seed the remembered selects/checkboxes and offer a
+  // "Remember my choice" toggle below the form (free-text inputs are never
+  // remembered). hasMemory drives both the seeding and the toggle's checked
+  // state, and lets a later un-check forget the stored choice.
+  const hasMemory = rememberKey !== undefined && dialogMemory[rememberKey] !== undefined;
+  if (rememberKey !== undefined) inputs = applyDialogMemory(inputs, dialogMemory[rememberKey]);
   let textRefInput = -1,
     multiElementForm = inputs.length > 1;
   let html =
@@ -3709,6 +3808,18 @@ function showFormDialog(
     html += "</td></tr>";
   }
   html += "</table>";
+  if (rememberKey !== undefined) {
+    // Its own single-row form table (a direct child of #dialog) so it inherits
+    // the themed checkbox styling without changing the layout of the inputs
+    // above. Read back by its fixed id on submit.
+    html +=
+      '<br><table class="dialogForm single"><tr><td>' +
+      '<span class="dialogFormCheckbox"><label><input id="dialogRememberChoice" type="checkbox"' +
+      (hasMemory ? " checked" : "") +
+      "/>" +
+      l10n.dialogRememberChoice +
+      "</label></span></td></tr></table>";
+  }
   showDialog(
     html,
     actionName,
@@ -3728,6 +3839,8 @@ function showFormDialog(
           values.push((<HTMLInputElement>elem).value);
         }
       }
+      if (rememberKey !== undefined)
+        saveOrForgetDialogMemory(rememberKey, inputs, values, hasMemory);
       hideDialog();
       actioned(values);
     },
