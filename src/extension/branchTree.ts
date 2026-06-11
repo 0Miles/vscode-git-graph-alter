@@ -39,7 +39,16 @@ export type BranchTreeFolder = {
   children: BranchTreeNode[];
 };
 
-export type BranchTreeNode = BranchTreeLeaf | BranchTreeFolder;
+/** A top-level "Remote" / "Local" heading. Only ever appears at the root, and
+ *  only when both kinds of branch are in play; the localized label is resolved
+ *  by the view (this module stays vscode-free). */
+export type BranchTreeGroup = {
+  type: "group";
+  kind: "remote" | "local";
+  children: BranchTreeNode[];
+};
+
+export type BranchTreeNode = BranchTreeLeaf | BranchTreeFolder | BranchTreeGroup;
 
 /** Branches surfaced ahead of the rest, in this order, within each folder. */
 const PRIMARY_BRANCHES = ["main", "master", "develop", "dev", "trunk"];
@@ -124,4 +133,24 @@ export function buildBranchTree(
   };
 
   return render(root, "");
+}
+
+/**
+ * Root nodes for the side-view: when remote-tracking branches are present, two
+ * top-level groups — remote first, then local. With no remotes (none fetched,
+ * or "show remote branches" off) the flat local tree is returned unchanged,
+ * since a lone "Local" heading would be noise.
+ */
+export function buildGroupedBranchRoots(
+  branches: string[],
+  head: string | null,
+  meta?: BranchTreeMeta
+): BranchTreeNode[] {
+  const remote = branches.filter((b) => b.startsWith(REMOTE_PREFIX));
+  if (remote.length === 0) return buildBranchTree(branches, head, meta);
+  const local = branches.filter((b) => !b.startsWith(REMOTE_PREFIX));
+  return [
+    { type: "group", kind: "remote", children: buildBranchTree(remote, head, meta) },
+    { type: "group", kind: "local", children: buildBranchTree(local, head, meta) }
+  ];
 }

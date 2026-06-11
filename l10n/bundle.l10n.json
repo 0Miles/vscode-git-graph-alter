@@ -343,5 +343,7 @@
   "branchView.age.day": "{0}d",
   "branchView.age.week": "{0}w",
   "branchView.age.month": "{0}mo",
-  "branchView.age.year": "{0}y"
+  "branchView.age.year": "{0}y",
+  "branchView.group.remote": "Remote",
+  "branchView.group.local": "Local"
 }
