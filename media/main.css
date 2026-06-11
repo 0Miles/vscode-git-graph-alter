@@ -253,13 +253,12 @@ code {
   vertical-align: top;
 }
 #commitDetails td {
-  /* A neutral panel tint (not a list state): a light foreground mix reads as
-     the same subtle surface tint in any theme, like upstream's translucent
-     grey but without a hard-coded colour. */
-  background-color: color-mix(
-    in srgb,
-    var(--vscode-editor-foreground, rgb(128, 128, 128)) 8%,
-    transparent
+  /* Layering follows the Quick Pick: the details panel is a *surface* (like
+     the quick-input widget itself), one elevation step above the view — not a
+     hovered or selected list item. */
+  background-color: var(
+    --vscode-quickInput-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
   );
   position: relative;
   font-size: 13px;
@@ -277,12 +276,18 @@ code {
   background-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
 }
 /* The row whose Commit Details View is open is the selected row: use the
-   native list selection colours. Hovering it keeps the selection colour (as
-   native lists do) — this rule wins over the shared hover rule above because
-   it comes later at equal specificity. */
+   Quick Pick focused-item colours (falling back to list selection). Hovering
+   it keeps the selection colour (as native lists do) — this rule wins over
+   the shared hover rule above because it comes later at equal specificity. */
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25));
-  color: var(--vscode-list-activeSelectionForeground, var(--vscode-editor-foreground));
+  background-color: var(
+    --vscode-quickInputList-focusBackground,
+    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25))
+  );
+  color: var(
+    --vscode-quickInputList-focusForeground,
+    var(--vscode-list-activeSelectionForeground, var(--vscode-editor-foreground))
+  );
 }
 /* Docked-to-bottom Commit Details View: a fixed panel below the graph
    rather than a row inserted into the table. Its inner panels are positioned
@@ -294,7 +299,12 @@ code {
   bottom: 0;
   height: 252px;
   z-index: 80;
-  background-color: var(--vscode-editor-background);
+  /* Same quick-input-like surface as the inline CDV, so both modes sit on the
+     identical elevation layer. */
+  background-color: var(
+    --vscode-quickInput-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
+  );
   border-top: 2px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
   font-size: 13px;
   line-height: 18px;
@@ -736,11 +746,17 @@ body.tagLabelsRightAligned .gitRef.tag {
 #dialog.active {
   display: block;
   position: fixed;
-  /* Native VS Code modals/quick-inputs sit on the editorWidget surface, which
-     is distinct from input-background — menu-background can coincide with it
-     in some themes, making the form controls inside blend away. */
-  background-color: var(--vscode-editorWidget-background, var(--vscode-menu-background));
-  color: var(--vscode-editorWidget-foreground, var(--vscode-menu-foreground));
+  /* A dialog is closest to a native quick input, so it sits on the same
+     surface token tree as the CDV (quickInput → editorWidget). That surface is
+     distinct from input-background, keeping the form controls visible. */
+  background-color: var(
+    --vscode-quickInput-background,
+    var(--vscode-editorWidget-background, var(--vscode-menu-background))
+  );
+  color: var(
+    --vscode-quickInput-foreground,
+    var(--vscode-editorWidget-foreground, var(--vscode-menu-foreground))
+  );
   padding: 10px;
   left: 50%;
   top: 50%;
