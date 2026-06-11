@@ -162,11 +162,18 @@ code {
   text-overflow: ellipsis;
   overflow: hidden;
 }
+/* Row state backgrounds take their hue from the theme's list tokens, but must
+   stay translucent: the commit graph SVG sits *behind* the table (z-index: -1),
+   so an opaque row background would hide the graph lines under it. */
 #commitTable tr.commit:hover td,
 #commitTable tr.commit.contextMenuActive td,
 #commitTable tr.commit.dialogActive td,
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15));
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.25)) 60%,
+    transparent
+  );
 }
 #commitTable tr.commit:hover td {
   cursor: pointer;
@@ -247,7 +254,11 @@ code {
   vertical-align: top;
 }
 #commitDetails td {
-  background-color: var(--vscode-list-inactiveSelectionBackground, rgba(128, 128, 128, 0.1));
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-list-inactiveSelectionBackground, rgba(128, 128, 128, 0.2)) 50%,
+    transparent
+  );
   position: relative;
   font-size: 13px;
   line-height: 18px;
@@ -264,10 +275,18 @@ code {
   background-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
 }
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25));
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.36)) 70%,
+    transparent
+  );
 }
 #commitTable tr.commit.commitDetailsOpen:hover td {
-  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.35));
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.41)) 85%,
+    transparent
+  );
 }
 /* Docked-to-bottom Commit Details View: a fixed panel below the graph
    rather than a row inserted into the table. Its inner panels are positioned
@@ -486,9 +505,18 @@ svg.fileIcon {
   line-height: 18px;
   margin-top: 2px;
   margin-right: 5px;
-  background-color: rgba(128, 128, 128, 0.15);
+  /* Chip tint/border are derived from the theme foreground rather than
+     panel-border: several themes (e.g. Dark Modern) define panel-border so
+     close to the background that the chip outline would vanish, while a
+     foreground mix is guaranteed to contrast in any theme. */
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground, rgb(128, 128, 128)) 12%,
+    transparent
+  );
   border-radius: 5px;
-  border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.75));
+  border: 1px solid
+    color-mix(in srgb, var(--vscode-editor-foreground, rgb(128, 128, 128)) 55%, transparent);
   vertical-align: top;
   font-size: 12px;
   cursor: default;
@@ -544,7 +572,8 @@ body.tagLabelsRightAligned .gitRef.tag {
   margin: 0;
   padding: 0 5px;
   border: none;
-  border-left: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.45));
+  border-left: 1px solid
+    color-mix(in srgb, var(--vscode-editor-foreground, rgb(128, 128, 128)) 35%, transparent);
   border-radius: 0;
   background-color: transparent;
   font-style: italic;
@@ -709,8 +738,11 @@ body.tagLabelsRightAligned .gitRef.tag {
 #dialog.active {
   display: block;
   position: fixed;
-  background-color: var(--vscode-menu-background);
-  color: var(--vscode-menu-foreground);
+  /* Native VS Code modals/quick-inputs sit on the editorWidget surface, which
+     is distinct from input-background — menu-background can coincide with it
+     in some themes, making the form controls inside blend away. */
+  background-color: var(--vscode-editorWidget-background, var(--vscode-menu-background));
+  color: var(--vscode-editorWidget-foreground, var(--vscode-menu-foreground));
   padding: 10px;
   left: 50%;
   top: 50%;
@@ -760,7 +792,11 @@ body.tagLabelsRightAligned .gitRef.tag {
   width: 15px;
   height: 15px;
   vertical-align: text-top;
-  border: 1px solid var(--vscode-checkbox-border, rgba(128, 128, 128, 0.6));
+  border: 1px solid
+    var(
+      --vscode-checkbox-border,
+      color-mix(in srgb, var(--vscode-editor-foreground, rgb(128, 128, 128)) 40%, transparent)
+    );
   border-radius: 3px;
   background: var(--vscode-checkbox-background, var(--vscode-input-background));
   outline-style: none;
@@ -788,7 +824,16 @@ body.tagLabelsRightAligned .gitRef.tag {
 #dialog > table.dialogForm select {
   padding: 4px;
   box-sizing: border-box;
-  border: 1px solid var(--vscode-dropdown-border, rgba(128, 128, 128, 0.3));
+  /* Fall through to a foreground-derived border so the controls keep a visible
+     outline even in themes whose input/dropdown borders match the background. */
+  border: 1px solid
+    var(
+      --vscode-input-border,
+      var(
+        --vscode-dropdown-border,
+        color-mix(in srgb, var(--vscode-editor-foreground, rgb(128, 128, 128)) 30%, transparent)
+      )
+    );
   background-color: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   outline-style: none;
