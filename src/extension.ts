@@ -317,10 +317,11 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // The native SCM view invokes `view` with the git SourceControl whose `rootUri`
-  // is the repo root; surface that path so the icon opens the graph for that repo
-  // (matching a click on the plugin sidebar's repo row). Other callers (status
-  // bar, command palette) pass nothing.
+  // The native SCM view (title icon, and the repository context menu in the
+  // Source Control Repositories view) invokes `view` with the git SourceControl
+  // whose `rootUri` is the repo root; surface that path so the graph opens for
+  // that repo (matching a click on the plugin sidebar's repo row). Other callers
+  // (status bar, command palette) pass nothing.
   const scmRepoPathFromArg = (arg: unknown): string | undefined => {
     if (typeof arg === "object" && arg !== null && "rootUri" in arg) {
       const rootUri = (arg as { rootUri?: vscode.Uri }).rootUri;

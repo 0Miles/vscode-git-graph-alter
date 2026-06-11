@@ -250,6 +250,13 @@
           "when": "scmProvider == git && config.git-graph-alter.scmButtonPosition == 'More actions...'"
         }
       ],
+      "scm/sourceControl": [
+        {
+          "command": "git-graph-alter.view",
+          "when": "scmProvider == git",
+          "group": "git-graph-alter@1"
+        }
+      ],
       "view/title": [
         {
           "command": "git-graph-alter.branches.search",
