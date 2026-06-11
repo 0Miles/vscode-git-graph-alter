@@ -744,9 +744,7 @@ class GitGraphView {
           this.commits.length
         : this.config.grid.y;
     this.config.grid.offsetY = headerHeight + this.config.grid.y / 2;
-    // The selected row is independent of the docked/inline CDV mode — the
-    // vertex halo must track the selection background in both.
-    this.graph.render(inlineExpanded, this.expandedCommit !== null ? this.expandedCommit.id : -1);
+    this.graph.render(inlineExpanded);
   }
   private renderTable() {
     const hiddenDate = this.columnVisibility.date ? "" : " hidden";
