@@ -216,12 +216,23 @@ class GitGraphView {
     this.observeWebviewScroll();
 
     this.renderShowLoading();
+    // The extension may have retargeted the view while the webview was dead
+    // (e.g. following a Source Control repo switch with the panel hidden):
+    // lastActiveRepo then names a different repo than the saved state, and the
+    // saved per-repo state must not win over it — loadRepos below only consults
+    // lastActiveRepo when no current repo was restored. On ordinary reloads the
+    // two match (selectRepo persists both), so restores keep working.
+    const repoRetargeted =
+      prevState !== null &&
+      lastActiveRepo !== null &&
+      lastActiveRepo !== prevState.currentRepo &&
+      typeof this.gitRepos[lastActiveRepo] !== "undefined";
     if (prevState) {
-      this.currentBranches = prevState.currentBranches;
       this.showRemoteBranches = prevState.showRemoteBranches;
       if (prevState.columnVisibility) this.columnVisibility = prevState.columnVisibility;
       this.alwaysAcceptCheckoutCommit = prevState.alwaysAcceptCheckoutCommit === true;
-      if (typeof this.gitRepos[prevState.currentRepo] !== "undefined") {
+      if (!repoRetargeted && typeof this.gitRepos[prevState.currentRepo] !== "undefined") {
+        this.currentBranches = prevState.currentBranches;
         this.currentRepo = prevState.currentRepo;
         this.maxCommits = prevState.maxCommits;
         this.expandedCommit = deserializeExpandedCommit(prevState.expandedCommit);
