@@ -288,7 +288,7 @@ class Vertex {
   public setCurrent() {
     this.isCurrent = true;
   }
-  public draw(svg: SVGElement, config: Config, expandOffset: boolean, isSelected: boolean) {
+  public draw(svg: SVGElement, config: Config, expandOffset: boolean) {
     if (this.onBranch === null) return;
 
     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -305,14 +305,10 @@ class Vertex {
       ).toString()
     );
     circle.setAttribute("r", "4");
-    // The selected row's vertex restyles its halo via CSS so it matches the
-    // selection background instead of punching an editor-background hole.
-    const selectedClass = isSelected ? " selectedRow" : "";
     if (this.isCurrent) {
-      circle.setAttribute("class", "current" + selectedClass);
+      circle.setAttribute("class", "current");
       circle.setAttribute("stroke", colour);
     } else {
-      if (isSelected) circle.setAttribute("class", "selectedRow");
       circle.setAttribute("fill", colour);
     }
 
@@ -411,7 +407,7 @@ export class Graph {
     }
   }
 
-  public render(expandedCommit: ExpandedCommit | null, selectedCommitId: number = -1) {
+  public render(expandedCommit: ExpandedCommit | null) {
     let group = <SVGGElement>document.createElementNS("http://www.w3.org/2000/svg", "g"),
       i,
       width = this.getWidth();
@@ -421,12 +417,7 @@ export class Graph {
       this.branches[i].draw(group, this.config, expandedCommit !== null ? expandedCommit.id : -1);
     }
     for (i = 0; i < this.vertices.length; i++) {
-      this.vertices[i].draw(
-        group,
-        this.config,
-        expandedCommit !== null && i > expandedCommit.id,
-        i === selectedCommitId
-      );
+      this.vertices[i].draw(group, this.config, expandedCommit !== null && i > expandedCommit.id);
     }
 
     if (this.svgGroup !== null) this.svg.removeChild(this.svgGroup);
