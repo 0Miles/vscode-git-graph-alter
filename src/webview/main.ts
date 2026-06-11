@@ -3967,13 +3967,13 @@ function showDialog(
   dialog.className = "active";
   dialog.innerHTML =
     html +
-    "<br>" +
+    '<div class="dialogButtons">' +
     (actionName !== null
       ? '<div id="dialogAction" class="roundedBtn">' + actionName + "</div>"
       : "") +
     '<div id="dialogDismiss" class="roundedBtn">' +
     dismissName +
-    "</div>";
+    "</div></div>";
   if (actionName !== null && actioned !== null)
     document.getElementById("dialogAction")!.addEventListener("click", actioned);
   document.getElementById("dialogDismiss")!.addEventListener(
