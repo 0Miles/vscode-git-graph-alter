@@ -214,6 +214,46 @@
         "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.copyName",
         "title": "%command.branches.copyName%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.rebase",
+        "title": "%command.branches.rebase%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.fastForward",
+        "title": "%command.branches.fastForward%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.push",
+        "title": "%command.branches.push%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.createArchive",
+        "title": "%command.branches.createArchive%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.createPullRequest",
+        "title": "%command.branches.createPullRequest%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.pull",
+        "title": "%command.branches.pull%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.fetchIntoLocal",
+        "title": "%command.branches.fetchIntoLocal%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.deleteRemote",
+        "title": "%command.branches.deleteRemote%"
       }
     ],
     "views": {
@@ -285,28 +325,83 @@
       "view/item/context": [
         {
           "command": "git-graph-alter.branches.checkout",
-          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|remote)$/",
-          "group": "1_checkout@1"
+          "when": "view == git-graph-alter.branches && viewItem == branch-local && git-graph-alter.cmv.branch.checkout",
+          "group": "1_action@1"
         },
         {
-          "command": "git-graph-alter.branches.merge",
-          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|remote)$/",
-          "group": "1_checkout@2"
+          "command": "git-graph-alter.branches.checkout",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.checkout",
+          "group": "1_action@1"
         },
         {
           "command": "git-graph-alter.branches.rename",
-          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/",
-          "group": "2_modify@1"
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/ && git-graph-alter.cmv.branch.rename",
+          "group": "1_action@2"
+        },
+        {
+          "command": "git-graph-alter.branches.merge",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.merge",
+          "group": "1_action@2"
+        },
+        {
+          "command": "git-graph-alter.branches.push",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/ && git-graph-alter.cmv.branch.push",
+          "group": "1_action@3"
+        },
+        {
+          "command": "git-graph-alter.branches.createArchive",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/ && git-graph-alter.cmv.branch.createArchive",
+          "group": "1_action@4"
         },
         {
           "command": "git-graph-alter.branches.delete",
-          "when": "view == git-graph-alter.branches && viewItem == branch-local",
+          "when": "view == git-graph-alter.branches && viewItem == branch-local && git-graph-alter.cmv.branch.delete",
+          "group": "2_modify@1"
+        },
+        {
+          "command": "git-graph-alter.branches.merge",
+          "when": "view == git-graph-alter.branches && viewItem == branch-local && git-graph-alter.cmv.branch.merge",
           "group": "2_modify@2"
         },
         {
-          "command": "git-graph-alter.branches.copyName",
+          "command": "git-graph-alter.branches.rebase",
+          "when": "view == git-graph-alter.branches && viewItem == branch-local && git-graph-alter.cmv.branch.rebase",
+          "group": "2_modify@3"
+        },
+        {
+          "command": "git-graph-alter.branches.fastForward",
+          "when": "view == git-graph-alter.branches && viewItem == branch-local",
+          "group": "2_modify@4"
+        },
+        {
+          "command": "git-graph-alter.branches.pull",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.pull",
+          "group": "2_modify@1"
+        },
+        {
+          "command": "git-graph-alter.branches.fetchIntoLocal",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.fetch",
+          "group": "2_modify@2"
+        },
+        {
+          "command": "git-graph-alter.branches.deleteRemote",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.delete",
+          "group": "2_modify@3"
+        },
+        {
+          "command": "git-graph-alter.branches.createPullRequest",
           "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current|remote)$/",
-          "group": "3_copy@1"
+          "group": "3_share@1"
+        },
+        {
+          "command": "git-graph-alter.branches.copyName",
+          "when": "view == git-graph-alter.branches && viewItem =~ /^branch-(local|current)$/ && git-graph-alter.cmv.branch.copyName",
+          "group": "4_copy@1"
+        },
+        {
+          "command": "git-graph-alter.branches.copyName",
+          "when": "view == git-graph-alter.branches && viewItem == branch-remote && git-graph-alter.cmv.remoteBranch.copyName",
+          "group": "4_copy@1"
         }
       ],
       "commandPalette": [
@@ -344,6 +439,38 @@
         },
         {
           "command": "git-graph-alter.branches.copyName",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.rebase",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.fastForward",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.push",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.createArchive",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.createPullRequest",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.pull",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.fetchIntoLocal",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.deleteRemote",
           "when": "false"
         }
       ]
