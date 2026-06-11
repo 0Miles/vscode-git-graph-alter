@@ -89,6 +89,8 @@ export function getWebviewLocalizedStrings() {
     viewDiff: l10n.t("action.viewDiff"),
     viewFileAtRevision: l10n.t("action.viewFileAtRevision"),
     viewDiffWithWorking: l10n.t("action.viewDiffWithWorking"),
+    fileLayoutTree: l10n.t("action.fileLayoutTree"),
+    fileLayoutList: l10n.t("action.fileLayoutList"),
     copyLink: l10n.t("action.copyLink"),
     copyTagName: l10n.t("action.copyTagName"),
     copyBranchName: l10n.t("action.copyBranchName"),

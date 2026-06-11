@@ -443,6 +443,38 @@ body.cdvDocked #content {
   stroke-width: 1;
   stroke-opacity: 0.2;
 }
+/* Tree/list file-layout toggle in the right-hand toolbar strip, stacked
+   below the close button. */
+#cdvFileViewToggle {
+  position: absolute;
+  right: 4px;
+  top: 34px;
+  width: 24px;
+}
+.cdvFileViewBtn {
+  width: 16px;
+  height: 16px;
+  padding: 4px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cdvFileViewBtn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  fill: var(--vscode-editor-foreground);
+  fill-opacity: 0.4;
+}
+.cdvFileViewBtn:hover svg {
+  fill-opacity: 0.7;
+}
+.cdvFileViewBtn.active {
+  background-color: var(--vscode-toolbar-activeBackground, rgba(128, 128, 128, 0.25));
+}
+.cdvFileViewBtn.active svg {
+  fill-opacity: 0.85;
+}
 svg.openFolderIcon,
 svg.closedFolderIcon,
 svg.fileIcon {
@@ -716,7 +748,6 @@ body.tagLabelsRightAligned .gitRef.tag {
   line-height: 28px;
 }
 
-
 /* Context Menu */
 #contextMenu {
   display: none;
@@ -772,7 +803,8 @@ body.tagLabelsRightAligned .gitRef.tag {
   left: 50%;
   top: 50%;
   transform: translateX(-50%) translateY(-50%);
-  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.5)));
+  border: 1px solid
+    var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.5)));
   border-radius: 5px;
   /* Plain alerts (message + buttons only) stay centred… */
   text-align: center;

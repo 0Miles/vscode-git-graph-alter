@@ -317,6 +317,8 @@
   "action.viewDiff": "View Diff",
   "action.viewFileAtRevision": "查看此版本的文件",
   "action.viewDiffWithWorking": "View Diff with Working File",
+  "action.fileLayoutTree": "以文件树查看更改",
+  "action.fileLayoutList": "以文件列表查看更改",
   "type.filePath": "文件路径",
   "action.copyLink": "复制链接到剪贴板",
   "type.link": "链接",

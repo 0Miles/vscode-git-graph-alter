@@ -95,6 +95,9 @@ export type GitRepoState = {
   customName?: string | null;
   /** Remote names whose branches are hidden in the graph. */
   hiddenRemotes?: string[];
+  /** Per-repo Commit Details View file layout (tree/list) chosen via the
+   *  panel's toolbar; null/undefined uses the global setting. */
+  fileViewType?: FileViewType | null;
   /** Inline Commit Details View height in px; unset = the default 250. */
   detailsPanelHeight?: number | null;
   /** Inline Commit Details View summary/files split, 0–1; unset = 0.45. */

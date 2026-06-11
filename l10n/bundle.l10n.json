@@ -317,6 +317,8 @@
   "action.viewDiff": "View Diff",
   "action.viewFileAtRevision": "View File at this Revision",
   "action.viewDiffWithWorking": "View Diff with Working File",
+  "action.fileLayoutTree": "View Changes as File Tree",
+  "action.fileLayoutList": "View Changes as File List",
   "type.filePath": "File Path",
   "action.copyLink": "Copy Link to Clipboard",
   "type.link": "Link",

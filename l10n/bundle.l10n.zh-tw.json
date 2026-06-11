@@ -317,6 +317,8 @@
   "action.viewDiff": "View Diff",
   "action.viewFileAtRevision": "檢視此版本的檔案",
   "action.viewDiffWithWorking": "View Diff with Working File",
+  "action.fileLayoutTree": "以檔案樹檢視變更",
+  "action.fileLayoutList": "以檔案清單檢視變更",
   "type.filePath": "檔案路徑",
   "action.copyLink": "複製連結到剪貼簿",
   "type.link": "連結",

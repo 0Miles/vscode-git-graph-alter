@@ -3055,21 +3055,37 @@ class GitGraphView {
     fileTree: GitFolder
   ) {
     if (this.expandedCommit === null || this.expandedCommit.srcElem === null) return;
-    // Shared inner content: summary + file tree/list + close button.
+    const fileViewType = this.getFileViewType();
+    // Shared inner content: summary + file tree/list + right-hand toolbar
+    // (close button above the tree/list layout toggle).
     const inner =
       '<div id="commitDetailsSummary">' +
       summaryHtml +
       "</div>" +
       '<div id="commitDetailsFiles">' +
-      (this.config.fileViewType === "File List"
-        ? generateGitFileListHtml(fileChanges, this.config.enhancedAccessibility)
-        : generateGitFileTreeHtml(fileTree, fileChanges, this.config.enhancedAccessibility)) +
+      this.generateCdvFilesHtml(fileChanges, fileTree, fileViewType) +
       "</table></div>" +
       // Draggable summary/files divider and bottom height grip (inline only).
       '<div id="detailsDivider"></div>' +
       '<div id="detailsResizeGrip"></div>' +
       '<div id="commitDetailsClose">' +
       svgIcons.close +
+      "</div>" +
+      '<div id="cdvFileViewToggle">' +
+      '<div class="cdvFileViewBtn' +
+      (fileViewType === "File Tree" ? " active" : "") +
+      '" data-viewtype="File Tree" title="' +
+      l10n.fileLayoutTree +
+      '">' +
+      svgIcons.fileTreeView +
+      "</div>" +
+      '<div class="cdvFileViewBtn' +
+      (fileViewType === "File List" ? " active" : "") +
+      '" data-viewtype="File List" title="' +
+      l10n.fileLayoutList +
+      '">' +
+      svgIcons.fileListView +
+      "</div>" +
       "</div>";
 
     const docked = this.isCdvDocked();
@@ -3115,6 +3131,48 @@ class GitGraphView {
     document.getElementById("commitDetailsClose")!.addEventListener("click", () => {
       this.hideCommitDetails();
     });
+    addListenerToClass("cdvFileViewBtn", "click", (e) => {
+      const btn = <HTMLElement>(<Element>e.target).closest(".cdvFileViewBtn")!;
+      this.setFileViewType(<GG.FileViewType>btn.dataset.viewtype);
+    });
+    this.attachCdvFileListeners();
+    addListenerToClass("commitBodyHash", "click", (e) => {
+      let sourceElem = <HTMLElement>(<Element>e.target).closest(".commitBodyHash")!;
+      let row = document.querySelector<HTMLElement>(
+        'tr.commit[data-hash="' + sourceElem.dataset.hash + '"]'
+      );
+      if (row !== null) {
+        if (typeof row.scrollIntoView === "function") row.scrollIntoView({ block: "center" });
+        this.loadCommitDetails(row);
+      }
+    });
+    addListenerToClass("commitBodyLink", "contextmenu", (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      let sourceElem = <HTMLElement>(<Element>e.target).closest(".commitBodyLink")!;
+      showContextMenu(
+        <MouseEvent>e,
+        [
+          {
+            title: l10n.copyLink,
+            onClick: () => {
+              sendMessage({
+                command: "copyToClipboard",
+                type: "Link",
+                data: sourceElem.textContent ?? ""
+              });
+            }
+          }
+        ],
+        sourceElem
+      );
+    });
+  }
+
+  /** Wire up the file rows of the Commit Details View file tree/list. Called on
+   *  each render of the panel and again whenever the file section is re-rendered
+   *  by the tree/list layout toggle (the old rows are replaced wholesale). */
+  private attachCdvFileListeners() {
     addListenerToClass("gitFolder", "click", (e) => {
       let sourceElem = <HTMLElement>(<Element>e.target!).closest(".gitFolder");
       let parent = sourceElem.parentElement!;
@@ -3289,37 +3347,52 @@ class GitGraphView {
         filePath: decodeURIComponent(sourceElem.dataset.filepath!)
       });
     });
-    addListenerToClass("commitBodyHash", "click", (e) => {
-      let sourceElem = <HTMLElement>(<Element>e.target).closest(".commitBodyHash")!;
-      let row = document.querySelector<HTMLElement>(
-        'tr.commit[data-hash="' + sourceElem.dataset.hash + '"]'
-      );
-      if (row !== null) {
-        if (typeof row.scrollIntoView === "function") row.scrollIntoView({ block: "center" });
-        this.loadCommitDetails(row);
-      }
+  }
+
+  /** The Commit Details View file layout: the per-repo choice when one has
+   *  been made via the panel's toolbar, otherwise the global setting. */
+  private getFileViewType(): GG.FileViewType {
+    return this.gitRepos[this.currentRepo]?.fileViewType ?? this.config.fileViewType;
+  }
+
+  private generateCdvFilesHtml(
+    fileChanges: GitFileChange[],
+    fileTree: GitFolder,
+    fileViewType: GG.FileViewType
+  ): string {
+    return fileViewType === "File List"
+      ? generateGitFileListHtml(fileChanges, this.config.enhancedAccessibility)
+      : generateGitFileTreeHtml(fileTree, fileChanges, this.config.enhancedAccessibility);
+  }
+
+  /** Switch the open Commit Details View between the tree and list file
+   *  layouts: persist the choice for the repo, re-render the file section in
+   *  place, and reflect the active state on the toggle buttons. */
+  private setFileViewType(fileViewType: GG.FileViewType) {
+    if (fileViewType !== "File Tree" && fileViewType !== "File List") return;
+    if (fileViewType === this.getFileViewType()) return;
+    this.gitRepos[this.currentRepo].fileViewType = fileViewType;
+    this.saveState();
+    sendMessage({
+      command: "saveRepoState",
+      repo: this.currentRepo,
+      state: this.gitRepos[this.currentRepo]
     });
-    addListenerToClass("commitBodyLink", "contextmenu", (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      let sourceElem = <HTMLElement>(<Element>e.target).closest(".commitBodyLink")!;
-      showContextMenu(
-        <MouseEvent>e,
-        [
-          {
-            title: l10n.copyLink,
-            onClick: () => {
-              sendMessage({
-                command: "copyToClipboard",
-                type: "Link",
-                data: sourceElem.textContent ?? ""
-              });
-            }
-          }
-        ],
-        sourceElem
+
+    const expanded = this.expandedCommit;
+    const filesElem = document.getElementById("commitDetailsFiles");
+    if (expanded === null || expanded.fileTree === null || filesElem === null) return;
+    const fileChanges = expanded.compareFileChanges ?? expanded.commitDetails?.fileChanges;
+    if (fileChanges === undefined) return;
+    filesElem.innerHTML = this.generateCdvFilesHtml(fileChanges, expanded.fileTree, fileViewType);
+    this.attachCdvFileListeners();
+    const buttons = document.getElementsByClassName("cdvFileViewBtn");
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle(
+        "active",
+        (<HTMLElement>buttons[i]).dataset.viewtype === fileViewType
       );
-    });
+    }
   }
 }
 
