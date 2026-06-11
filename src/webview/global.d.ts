@@ -141,6 +141,9 @@ declare global {
     gitRepos: GG.GitRepoSet;
     gitBranches: string[];
     gitBranchHead: string | null;
+    // Optional: absent in states saved by versions that didn't persist remotes.
+    remotes?: string[];
+    pushDefault?: string | null;
     commits: GitCommitNode[];
     commitHead: string | null;
     avatars: AvatarImageCollection;
