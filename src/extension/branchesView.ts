@@ -5,7 +5,12 @@ import * as l10n from "@/l10n";
 import { classifyInactive, relativeAge } from "./branchActivity";
 import { BranchDataService } from "./branchDataService";
 import { BranchFilterStore } from "./branchFilterStore";
-import { type BranchTreeLeaf, type BranchTreeNode, buildGroupedBranchRoots } from "./branchTree";
+import {
+  type BranchTreeLeaf,
+  type BranchTreeNode,
+  buildGroupedBranchRoots,
+  REMOTE_PREFIX
+} from "./branchTree";
 
 /** Scheme of the opaque per-branch URIs given to inactive leaves so the
  *  FileDecorationProvider below can dim them. */
@@ -199,6 +204,39 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
     return nodes.map((node) => new BranchItem(node, this.repo!, this.selectionGen));
   }
 
+  /** Required by `treeView.reveal`: the chain is rebuilt by walking the current
+   *  roots for the element's node (nodes are compared structurally because
+   *  BranchItems are constructed fresh on every getChildren call). */
+  getParent(element: BranchItem): BranchItem | undefined {
+    if (this.repo === null) return undefined;
+    const chain = findNodeChain(this.roots, element.node);
+    if (chain === null || chain.length < 2) return undefined;
+    return new BranchItem(chain[chain.length - 2], this.repo, this.selectionGen);
+  }
+
+  /** Wrap the leaf for `ref` (if currently in the tree) so it can be revealed. */
+  findLeafItem(ref: string): BranchItem | null {
+    if (this.repo === null) return null;
+    const chain = findNodeChain(this.roots, (n) => n.type === "leaf" && n.branch === ref);
+    return chain === null
+      ? null
+      : new BranchItem(chain[chain.length - 1], this.repo, this.selectionGen);
+  }
+
+  /** All leaf refs currently in the tree (depth-first), for the search picker.
+   *  Reflects what the view shows: hidden remotes/inactive branches excluded. */
+  visibleLeaves(): BranchTreeLeaf[] {
+    const out: BranchTreeLeaf[] = [];
+    const walk = (nodes: BranchTreeNode[]) => {
+      for (const n of nodes) {
+        if (n.type === "leaf") out.push(n);
+        else walk(n.children);
+      }
+    };
+    walk(this.roots);
+    return out;
+  }
+
   /** Clear the visual selection by re-keying leaf items (VSCode drops selection
    *  of ids that no longer exist); folder expansion is preserved. */
   clearSelection(): void {
@@ -209,6 +247,36 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   dispose(): void {
     this._onDidChangeTreeData.dispose();
   }
+}
+
+/** Whether two nodes denote the same tree entry. Structural (not identity)
+ *  because the view may hold nodes from an earlier `roots` build. */
+function sameNode(a: BranchTreeNode, b: BranchTreeNode): boolean {
+  if (a.type !== b.type) return false;
+  if (a.type === "leaf") return a.branch === (b as BranchTreeLeaf).branch;
+  if (a.type === "folder") return a.path === (b as { path: string }).path;
+  return a.kind === (b as { kind: string }).kind;
+}
+
+/** Depth-first search for `target` (a node, or a predicate); returns the chain
+ *  of nodes from a root down to the match inclusive, or null when absent. */
+function findNodeChain(
+  roots: BranchTreeNode[],
+  target: BranchTreeNode | ((n: BranchTreeNode) => boolean)
+): BranchTreeNode[] | null {
+  const matches =
+    typeof target === "function" ? target : (n: BranchTreeNode) => sameNode(n, target);
+  const walk = (nodes: BranchTreeNode[], trail: BranchTreeNode[]): BranchTreeNode[] | null => {
+    for (const n of nodes) {
+      if (matches(n)) return [...trail, n];
+      if (n.type !== "leaf") {
+        const found = walk(n.children, [...trail, n]);
+        if (found !== null) return found;
+      }
+    }
+    return null;
+  };
+  return walk(roots, []);
 }
 
 /** The selected leaf branches in a TreeView selection (folders ignored). */
@@ -287,6 +355,49 @@ export function createBranchesView(deps: BranchesProviderDeps) {
     debounce = setTimeout(() => deps.filterStore.set(repo, branches), 200);
   });
 
+  /** QuickPick over the branches currently in the tree; picking one reveals it
+   *  (expanding its group/folders) and selects it, which drives the graph
+   *  filter through the normal selection pipeline. */
+  const searchBranch = async (): Promise<void> => {
+    if (provider.getRepo() === null) return;
+    const leaves = provider.visibleLeaves();
+    if (leaves.length === 0) return;
+    type BranchPick = vscode.QuickPickItem & { ref?: string };
+    const toPick = (leaf: BranchTreeLeaf): BranchPick => ({
+      label:
+        (leaf.isHead ? "$(check) " : leaf.isRemote ? "$(cloud) " : "$(git-branch) ") +
+        (leaf.isRemote ? leaf.branch.slice(REMOTE_PREFIX.length) : leaf.branch),
+      description: leaf.isHead ? l10n.t("branchView.current") : undefined,
+      ref: leaf.branch
+    });
+    // Same order as the tree: the remote section first, then local.
+    const remote = leaves.filter((leaf) => leaf.isRemote).map(toPick);
+    const local = leaves.filter((leaf) => !leaf.isRemote).map(toPick);
+    const items: BranchPick[] =
+      remote.length > 0 && local.length > 0
+        ? [
+            {
+              label: l10n.t("branchView.group.remote"),
+              kind: vscode.QuickPickItemKind.Separator
+            },
+            ...remote,
+            { label: l10n.t("branchView.group.local"), kind: vscode.QuickPickItemKind.Separator },
+            ...local
+          ]
+        : [...remote, ...local];
+    const picked = await vscode.window.showQuickPick(items, {
+      placeHolder: l10n.t("branchView.search.placeholder"),
+      matchOnDescription: true
+    });
+    if (picked?.ref === undefined) return;
+    const item = provider.findLeafItem(picked.ref);
+    if (item !== null) {
+      // select:true fires onDidChangeSelection, which sets the filter exactly
+      // as a manual click would (same debounce, same repo guard).
+      await treeView.reveal(item, { select: true, focus: true });
+    }
+  };
+
   return {
     setActiveRepo: (repo: string | null): void => {
       // Drop any pending write from the previous repo before switching.
@@ -299,6 +410,7 @@ export function createBranchesView(deps: BranchesProviderDeps) {
     getActiveRepo: (): string | null => provider.getRepo(),
     refresh: (): void => provider.refresh(),
     clearSelection: (): void => provider.clearSelection(),
+    searchBranch,
     dispose: (): void => {
       if (debounce !== undefined) clearTimeout(debounce);
       selectionSub.dispose();
