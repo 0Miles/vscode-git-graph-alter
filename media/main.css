@@ -757,18 +757,30 @@ body.tagLabelsRightAligned .gitRef.tag {
     --vscode-quickInput-foreground,
     var(--vscode-editorWidget-foreground, var(--vscode-menu-foreground))
   );
-  padding: 10px;
+  padding: 16px;
   left: 50%;
   top: 50%;
   transform: translateX(-50%) translateY(-50%);
   border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.5)));
   border-radius: 5px;
+  /* Plain alerts (message + buttons only) stay centred… */
   text-align: center;
-  max-width: 360px;
+  max-width: 400px;
   max-height: 80%;
   z-index: 10;
   box-shadow: 0 0 30px 5px var(--vscode-widget-shadow);
   overflow-y: auto;
+}
+/* …while form dialogs follow the native dialog layout: body text and controls
+   align left, buttons align right with the primary action outermost. */
+#dialog.active:has(table.dialogForm) {
+  text-align: left;
+}
+#dialog.active:has(table.dialogForm) .dialogButtons {
+  justify-content: flex-end;
+}
+#dialog.active:has(table.dialogForm) #dialogAction {
+  order: 2;
 }
 
 #dialog > table.dialogForm {
@@ -776,7 +788,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   width: 360px;
 }
 #dialog > table.dialogForm td {
-  padding-top: 10px;
+  padding-top: 8px;
   text-align: left;
   white-space: nowrap;
 }
@@ -784,14 +796,14 @@ body.tagLabelsRightAligned .gitRef.tag {
   width: 100%;
 }
 #dialog > table.dialogForm.multi td:nth-child(1) {
-  padding-right: 5px;
+  padding-right: 8px;
 }
 #dialog > table.dialogForm.single select {
   width: 100%;
 }
 #dialog > table.dialogForm.single .dialogFormCheckbox {
   display: inline-block;
-  text-align: center;
+  text-align: left;
   width: 100%;
 }
 #dialog > table.dialogForm input[type="text"] {
@@ -873,12 +885,19 @@ body.vscode-high-contrast-light #dialog > table.dialogForm select {
   background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
   color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
 }
+/* Button row: centred for plain alerts; form dialogs flip it to flex-end via
+   the :has() rule above. Spacing follows the native dialog conventions
+   (16px above the row, 8px between buttons, 4px/14px button padding). */
+#dialog .dialogButtons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
 #dialog .roundedBtn {
   display: inline-block;
-  line-height: 20px;
-  padding: 0 15px;
-  margin: 10px 6px 0 6px;
-  height: 22px;
+  line-height: 18px;
+  padding: 3px 14px;
 }
 #dialog .errorReason {
   display: inline-block;
