@@ -195,13 +195,13 @@ code {
   margin-right: 4px;
 }
 .commitSignature.good {
-  color: var(--vscode-gitDecoration-untrackedResourceForeground, #2ea043);
+  color: var(--vscode-gitDecoration-untrackedResourceForeground);
 }
 .commitSignature.unverified {
   color: var(--vscode-descriptionForeground);
 }
 .commitSignature.bad {
-  color: var(--vscode-errorForeground, #f14c4c);
+  color: var(--vscode-errorForeground);
 }
 #commitTable td {
   line-height: 24px;
@@ -253,9 +253,14 @@ code {
   vertical-align: top;
 }
 #commitDetails td {
-  /* A neutral panel tint (as upstream), not a list state — the details panel
-     is a surface, and the translucent grey reads correctly in any theme. */
-  background-color: rgba(128, 128, 128, 0.1);
+  /* A neutral panel tint (not a list state): a light foreground mix reads as
+     the same subtle surface tint in any theme, like upstream's translucent
+     grey but without a hard-coded colour. */
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground, rgb(128, 128, 128)) 8%,
+    transparent
+  );
   position: relative;
   font-size: 13px;
   line-height: 18px;
@@ -836,10 +841,17 @@ body.tagLabelsRightAligned .gitRef.tag {
   -webkit-appearance: none;
   background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
   color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23808080' d='M8 11L3 6h10z'/></svg>");
+  /* The chevron is an inline data URI, which cannot reference CSS variables —
+     so it is swapped per theme kind via the body classes VS Code injects,
+     using the native icon-foreground values (#C5C5C5 dark / #424242 light). */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23C5C5C5' d='M8 11L3 6h10z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 6px center;
   padding-right: 22px;
+}
+body.vscode-light #dialog > table.dialogForm select,
+body.vscode-high-contrast-light #dialog > table.dialogForm select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23424242' d='M8 11L3 6h10z'/></svg>");
 }
 #dialog > table.dialogForm select option {
   background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
@@ -872,7 +884,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   color: var(--vscode-descriptionForeground);
 }
 #dialog .conflictPrediction.hasConflict {
-  color: var(--vscode-errorForeground, #f14c4c);
+  color: var(--vscode-errorForeground);
 }
 #dialog .conflictPredictionList {
   margin: 4px 0 0 0;
@@ -968,12 +980,12 @@ body.tagLabelsRightAligned .gitRef.tag {
    so it matches VS Code's native disabled-button behaviour. */
 #dialogAction,
 #conflictContinue {
-  background-color: var(--vscode-button-background, #0e639c);
-  color: var(--vscode-button-foreground, #ffffff);
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
 }
 #dialog:not(.noInput):not(.inputInvalid) #dialogAction:hover,
 #conflictContinue:not(.disabled):hover {
-  background-color: var(--vscode-button-hoverBackground, #1177bb);
+  background-color: var(--vscode-button-hoverBackground);
 }
 /* Busy indicator while a refresh/load is in progress: spin the icon. */
 #refreshBtn.refreshing {
