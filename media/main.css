@@ -134,6 +134,14 @@ code {
   stroke-width: 1;
   stroke-opacity: 0.75;
 }
+/* Outer ring drawn behind the HEAD node: the same editor-background outline
+   normal nodes get, hugging the outside of the coloured stroke. */
+#commitGraph circle.currentHalo {
+  fill: none;
+  stroke: var(--vscode-editor-background);
+  stroke-width: 1;
+  stroke-opacity: 0.75;
+}
 #commitGraph path.shaddow {
   fill: none;
   stroke: var(--vscode-editor-background);
@@ -514,11 +522,14 @@ svg.fileIcon {
   /* Chip tint/border are derived from the theme foreground rather than
      panel-border: several themes (e.g. Dark Modern) define panel-border so
      close to the background that the chip outline would vanish, while a
-     foreground mix is guaranteed to contrast in any theme. */
+     foreground mix is guaranteed to contrast in any theme. The tint is mixed
+     onto the editor background (not transparent) so the chip is opaque —
+     identical look on normal rows, but the selection highlight underneath
+     can't bleed through it. */
   background-color: color-mix(
     in srgb,
     var(--vscode-editor-foreground, rgb(128, 128, 128)) 12%,
-    transparent
+    var(--vscode-editor-background)
   );
   border-radius: 5px;
   border: 1px solid
@@ -556,12 +567,12 @@ body.tagLabelsRightAligned .gitRef.tag {
 }
 .gitRef.stash {
   /* Keep the original faint-gold chip look, but derive the hue from the active
-     theme's warning colour (an opaque token) by mixing it down to a translucent
-     tint/border instead of using it solid. */
+     theme's warning colour (an opaque token); mixed onto the editor background
+     so the chip stays opaque like the base .gitRef. */
   background-color: color-mix(
     in srgb,
     var(--vscode-statusBarItem-warningBackground, rgb(255, 184, 0)) 15%,
-    transparent
+    var(--vscode-editor-background)
   );
   border-color: color-mix(
     in srgb,
