@@ -174,6 +174,18 @@
       },
       {
         "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.showInactive",
+        "title": "%command.branches.showInactive%",
+        "icon": "$(history)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.hideInactive",
+        "title": "%command.branches.hideInactive%",
+        "icon": "$(history)"
+      },
+      {
+        "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.checkout",
         "title": "%command.branches.checkout%"
       },
@@ -247,6 +259,16 @@
           "command": "git-graph-alter.branches.hideRemoteBranches",
           "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingRemote",
           "group": "navigation@2"
+        },
+        {
+          "command": "git-graph-alter.branches.showInactive",
+          "when": "view == git-graph-alter.branches && !git-graph-alter.branchView.showingInactive",
+          "group": "navigation@3"
+        },
+        {
+          "command": "git-graph-alter.branches.hideInactive",
+          "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingInactive",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -277,13 +299,42 @@
         }
       ],
       "commandPalette": [
-        { "command": "git-graph-alter.branches.showRemoteBranches", "when": "false" },
-        { "command": "git-graph-alter.branches.hideRemoteBranches", "when": "false" },
-        { "command": "git-graph-alter.branches.checkout", "when": "false" },
-        { "command": "git-graph-alter.branches.merge", "when": "false" },
-        { "command": "git-graph-alter.branches.rename", "when": "false" },
-        { "command": "git-graph-alter.branches.delete", "when": "false" },
-        { "command": "git-graph-alter.branches.copyName", "when": "false" }
+        {
+          "command": "git-graph-alter.branches.showRemoteBranches",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.hideRemoteBranches",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.showInactive",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.hideInactive",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.checkout",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.merge",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.rename",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.delete",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.copyName",
+          "when": "false"
+        }
       ]
     },
     "configuration": {
@@ -1019,6 +1070,31 @@
           "type": "boolean",
           "default": true,
           "description": "%config.showRemoteBranches%"
+        },
+        "git-graph-alter.branches.inactiveAfterDays": {
+          "type": "number",
+          "default": 30,
+          "minimum": 0,
+          "description": "%config.branches.inactiveAfterDays%"
+        },
+        "git-graph-alter.branches.alwaysShow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "main",
+            "master",
+            "develop",
+            "dev",
+            "trunk"
+          ],
+          "description": "%config.branches.alwaysShow%"
+        },
+        "git-graph-alter.branches.showInactiveByDefault": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.branches.showInactiveByDefault%"
         },
         "git-graph-alter.show.remoteHeads": {
           "type": "boolean",

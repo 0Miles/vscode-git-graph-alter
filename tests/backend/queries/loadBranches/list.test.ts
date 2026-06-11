@@ -170,4 +170,41 @@ describe("loadBranches", () => {
       isRepo: true
     });
   });
+
+  it("omits branchDates unless includeDates is requested", async () => {
+    const result = await loadBranches(simpleGit(simpleRepo), {
+      showRemoteBranches: false,
+      hard: false,
+      currentRepo: simpleRepo,
+      gitPath: "git"
+    });
+    expect(result.branchDates).toBeUndefined();
+  });
+
+  it("returns a last-commit time for every branch when includeDates is set", async () => {
+    const result = await loadBranches(simpleGit(simpleRepo), {
+      showRemoteBranches: false,
+      hard: false,
+      currentRepo: simpleRepo,
+      gitPath: "git",
+      includeDates: true
+    });
+    expect(result.branchDates).toBeDefined();
+    for (const branch of result.branches) {
+      expect(typeof result.branchDates![branch]).toBe("number");
+      expect(Number.isFinite(result.branchDates![branch])).toBe(true);
+    }
+  });
+
+  it("keys remote branch dates to match the remotes/ branch-list format", async () => {
+    const result = await loadBranches(simpleGit(repoWithRemote), {
+      showRemoteBranches: true,
+      hard: false,
+      currentRepo: repoWithRemote,
+      gitPath: "git",
+      includeDates: true
+    });
+    const remote = result.branches.find((b) => b.startsWith("remotes/origin/"))!;
+    expect(typeof result.branchDates![remote]).toBe("number");
+  });
 });

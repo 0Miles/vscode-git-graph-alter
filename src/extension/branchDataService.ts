@@ -23,18 +23,30 @@ export function createBranchDataService(deps: {
     getGitInstance: instanceFor,
 
     /** The repo's branches and checked-out head; `isRepo` is false when the
-     *  path isn't a git repository. */
+     *  path isn't a git repository. `branchDates` maps each ref to its last
+     *  commit time (unix seconds) for inactive-branch classification. */
     async listBranches(
       repo: string,
       showRemoteBranches: boolean
-    ): Promise<{ branches: string[]; head: string | null; isRepo: boolean }> {
+    ): Promise<{
+      branches: string[];
+      head: string | null;
+      isRepo: boolean;
+      branchDates: Record<string, number>;
+    }> {
       const result = await loadBranches(instanceFor(repo), {
         showRemoteBranches,
         hard: true,
         currentRepo: repo,
-        gitPath: deps.gitPath()
+        gitPath: deps.gitPath(),
+        includeDates: true
       });
-      return { branches: result.branches, head: result.head, isRepo: result.isRepo };
+      return {
+        branches: result.branches,
+        head: result.head,
+        isRepo: result.isRepo,
+        branchDates: result.branchDates ?? {}
+      };
     }
   };
 }
