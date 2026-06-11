@@ -295,17 +295,25 @@ class Vertex {
     let colour = this.isCommitted
       ? config.graphColours[this.onBranch.getColour() % config.graphColours.length]
       : "#808080";
-    circle.setAttribute("cx", (this.x * config.grid.x + config.grid.offsetX).toString());
-    circle.setAttribute(
-      "cy",
-      (
-        this.y * config.grid.y +
-        config.grid.offsetY +
-        (expandOffset ? config.grid.expandY : 0)
-      ).toString()
-    );
+    const cx = (this.x * config.grid.x + config.grid.offsetX).toString();
+    const cy = (
+      this.y * config.grid.y +
+      config.grid.offsetY +
+      (expandOffset ? config.grid.expandY : 0)
+    ).toString();
+    circle.setAttribute("cx", cx);
+    circle.setAttribute("cy", cy);
     circle.setAttribute("r", "4");
     if (this.isCurrent) {
+      // An outer ring hugging the coloured stroke, styled (via CSS) like the
+      // editor-background outline normal nodes get, so the HEAD node carries
+      // the same cut-out edge as every other node.
+      let halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      halo.setAttribute("cx", cx);
+      halo.setAttribute("cy", cy);
+      halo.setAttribute("r", "5.5");
+      halo.setAttribute("class", "currentHalo");
+      svg.appendChild(halo);
       circle.setAttribute("class", "current");
       circle.setAttribute("stroke", colour);
     } else {
