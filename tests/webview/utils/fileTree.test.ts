@@ -4,9 +4,11 @@ import type { GitFileChange } from "@/backend/types";
 import {
   alterGitFileTree,
   compactGitFileTree,
+  deserializeGitFileTree,
   generateGitFileListHtml,
   generateGitFileTree,
-  generateGitFileTreeHtml
+  generateGitFileTreeHtml,
+  serializeGitFileTree
 } from "@/webview/utils/fileTree";
 
 function file(newFilePath: string): GitFileChange {
@@ -81,6 +83,73 @@ describe("alterGitFileTree", () => {
   it("does nothing for an unknown folderPath", () => {
     const tree = generateGitFileTree([file("src/a.ts")]);
     expect(() => alterGitFileTree(tree, "nope", true)).not.toThrow();
+  });
+});
+
+describe("serializeGitFileTree / deserializeGitFileTree", () => {
+  beforeAll(() => {
+    // Rendering the revived tree reads localized strings from the global l10n.
+    (globalThis as { l10n?: unknown }).l10n = {
+      tooltipBinaryFile: "Binary",
+      tooltipRenamedTo: " renamed to ",
+      copyFilePath: "Copy",
+      openFile: "Open File",
+      viewFileAtRevision: "View File at this Revision",
+      viewDiffWithWorking: "View Diff with Working File",
+      tooltipAdditions: " additions",
+      tooltipAddition: " addition",
+      tooltipDeletions: " deletions",
+      tooltipDeletion: " deletion"
+    };
+  });
+
+  it("survives the JSON round-trip vscode.setState applies to webview state", () => {
+    const tree = generateGitFileTree([file("src/a.ts"), file("src/sub/b.ts"), file("top.ts")]);
+    compactGitFileTree(tree);
+    alterGitFileTree(tree, "src", false);
+
+    const revived = deserializeGitFileTree(JSON.parse(JSON.stringify(serializeGitFileTree(tree))));
+    expect(revived).not.toBeNull();
+    const src = revived!.children.get("src") as GitFolder;
+    expect(src.type).toBe("folder");
+    expect(src.open).toBe(false);
+    expect(src.children.get("a.ts")!.type).toBe("file");
+    // Rendering the revived tree iterates the rebuilt Maps without throwing.
+    const html = generateGitFileTreeHtml(
+      revived!,
+      [file("src/a.ts"), file("src/sub/b.ts"), file("top.ts")],
+      false
+    );
+    expect(html).toContain("a.ts");
+  });
+
+  it("keeps compacted folder nodes keyed and named by their joined path", () => {
+    const tree = generateGitFileTree([file("a/b/c.ts")]);
+    compactGitFileTree(tree);
+    const revived = deserializeGitFileTree(JSON.parse(JSON.stringify(serializeGitFileTree(tree))));
+    const folder = [...revived!.children.values()][0] as GitFolder;
+    expect(folder.name).toBe("a/b");
+    expect(folder.children.get("c.ts")!.type).toBe("file");
+  });
+
+  it("rejects a legacy tree whose Map children were collapsed to {} by JSON", () => {
+    const legacy = JSON.parse(JSON.stringify(generateGitFileTree([file("src/a.ts")])));
+    expect(legacy.children).toEqual({});
+    expect(deserializeGitFileTree(legacy)).toBeNull();
+  });
+
+  it("rejects null, undefined and malformed values", () => {
+    expect(deserializeGitFileTree(null)).toBeNull();
+    expect(deserializeGitFileTree(undefined)).toBeNull();
+    expect(
+      deserializeGitFileTree({
+        type: "folder",
+        name: "",
+        folderPath: "",
+        children: [{ type: "file", name: "x.ts" } as GitFile],
+        open: true
+      })
+    ).toBeNull();
   });
 });
 

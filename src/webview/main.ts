@@ -18,9 +18,11 @@ import { replaceEmojiShortcodes } from "./utils/emoji";
 import {
   alterGitFileTree,
   compactGitFileTree,
+  deserializeGitFileTree,
   generateGitFileListHtml,
   generateGitFileTree,
-  generateGitFileTreeHtml
+  generateGitFileTreeHtml,
+  serializeGitFileTree
 } from "./utils/fileTree";
 import {
   arraysEqual,
@@ -58,6 +60,32 @@ function splitRemoteRef(refName: string): { remote: string; branchOnRemote: stri
   const branchOnRemote = refName.substring(slashIndex + 1);
   if (branchOnRemote === "HEAD") return null;
   return { remote: refName.substring(0, slashIndex), branchOnRemote };
+}
+
+/** ExpandedCommit in the JSON-safe form saved with vscode.setState: DOM
+ *  references are dropped (renderTable re-binds them to the fresh rows) and
+ *  the file tree's Maps are converted to arrays. */
+function serializeExpandedCommit(
+  expandedCommit: ExpandedCommit | null
+): SerializedExpandedCommit | null {
+  if (expandedCommit === null) return null;
+  const { srcElem: _src, compareWithSrcElem: _cmp, fileTree, ...rest } = expandedCommit;
+  return { ...rest, fileTree: fileTree !== null ? serializeGitFileTree(fileTree) : null };
+}
+
+/** Revive a persisted ExpandedCommit. An invalid file tree (e.g. saved by a
+ *  version that persisted Maps, which JSON collapsed to {}) becomes NULL, so
+ *  renderTable re-requests the commit details instead of crashing. */
+function deserializeExpandedCommit(
+  expandedCommit: SerializedExpandedCommit | null
+): ExpandedCommit | null {
+  if (!expandedCommit) return null;
+  return {
+    ...expandedCommit,
+    srcElem: null,
+    compareWithSrcElem: null,
+    fileTree: deserializeGitFileTree(expandedCommit.fileTree)
+  };
 }
 
 class GitGraphView {
@@ -196,7 +224,7 @@ class GitGraphView {
       if (typeof this.gitRepos[prevState.currentRepo] !== "undefined") {
         this.currentRepo = prevState.currentRepo;
         this.maxCommits = prevState.maxCommits;
-        this.expandedCommit = prevState.expandedCommit;
+        this.expandedCommit = deserializeExpandedCommit(prevState.expandedCommit);
         this.avatars = prevState.avatars;
         // Restore remotes before rendering the saved commits: folding a remote
         // branch label into its local head needs the remote names to split
@@ -702,7 +730,7 @@ class GitGraphView {
       moreCommitsAvailable: this.moreCommitsAvailable,
       maxCommits: this.maxCommits,
       showRemoteBranches: this.showRemoteBranches,
-      expandedCommit: this.expandedCommit,
+      expandedCommit: serializeExpandedCommit(this.expandedCommit),
       columnVisibility: this.columnVisibility,
       alwaysAcceptCheckoutCommit: this.alwaysAcceptCheckoutCommit
     });
