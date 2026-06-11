@@ -5,7 +5,7 @@ import * as l10n from "@/l10n";
 import { classifyInactive, relativeAge } from "./branchActivity";
 import { BranchDataService } from "./branchDataService";
 import { BranchFilterStore } from "./branchFilterStore";
-import { type BranchTreeLeaf, type BranchTreeNode, buildBranchTree } from "./branchTree";
+import { type BranchTreeLeaf, type BranchTreeNode, buildGroupedBranchRoots } from "./branchTree";
 
 /** Scheme of the opaque per-branch URIs given to inactive leaves so the
  *  FileDecorationProvider below can dim them. */
@@ -30,12 +30,19 @@ class BranchItem extends vscode.TreeItem {
     selectionGen: number
   ) {
     super(
-      node.name,
-      node.type === "folder"
-        ? vscode.TreeItemCollapsibleState.Collapsed
-        : vscode.TreeItemCollapsibleState.None
+      node.type === "group" ? l10n.t("branchView.group." + node.kind) : node.name,
+      node.type === "group"
+        ? vscode.TreeItemCollapsibleState.Expanded
+        : node.type === "folder"
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None
     );
-    if (node.type === "folder") {
+    if (node.type === "group") {
+      // A stable id keeps the user's collapse choice across refreshes. No icon:
+      // the bare expanded label reads as a section heading.
+      this.id = repo + "::group::" + node.kind;
+      this.contextValue = "branch-group";
+    } else if (node.type === "folder") {
       // A stable folder id keeps expansion across refreshes (and across the
       // "Show All" selection reset, which only re-keys leaves).
       this.id = repo + "::folder::" + node.path;
@@ -164,8 +171,8 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
           selected: this.deps.filterStore.get(repo)
         });
         this.roots = showInactive
-          ? buildBranchTree(branches, head, { inactive, dates: branchDates })
-          : buildBranchTree(
+          ? buildGroupedBranchRoots(branches, head, { inactive, dates: branchDates })
+          : buildGroupedBranchRoots(
               branches.filter((b) => !inactive.has(b)),
               head
             );
@@ -186,7 +193,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
     const nodes =
       element === undefined
         ? this.roots
-        : element.node.type === "folder"
+        : element.node.type === "folder" || element.node.type === "group"
           ? element.node.children
           : [];
     return nodes.map((node) => new BranchItem(node, this.repo!, this.selectionGen));
