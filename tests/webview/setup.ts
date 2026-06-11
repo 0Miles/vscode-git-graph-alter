@@ -1,9 +1,9 @@
 import { getWebviewLocalizedStrings } from "@/extension/webviewL10n";
 import type * as GG from "@/types";
 
-export function createVscodeMock() {
+export function createVscodeMock(initialState: WebViewState | null = null) {
   const sent: GG.RequestMessage[] = [];
-  let state: WebViewState | null = null;
+  let state: WebViewState | null = initialState;
 
   const mock = {
     postMessage: (msg: GG.RequestMessage) => sent.push(msg),

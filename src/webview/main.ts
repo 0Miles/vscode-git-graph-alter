@@ -182,6 +182,11 @@ class GitGraphView {
         this.maxCommits = prevState.maxCommits;
         this.expandedCommit = prevState.expandedCommit;
         this.avatars = prevState.avatars;
+        // Restore remotes before rendering the saved commits: folding a remote
+        // branch label into its local head needs the remote names to split
+        // "<remote>/<branch>", otherwise the labels render separately.
+        this.remotes = prevState.remotes ?? [];
+        this.pushDefault = prevState.pushDefault ?? null;
         this.loadBranches(
           prevState.gitBranches,
           prevState.gitBranchHead,
@@ -523,8 +528,16 @@ class GitGraphView {
     });
   }
   public loadRemotes(remotes: string[], pushDefault: string | null) {
+    const changed = !arraysEqual(this.remotes, remotes, (a, b) => a === b);
     this.remotes = remotes;
     this.pushDefault = pushDefault;
+    // Branch labels are laid out using the remote names (to fold a remote into
+    // its matching local head), so commits rendered with stale remotes need a
+    // re-render. loadCommits won't do it: an unchanged commit list short-circuits.
+    if (changed && this.commits.length > 0) {
+      this.saveState();
+      this.render();
+    }
   }
   /** Render (or clear) the conflict-resolution banner for an in-progress
    *  operation. Handlers close over `conflictedFiles`, so a `data-index`
@@ -661,6 +674,8 @@ class GitGraphView {
       gitRepos: this.gitRepos,
       gitBranches: this.gitBranches,
       gitBranchHead: this.gitBranchHead,
+      remotes: this.remotes,
+      pushDefault: this.pushDefault,
       commits: this.commits,
       commitHead: this.commitHead,
       avatars: this.avatars,
