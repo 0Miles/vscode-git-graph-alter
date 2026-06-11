@@ -415,6 +415,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("git-graph-alter.branches.search", () =>
       branchesView.searchBranch()
     ),
+    vscode.commands.registerCommand("git-graph-alter.branches.refresh", () =>
+      branchesView.refresh()
+    ),
     vscode.commands.registerCommand("git-graph-alter.branches.showAll", () => {
       const repo = branchesView.getActiveRepo();
       if (repo === null) return;

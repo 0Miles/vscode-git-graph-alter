@@ -115,6 +115,7 @@
   "view.branches.welcome": "未选取存储库。\n[打开 Git Graph](command:git-graph-alter.view)",
   "command.branches.search": "搜索分支",
   "command.branches.showAll": "显示所有分支",
+  "command.branches.refresh": "刷新",
   "command.branches.showRemoteBranches": "显示远程分支",
   "command.branches.hideRemoteBranches": "隐藏远程分支",
   "command.branches.showInactive": "显示不活跃分支",
