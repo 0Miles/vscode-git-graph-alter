@@ -113,6 +113,7 @@
   "config.followSourceControlSelection": "啟用後，Git Graph 會跟隨在原始檔控制檢視中選取的存放庫，開啟或切換圖表至該存放庫。當選取多個存放庫時，圖表控制列會顯示存放庫下拉框供你選擇要顯示哪一個。預設：啟用",
   "view.branches": "分支",
   "view.branches.welcome": "未選取存放庫。\n[開啟 Git Graph](command:git-graph-alter.view)",
+  "command.branches.search": "搜尋 branch",
   "command.branches.showAll": "顯示所有 branch",
   "command.branches.showRemoteBranches": "顯示遠端 branch",
   "command.branches.hideRemoteBranches": "隱藏遠端 branch",

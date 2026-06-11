@@ -373,6 +373,9 @@ export function activate(context: vscode.ExtensionContext) {
       openGraphView(rawRepoPath)
     ),
     // --- Branches side-view commands ---
+    vscode.commands.registerCommand("git-graph-alter.branches.search", () =>
+      branchesView.searchBranch()
+    ),
     vscode.commands.registerCommand("git-graph-alter.branches.showAll", () => {
       const repo = branchesView.getActiveRepo();
       if (repo === null) return;

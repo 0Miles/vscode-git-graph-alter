@@ -113,6 +113,7 @@
   "config.followSourceControlSelection": "启用后，Git Graph 会跟随在源代码管理视图中选取的存储库，打开或切换图表到该存储库。当选取多个存储库时，图表控制列会显示存储库下拉框供你选择要显示哪一个。默认：启用",
   "view.branches": "分支",
   "view.branches.welcome": "未选取存储库。\n[打开 Git Graph](command:git-graph-alter.view)",
+  "command.branches.search": "搜索分支",
   "command.branches.showAll": "显示所有分支",
   "command.branches.showRemoteBranches": "显示远程分支",
   "command.branches.hideRemoteBranches": "隐藏远程分支",
