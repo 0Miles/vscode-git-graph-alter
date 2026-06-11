@@ -134,22 +134,6 @@ code {
   stroke-width: 1;
   stroke-opacity: 0.75;
 }
-/* The vertex on the selected (CDV-open) row mirrors the native SCM Graph,
-   where a node's halo always matches its row background — without this the
-   editor-background halo punches a dark hole into the selection colour. */
-#commitGraph circle.selectedRow.current {
-  fill: var(
-    --vscode-quickInputList-focusBackground,
-    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25))
-  );
-}
-#commitGraph circle.selectedRow:not(.current) {
-  stroke: var(
-    --vscode-quickInputList-focusBackground,
-    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25))
-  );
-  stroke-opacity: 1;
-}
 #commitGraph path.shaddow {
   fill: none;
   stroke: var(--vscode-editor-background);
@@ -527,24 +511,25 @@ svg.fileIcon {
   line-height: 18px;
   margin-top: 2px;
   margin-right: 5px;
-  /* Solid label background, mirroring the native SCM Graph ref pills — an
-     opaque surface keeps the chip legible on any row state (hover, quick-pick
-     selection) where a translucent tint would wash out. The border slot is
-     kept (transparent) so the active/stash variants can colour it without a
-     layout shift. */
-  background-color: var(
-    --vscode-scmGraph-historyItemHoverDefaultLabelBackground,
-    var(--vscode-badge-background, rgba(128, 128, 128, 0.4))
+  /* Chip tint/border are derived from the theme foreground rather than
+     panel-border: several themes (e.g. Dark Modern) define panel-border so
+     close to the background that the chip outline would vanish, while a
+     foreground mix is guaranteed to contrast in any theme. */
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground, rgb(128, 128, 128)) 12%,
+    transparent
   );
   border-radius: 5px;
-  border: 1px solid transparent;
+  border: 1px solid
+    color-mix(in srgb, var(--vscode-editor-foreground, rgb(128, 128, 128)) 55%, transparent);
   vertical-align: top;
   font-size: 12px;
   cursor: default;
   overflow: hidden;
-  /* Match the native pill text colour, and keep it even when the commit row
-     is muted or selected rather than inheriting the row text colour. */
-  color: var(--vscode-foreground, var(--vscode-editor-foreground));
+  /* Keep the normal label colour even when the commit row is muted (e.g. a
+     merge commit), rather than inheriting the dimmed row text colour. */
+  color: var(--vscode-editor-foreground);
 }
 .gitRef.active {
   border-color: var(--git-graph-color);
@@ -570,16 +555,13 @@ body.tagLabelsRightAligned .gitRef.tag {
   margin-right: 0;
 }
 .gitRef.stash {
-  /* Faint-gold variant of the solid pill: the theme's warning colour mixed
-     into the default label background (kept opaque so it stays legible on
-     hover/selection backgrounds). */
+  /* Keep the original faint-gold chip look, but derive the hue from the active
+     theme's warning colour (an opaque token) by mixing it down to a translucent
+     tint/border instead of using it solid. */
   background-color: color-mix(
     in srgb,
-    var(--vscode-statusBarItem-warningBackground, rgb(255, 184, 0)) 22%,
-    var(
-      --vscode-scmGraph-historyItemHoverDefaultLabelBackground,
-      var(--vscode-badge-background, rgb(96, 96, 96))
-    )
+    var(--vscode-statusBarItem-warningBackground, rgb(255, 184, 0)) 15%,
+    transparent
   );
   border-color: color-mix(
     in srgb,
