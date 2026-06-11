@@ -342,6 +342,10 @@ export function activate(context: vscode.ExtensionContext) {
         void openGraphView(selected[0]);
         return;
       }
+      // Persist first: a hidden panel drops the posts below (no live webview without
+      // retainContextWhenHidden) and reloads its HTML on reveal, booting from the stored
+      // lastActiveRepo — without this it would come back showing the previous repo.
+      extensionState.setLastActiveRepo(selected[0]);
       // `loadRepos` refreshes the repo set; `setRepo` then switches unconditionally (it alone won't,
       // as it keeps a still-valid current repo). Then reveal the panel to bring the graph to the
       // front and focus it on the newly-selected repo.
