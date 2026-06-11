@@ -343,7 +343,7 @@
   "branchView.age.week": "{0}w",
   "branchView.age.month": "{0}mo",
   "branchView.age.year": "{0}y",
-  "branchView.search.placeholder": "Search a branch to locate it and filter the graph",
+  "branchView.search.placeholder": "Search branches — check one or more to filter the graph (none = show all)",
   "branchView.group.remote": "Remote",
   "branchView.group.local": "Local"
 }

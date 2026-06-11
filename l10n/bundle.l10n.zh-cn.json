@@ -343,7 +343,7 @@
   "branchView.age.week": "{0} 周",
   "branchView.age.month": "{0} 个月",
   "branchView.age.year": "{0} 年",
-  "branchView.search.placeholder": "搜索分支（定位并设为图形筛选）",
+  "branchView.search.placeholder": "搜索分支 — 可勾选多个设为图形筛选（不勾＝显示全部）",
   "branchView.group.remote": "远端",
   "branchView.group.local": "本地"
 }

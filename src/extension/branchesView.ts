@@ -340,10 +340,19 @@ export function createBranchesView(deps: BranchesProviderDeps) {
   // "deselect all" (→ show all) apart from the empty selection VSCode emits when
   // the tree is rebuilt for a different repo (whose items have different ids).
   let lastSelectionRepo: string | null = null;
+  // Armed by the multi-pick search path before it clears the tree's visual
+  // selection: the resulting empty-selection event must not clobber the filter
+  // it just wrote with "show all".
+  let suppressEmptySelectionOnce = false;
   const selectionSub = treeView.onDidChangeSelection((e) => {
     const repo = provider.getRepo();
     if (repo === null) return;
     const branches = selectedBranchRefs([...e.selection]);
+    if (branches.length === 0 && suppressEmptySelectionOnce) {
+      suppressEmptySelectionOnce = false;
+      lastSelectionRepo = repo;
+      return;
+    }
     // Ignore the empty-selection event that follows a repo switch; honouring it
     // would clobber the new repo's filter with "show all".
     if (branches.length === 0 && repo !== lastSelectionRepo) {
@@ -355,20 +364,27 @@ export function createBranchesView(deps: BranchesProviderDeps) {
     debounce = setTimeout(() => deps.filterStore.set(repo, branches), 200);
   });
 
-  /** QuickPick over the branches currently in the tree; picking one reveals it
-   *  (expanding its group/folders) and selects it, which drives the graph
-   *  filter through the normal selection pipeline. */
+  /** QuickPick over the branches currently in the tree, with one checkbox per
+   *  branch (the current filter pre-checked) — confirming makes the checked set
+   *  the graph filter. A single checked branch additionally reveals + selects
+   *  it in the tree (the normal selection pipeline); checking none shows all.
+   *  TreeView offers no API to set a multi-selection programmatically, so the
+   *  multi case writes the filter store directly and clears the tree's visual
+   *  selection instead. */
   const searchBranch = async (): Promise<void> => {
-    if (provider.getRepo() === null) return;
+    const repo = provider.getRepo();
+    if (repo === null) return;
     const leaves = provider.visibleLeaves();
     if (leaves.length === 0) return;
+    const currentFilter = deps.filterStore.get(repo);
     type BranchPick = vscode.QuickPickItem & { ref?: string };
     const toPick = (leaf: BranchTreeLeaf): BranchPick => ({
       label:
         (leaf.isHead ? "$(check) " : leaf.isRemote ? "$(cloud) " : "$(git-branch) ") +
         (leaf.isRemote ? leaf.branch.slice(REMOTE_PREFIX.length) : leaf.branch),
       description: leaf.isHead ? l10n.t("branchView.current") : undefined,
-      ref: leaf.branch
+      ref: leaf.branch,
+      picked: currentFilter.includes(leaf.branch)
     });
     // Same order as the tree: the remote section first, then local.
     const remote = leaves.filter((leaf) => leaf.isRemote).map(toPick);
@@ -387,14 +403,33 @@ export function createBranchesView(deps: BranchesProviderDeps) {
         : [...remote, ...local];
     const picked = await vscode.window.showQuickPick(items, {
       placeHolder: l10n.t("branchView.search.placeholder"),
-      matchOnDescription: true
+      matchOnDescription: true,
+      canPickMany: true
     });
-    if (picked?.ref === undefined) return;
-    const item = provider.findLeafItem(picked.ref);
-    if (item !== null) {
-      // select:true fires onDidChangeSelection, which sets the filter exactly
-      // as a manual click would (same debounce, same repo guard).
-      await treeView.reveal(item, { select: true, focus: true });
+    if (picked === undefined) return; // cancelled
+    const refs = picked.map((p) => p.ref).filter((r): r is string => r !== undefined);
+    if (refs.length === 1) {
+      const item = provider.findLeafItem(refs[0]);
+      if (item !== null) {
+        // select:true fires onDidChangeSelection, which sets the filter exactly
+        // as a manual click would (same debounce, same repo guard).
+        await treeView.reveal(item, { select: true, focus: true });
+        return;
+      }
+    }
+    // Zero (= show all) or several branches: write the filter directly and
+    // clear the visual selection, swallowing the empty-selection event it emits
+    // so it can't overwrite the filter just written.
+    if (debounce !== undefined) {
+      clearTimeout(debounce);
+      debounce = undefined;
+    }
+    deps.filterStore.set(repo, refs);
+    if (treeView.selection.length > 0) suppressEmptySelectionOnce = true;
+    provider.clearSelection();
+    if (refs.length > 0) {
+      const first = provider.findLeafItem(refs[0]);
+      if (first !== null) await treeView.reveal(first, { select: false, focus: false });
     }
   };
 
