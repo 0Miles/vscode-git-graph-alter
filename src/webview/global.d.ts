@@ -119,6 +119,26 @@ declare global {
 
   type GitFolderOrFile = GitFolder | GitFile;
 
+  /** JSON-safe form of GitFolder as persisted in WebViewState: vscode.setState
+   *  JSON-serializes the state, which would collapse a Map to {}. */
+  interface SerializedGitFolder {
+    type: "folder";
+    name: string;
+    folderPath: string;
+    children: (SerializedGitFolder | GitFile)[];
+    open: boolean;
+  }
+
+  /** ExpandedCommit as persisted in WebViewState: DOM references are dropped
+   *  (they are re-bound to the freshly rendered rows on restore) and the file
+   *  tree is stored in its serialized form. */
+  interface SerializedExpandedCommit extends Omit<
+    ExpandedCommit,
+    "srcElem" | "compareWithSrcElem" | "fileTree"
+  > {
+    fileTree: SerializedGitFolder | null;
+  }
+
   interface Point {
     x: number;
     y: number;
@@ -157,7 +177,7 @@ declare global {
     moreCommitsAvailable: boolean;
     maxCommits: number;
     showRemoteBranches: boolean;
-    expandedCommit: ExpandedCommit | null;
+    expandedCommit: SerializedExpandedCommit | null;
     columnVisibility: { date: boolean; author: boolean; commit: boolean };
     alwaysAcceptCheckoutCommit: boolean;
   }

@@ -61,6 +61,57 @@ export function compactGitFileTree(folder: GitFolder): void {
   }
 }
 
+/**
+ * Convert a file tree to the JSON-safe form persisted in WebViewState:
+ * vscode.setState JSON-serializes the state, which would collapse the Map of
+ * children to {} and lose the tree.
+ */
+export function serializeGitFileTree(folder: GitFolder): SerializedGitFolder {
+  const children: (SerializedGitFolder | GitFile)[] = [];
+  for (const child of folder.children.values()) {
+    children.push(child.type === "folder" ? serializeGitFileTree(child) : child);
+  }
+  return {
+    type: "folder",
+    name: folder.name,
+    folderPath: folder.folderPath,
+    children,
+    open: folder.open
+  };
+}
+
+/**
+ * Rebuild a file tree from its persisted form. Returns NULL when the value
+ * isn't a valid serialized tree — in particular for states saved by versions
+ * that persisted the Map directly (JSON collapsed it to {}) — so callers fall
+ * back to re-requesting the commit details instead of crashing on restore.
+ */
+export function deserializeGitFileTree(
+  folder: SerializedGitFolder | null | undefined
+): GitFolder | null {
+  if (!folder || folder.type !== "folder" || !Array.isArray(folder.children)) return null;
+  const children = new Map<string, GitFolderOrFile>();
+  for (const child of folder.children) {
+    if (!child || typeof child.name !== "string") return null;
+    if (child.type === "folder") {
+      const sub = deserializeGitFileTree(child);
+      if (sub === null) return null;
+      children.set(child.name, sub);
+    } else if (child.type === "file" && typeof child.index === "number") {
+      children.set(child.name, child);
+    } else {
+      return null;
+    }
+  }
+  return {
+    type: "folder",
+    name: folder.name,
+    folderPath: folder.folderPath,
+    children,
+    open: folder.open !== false
+  };
+}
+
 /** Order a folder's children: sub-folders first, then files, each group sorted
  *  by name (code-point order, matching the flat File List view). */
 function sortedChildren(folder: GitFolder): GitFolderOrFile[] {

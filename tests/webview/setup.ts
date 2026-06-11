@@ -1,15 +1,22 @@
 import { getWebviewLocalizedStrings } from "@/extension/webviewL10n";
 import type * as GG from "@/types";
 
+// The real vscode.setState persists state as JSON, so anything that doesn't
+// survive a JSON round-trip (Map, Set, DOM elements) is silently lost. Model
+// that here, otherwise tests restore live objects the real webview never gets.
+function jsonRoundTrip<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export function createVscodeMock(initialState: WebViewState | null = null) {
   const sent: GG.RequestMessage[] = [];
-  let state: WebViewState | null = initialState;
+  let state: WebViewState | null = initialState === null ? null : jsonRoundTrip(initialState);
 
   const mock = {
     postMessage: (msg: GG.RequestMessage) => sent.push(msg),
     getState: () => state,
     setState: (s: WebViewState) => {
-      state = s;
+      state = jsonRoundTrip(s);
     }
   };
 
