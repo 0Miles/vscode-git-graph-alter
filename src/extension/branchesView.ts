@@ -32,7 +32,8 @@ class BranchItem extends vscode.TreeItem {
   constructor(
     public readonly node: BranchTreeNode,
     public readonly repo: string,
-    selectionGen: number
+    selectionGen: number,
+    folderGen: number
   ) {
     super(
       node.type === "group" ? l10n.t("branchView.group." + node.kind) : node.name,
@@ -43,14 +44,16 @@ class BranchItem extends vscode.TreeItem {
           : vscode.TreeItemCollapsibleState.None
     );
     if (node.type === "group") {
-      // A stable id keeps the user's collapse choice across refreshes. No icon:
-      // the bare expanded label reads as a section heading.
+      // A stable id keeps the user's collapse choice across refreshes — the
+      // Collapse button leaves group headings alone (it only bumps folderGen).
       this.id = repo + "::group::" + node.kind;
       this.contextValue = "branch-group";
     } else if (node.type === "folder") {
-      // A stable folder id keeps expansion across refreshes (and across the
-      // "Show All" selection reset, which only re-keys leaves).
-      this.id = repo + "::folder::" + node.path;
+      // Within a folder generation the id is stable, keeping expansion across
+      // refreshes (and across the "Show All" selection reset, which only
+      // re-keys leaves). The Collapse button bumps the generation: every folder
+      // re-renders under a fresh id, falling back to Collapsed.
+      this.id = repo + "::folder::" + folderGen + "::" + node.path;
       this.contextValue = "branch-folder";
       this.iconPath = vscode.ThemeIcon.Folder;
     } else {
@@ -113,6 +116,9 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   private fetchId = 0;
   // Bumped by "Show All" to re-key leaf items and so clear the visual selection.
   private selectionGen = 0;
+  // Bumped by the Collapse button to re-key folder items: fresh ids fall back
+  // to Collapsed while the group headings (stable ids) stay expanded.
+  private folderGen = 0;
 
   constructor(private readonly deps: BranchesProviderDeps) {}
 
@@ -201,7 +207,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
         : element.node.type === "folder" || element.node.type === "group"
           ? element.node.children
           : [];
-    return nodes.map((node) => new BranchItem(node, this.repo!, this.selectionGen));
+    return nodes.map((node) => new BranchItem(node, this.repo!, this.selectionGen, this.folderGen));
   }
 
   /** Required by `treeView.reveal`: the chain is rebuilt by walking the current
@@ -211,7 +217,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
     if (this.repo === null) return undefined;
     const chain = findNodeChain(this.roots, element.node);
     if (chain === null || chain.length < 2) return undefined;
-    return new BranchItem(chain[chain.length - 2], this.repo, this.selectionGen);
+    return new BranchItem(chain[chain.length - 2], this.repo, this.selectionGen, this.folderGen);
   }
 
   /** Wrap the leaf for `ref` (if currently in the tree) so it can be revealed. */
@@ -220,7 +226,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
     const chain = findNodeChain(this.roots, (n) => n.type === "leaf" && n.branch === ref);
     return chain === null
       ? null
-      : new BranchItem(chain[chain.length - 1], this.repo, this.selectionGen);
+      : new BranchItem(chain[chain.length - 1], this.repo, this.selectionGen, this.folderGen);
   }
 
   /** All leaf refs currently in the tree (depth-first), for the search picker.
@@ -241,6 +247,15 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
    *  of ids that no longer exist); folder expansion is preserved. */
   clearSelection(): void {
     this.selectionGen++;
+    this._onDidChangeTreeData.fire();
+  }
+
+  /** Collapse every folder while keeping the Remote/Local group headings
+   *  expanded, by re-keying the folders (fresh ids default to Collapsed; the
+   *  groups' stable ids keep their state). Replaces the native Collapse All,
+   *  which would fold the headings too. */
+  collapseFolders(): void {
+    this.folderGen++;
     this._onDidChangeTreeData.fire();
   }
 
@@ -320,7 +335,9 @@ export function createBranchesView(deps: BranchesProviderDeps) {
   const treeView = vscode.window.createTreeView<BranchItem>("git-graph-alter.branches", {
     treeDataProvider: provider,
     canSelectMany: true,
-    showCollapseAll: true
+    // The native Collapse All would fold the Remote/Local group headings too;
+    // a custom title button (branches.collapseAll) collapses only the folders.
+    showCollapseAll: false
   });
 
   // Dims inactive branch leaves (which carry an `INACTIVE_SCHEME` resourceUri);
@@ -445,6 +462,7 @@ export function createBranchesView(deps: BranchesProviderDeps) {
     getActiveRepo: (): string | null => provider.getRepo(),
     refresh: (): void => provider.refresh(),
     clearSelection: (): void => provider.clearSelection(),
+    collapseFolders: (): void => provider.collapseFolders(),
     searchBranch,
     dispose: (): void => {
       if (debounce !== undefined) clearTimeout(debounce);

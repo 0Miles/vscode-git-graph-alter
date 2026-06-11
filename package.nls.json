@@ -131,5 +131,6 @@
   "command.branches.createPullRequest": "Create Pull Request…",
   "command.branches.pull": "Pull into Current Branch…",
   "command.branches.fetchIntoLocal": "Fetch into Local Branch…",
-  "command.branches.deleteRemote": "Delete Remote Branch…"
+  "command.branches.deleteRemote": "Delete Remote Branch…",
+  "command.branches.collapseAll": "Collapse Branches"
 }
