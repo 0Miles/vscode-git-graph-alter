@@ -120,8 +120,16 @@
   "command.branches.showInactive": "Show Inactive Branches",
   "command.branches.hideInactive": "Hide Inactive Branches",
   "command.branches.checkout": "Checkout",
-  "command.branches.merge": "Merge into Current Branch",
+  "command.branches.merge": "Merge into Current Branch…",
   "command.branches.rename": "Rename Branch…",
   "command.branches.delete": "Delete Branch…",
-  "command.branches.copyName": "Copy Branch Name"
+  "command.branches.copyName": "Copy Branch Name",
+  "command.branches.rebase": "Rebase Current Branch on Branch…",
+  "command.branches.fastForward": "Fast-Forward to Upstream",
+  "command.branches.push": "Push Branch…",
+  "command.branches.createArchive": "Create Archive…",
+  "command.branches.createPullRequest": "Create Pull Request…",
+  "command.branches.pull": "Pull into Current Branch…",
+  "command.branches.fetchIntoLocal": "Fetch into Local Branch…",
+  "command.branches.deleteRemote": "Delete Remote Branch…"
 }

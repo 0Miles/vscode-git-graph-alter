@@ -354,6 +354,36 @@ export type ResponseSetShowRemoteBranches = {
   value: boolean;
 };
 
+/** A branch action the Branches side-view delegates to the graph webview, so
+ *  the exact same context-menu flow (dialogs included) runs there. */
+export type RefAction =
+  | "checkout"
+  | "rename"
+  | "delete"
+  | "merge"
+  | "rebase"
+  | "fastForward"
+  | "push"
+  | "createArchive"
+  | "createPullRequest"
+  | "pull"
+  | "fetchIntoLocal"
+  | "deleteRemote";
+
+export type ResponseRunRefAction = {
+  command: "runRefAction";
+  repo: string;
+  /** Webview-format ref: "main" for local, "origin/feature" for remote
+   *  (the "remotes/" prefix already stripped). */
+  ref: string;
+  isRemote: boolean;
+  action: RefAction;
+  /** Monotonic per-session sequence number. The webview ignores a message whose
+   *  seq it has already executed, so the host may deliver the same action over
+   *  two paths (direct post + post-reload flush) without it running twice. */
+  seq: number;
+};
+
 export type RequestMessage =
   | ActionRequest
   | QueryRequest
@@ -392,4 +422,5 @@ export type ResponseMessage =
   | ResponseRefresh
   | ResponseSetRepo
   | ResponseSetBranchFilter
-  | ResponseSetShowRemoteBranches;
+  | ResponseSetShowRemoteBranches
+  | ResponseRunRefAction;

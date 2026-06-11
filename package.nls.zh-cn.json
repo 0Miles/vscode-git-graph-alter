@@ -120,8 +120,16 @@
   "command.branches.showInactive": "显示不活跃分支",
   "command.branches.hideInactive": "隐藏不活跃分支",
   "command.branches.checkout": "检出",
-  "command.branches.merge": "合并到当前分支",
+  "command.branches.merge": "合并到当前分支…",
   "command.branches.rename": "重命名分支…",
   "command.branches.delete": "删除分支…",
-  "command.branches.copyName": "复制分支名称"
+  "command.branches.copyName": "复制分支名称",
+  "command.branches.rebase": "将当前分支 rebase 到此分支…",
+  "command.branches.fastForward": "快进到 upstream",
+  "command.branches.push": "推送分支…",
+  "command.branches.createArchive": "创建归档…",
+  "command.branches.createPullRequest": "创建 Pull Request…",
+  "command.branches.pull": "拉取到当前分支…",
+  "command.branches.fetchIntoLocal": "Fetch 到本地分支…",
+  "command.branches.deleteRemote": "删除远程分支…"
 }

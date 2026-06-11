@@ -49,6 +49,17 @@ import {
 import { svgIcons } from "./utils/icons";
 import { getVSCodeStyle, sendMessage, vscode } from "./utils/vscode";
 
+/** Split a remote ref "<remote>/<branch>" on its first slash. Null for the
+ *  symbolic "<remote>/HEAD" ref and for names without a slash — the callers
+ *  offer no remote-branch operations on those. */
+function splitRemoteRef(refName: string): { remote: string; branchOnRemote: string } | null {
+  const slashIndex = refName.indexOf("/");
+  if (slashIndex === -1) return null;
+  const branchOnRemote = refName.substring(slashIndex + 1);
+  if (branchOnRemote === "HEAD") return null;
+  return { remote: refName.substring(0, slashIndex), branchOnRemote };
+}
+
 class GitGraphView {
   private gitRepos: GG.GitRepoSet;
   private gitBranches: string[] = [];
@@ -72,6 +83,11 @@ class GitGraphView {
   // The last branch-deletion request, so a failed non-force delete can offer a
   // one-click force delete.
   private pendingDeleteBranch: { branchName: string; deleteOnRemotes: boolean } | null = null;
+  // A branch action delegated by the Branches side-view, held until this view
+  // shows the right repo with its data loaded. lastRefActionSeq dedupes the
+  // host's two delivery paths (direct post + post-reload flush).
+  private pendingRefAction: GG.ResponseRunRefAction | null = null;
+  private lastRefActionSeq = 0;
 
   private graph: Graph;
   private config: Config;
@@ -477,6 +493,8 @@ class GitGraphView {
       this.loadCommitsCallback(changes);
       this.loadCommitsCallback = null;
     }
+    // A side-view-delegated action may have been waiting for this load.
+    this.tryRunPendingRefAction();
   }
 
   public loadAvatar(email: string, image: string) {
@@ -1747,31 +1765,13 @@ class GitGraphView {
             menu.push({
               title: l10n.checkoutBranch,
               visible: cmv.branch.checkout,
-              onClick: () => this.checkoutBranchAction(sourceElem, refName)
+              onClick: () => this.checkoutBranchAction(refName, false)
             });
           }
           menu.push({
             title: l10n.renameBranch + ELLIPSIS,
             visible: cmv.branch.rename,
-            onClick: () => {
-              showRefInputDialog(
-                l10n.dialogRenameBranchTitle.replace(
-                  "{0}",
-                  "<b><i>" + escapeHtml(refName) + "</i></b>"
-                ),
-                refName,
-                l10n.dialogRenameBranchSubmit,
-                (newName) => {
-                  sendMessage({
-                    command: "renameBranch",
-                    repo: this.currentRepo!,
-                    oldName: refName,
-                    newName: newName
-                  });
-                },
-                null
-              );
-            }
+            onClick: () => this.renameBranchAction(refName)
           });
           if (this.remotes.length > 0) {
             menu.push({
@@ -1792,53 +1792,7 @@ class GitGraphView {
               {
                 title: l10n.deleteBranch + ELLIPSIS,
                 visible: cmv.branch.delete,
-                onClick: () => {
-                  const confirmMsg = l10n.dialogDeleteConfirm
-                    .replace("{0}", l10n.labelBranch)
-                    .replace("{1}", "<b><i>" + escapeHtml(refName) + "</i></b>");
-                  if (this.remotes.length > 0) {
-                    // Offer to also delete the branch on the remote(s) it exists on.
-                    showFormDialog(
-                      confirmMsg,
-                      [
-                        {
-                          type: "checkbox",
-                          name: l10n.dialogDeleteForceDelete,
-                          value: this.config.dialogDeleteBranchForceDelete,
-                          remember: true
-                        },
-                        {
-                          type: "checkbox",
-                          name: l10n.dialogDeleteOnRemotes,
-                          value: false,
-                          remember: true
-                        }
-                      ],
-                      l10n.deleteBranch,
-                      (values) => {
-                        this.sendDeleteBranch(
-                          refName,
-                          values[0] === "checked",
-                          values[1] === "checked"
-                        );
-                      },
-                      null,
-                      "deleteBranch"
-                    );
-                  } else {
-                    showCheckboxDialog(
-                      confirmMsg,
-                      l10n.dialogDeleteForceDelete,
-                      this.config.dialogDeleteBranchForceDelete,
-                      l10n.deleteBranch,
-                      (forceDelete) => {
-                        this.sendDeleteBranch(refName, forceDelete, false);
-                      },
-                      null,
-                      "deleteBranch"
-                    );
-                  }
-                }
+                onClick: () => this.deleteBranchAction(refName)
               },
               {
                 title: l10n.merge + ELLIPSIS,
@@ -1848,38 +1802,12 @@ class GitGraphView {
               {
                 title: l10n.rebaseOnBranch + ELLIPSIS,
                 visible: cmv.branch.rebase,
-                onClick: () => {
-                  showConfirmationDialog(
-                    l10n.dialogRebaseConfirm
-                      .replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>")
-                      .replace("{1}", this.currentBranchLabel()),
-                    () => {
-                      sendMessage({ command: "rebaseOn", repo: this.currentRepo!, obj: refName });
-                      showActionRunningDialog(l10n.rebasing);
-                    },
-                    null
-                  );
-                }
+                onClick: () => this.rebaseOnBranchAction(refName)
               },
               {
                 title: l10n.fastForwardBranch,
                 visible: true,
-                onClick: () => {
-                  showConfirmationDialog(
-                    l10n.dialogFastForwardConfirm.replace(
-                      "{0}",
-                      "<b><i>" + escapeHtml(refName) + "</i></b>"
-                    ),
-                    () => {
-                      sendMessage({
-                        command: "fastForwardBranch",
-                        repo: this.currentRepo!,
-                        branchName: refName
-                      });
-                    },
-                    null
-                  );
-                }
+                onClick: () => this.fastForwardBranchAction(refName)
               }
             );
           }
@@ -1888,7 +1816,7 @@ class GitGraphView {
             {
               title: l10n.checkoutBranch + ELLIPSIS,
               visible: cmv.remoteBranch.checkout,
-              onClick: () => this.checkoutBranchAction(sourceElem, refName)
+              onClick: () => this.checkoutBranchAction(refName, true)
             },
             {
               title: l10n.merge + ELLIPSIS,
@@ -1898,91 +1826,21 @@ class GitGraphView {
           ];
           // Remote branch refs are "<remote>/<branch>"; offer to delete the
           // branch on its remote (but not the symbolic "<remote>/HEAD" ref).
-          let slashIndex = refName.indexOf("/");
-          if (slashIndex > -1 && refName.substring(slashIndex + 1) !== "HEAD") {
-            let remote = refName.substring(0, slashIndex),
-              branchOnRemote = refName.substring(slashIndex + 1);
+          if (splitRemoteRef(refName) !== null) {
             menu.push({
               title: l10n.pullIntoCurrentBranch + ELLIPSIS,
               visible: cmv.remoteBranch.pull,
-              onClick: () => {
-                showConfirmationDialog(
-                  l10n.dialogPullConfirm
-                    .replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>")
-                    .replace("{1}", this.currentBranchLabel()),
-                  () => {
-                    sendMessage({
-                      command: "pullBranch",
-                      repo: this.currentRepo!,
-                      remote: remote,
-                      branchName: branchOnRemote
-                    });
-                    showActionRunningDialog(l10n.pulling);
-                  },
-                  null
-                );
-              }
+              onClick: () => this.pullRemoteBranchAction(refName)
             });
             menu.push({
               title: l10n.fetchIntoLocalBranch + ELLIPSIS,
               visible: cmv.remoteBranch.fetch,
-              onClick: () => {
-                showFormDialog(
-                  l10n.dialogFetchIntoLocalBranchTitle.replace(
-                    "{0}",
-                    "<b><i>" + escapeHtml(refName) + "</i></b>"
-                  ),
-                  [
-                    {
-                      type: "text-ref",
-                      name: l10n.dialogFetchIntoLocalBranchName,
-                      default: branchOnRemote
-                    },
-                    {
-                      type: "checkbox",
-                      name: l10n.dialogFetchIntoLocalBranchForce,
-                      value: false,
-                      remember: true
-                    }
-                  ],
-                  l10n.dialogFetchIntoLocalBranchSubmit,
-                  (values) => {
-                    sendMessage({
-                      command: "fetchIntoLocalBranch",
-                      repo: this.currentRepo!,
-                      remote: remote,
-                      remoteBranch: branchOnRemote,
-                      localBranch: values[0],
-                      force: values[1] === "checked"
-                    });
-                    showActionRunningDialog(l10n.fetchingIntoLocalBranch);
-                  },
-                  sourceElem,
-                  "fetchIntoLocalBranch"
-                );
-              }
+              onClick: () => this.fetchIntoLocalBranchAction(refName, sourceElem)
             });
             menu.push({
               title: l10n.deleteRemoteBranch + ELLIPSIS,
               visible: cmv.remoteBranch.delete,
-              onClick: () => {
-                showConfirmationDialog(
-                  l10n.dialogDeleteRemoteBranchConfirm.replace(
-                    "{0}",
-                    "<b><i>" + escapeHtml(refName) + "</i></b>"
-                  ),
-                  () => {
-                    sendMessage({
-                      command: "deleteRemoteBranch",
-                      repo: this.currentRepo!,
-                      remote: remote,
-                      branchName: branchOnRemote
-                    });
-                    showActionRunningDialog(l10n.deletingRemoteBranch);
-                  },
-                  null
-                );
-              }
+              onClick: () => this.deleteRemoteBranchAction(refName)
             });
           }
         }
@@ -1990,24 +1848,8 @@ class GitGraphView {
         if (this.remotes.length > 0) {
           menu.push({
             title: l10n.createPullRequest + ELLIPSIS,
-            onClick: () => {
-              let remote = this.defaultPushRemote();
-              let branch = refName;
-              if (sourceElem.classList.contains("remote")) {
-                // refName is "<remote>/<branch>"; split off the remote.
-                const r = this.remotes.find((rm) => refName === rm || refName.startsWith(rm + "/"));
-                if (r !== undefined) {
-                  remote = r;
-                  branch = refName.slice(r.length + 1);
-                }
-              }
-              sendMessage({
-                command: "createPullRequest",
-                repo: this.currentRepo!,
-                branchName: branch,
-                remote
-              });
-            }
+            onClick: () =>
+              this.createPullRequestAction(refName, sourceElem.classList.contains("remote"))
           });
         }
         copyType = "Branch Name";
@@ -2041,7 +1883,13 @@ class GitGraphView {
       e.stopPropagation();
       hideDialogAndContextMenu();
       let sourceElem = <HTMLElement>(<Element>e.target).closest(".gitRef")!;
-      this.checkoutBranchAction(sourceElem, unescapeHtml(sourceElem.dataset.name!));
+      // Only branches are checkout-able; tag/stash refs share the gitRef class.
+      if (sourceElem.classList.contains("head") || sourceElem.classList.contains("remote")) {
+        this.checkoutBranchAction(
+          unescapeHtml(sourceElem.dataset.name!),
+          sourceElem.classList.contains("remote")
+        );
+      }
     });
   }
   private renderUncommitedChanges() {
@@ -2062,8 +1910,8 @@ class GitGraphView {
       '<h2 id="loadingHeader">' + svgIcons.loading + l10n.loading + "</h2>";
     this.footerElem.innerHTML = "";
   }
-  private checkoutBranchAction(sourceElem: HTMLElement, refName: string) {
-    if (sourceElem.classList.contains("head")) {
+  private checkoutBranchAction(refName: string, isRemote: boolean) {
+    if (!isRemote) {
       showActionRunningDialog(l10n.checkoutBranch);
       sendMessage({
         command: "checkoutBranch",
@@ -2072,7 +1920,7 @@ class GitGraphView {
         remoteBranch: null,
         force: false
       });
-    } else if (sourceElem.classList.contains("remote")) {
+    } else {
       // refName is "<remote>/<branch>"; strip only the remote prefix so the
       // local branch keeps the full branch path (e.g. "fix/something-1")
       // rather than just the segment after the last slash.
@@ -2082,7 +1930,7 @@ class GitGraphView {
         showRefInputDialog(
           l10n.dialogCreateBranchTitle.replace(
             "{0}",
-            "<b><i>" + escapeHtml(sourceElem.dataset.name!) + "</i></b>"
+            "<b><i>" + escapeHtml(refName) + "</i></b>"
           ),
           leaf,
           l10n.checkoutBranch,
@@ -2152,6 +2000,270 @@ class GitGraphView {
         );
       } else {
         promptNewLocalBranch();
+      }
+    }
+  }
+  private renameBranchAction(refName: string) {
+    showRefInputDialog(
+      l10n.dialogRenameBranchTitle.replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>"),
+      refName,
+      l10n.dialogRenameBranchSubmit,
+      (newName) => {
+        sendMessage({
+          command: "renameBranch",
+          repo: this.currentRepo!,
+          oldName: refName,
+          newName: newName
+        });
+      },
+      null
+    );
+  }
+  private deleteBranchAction(refName: string) {
+    const confirmMsg = l10n.dialogDeleteConfirm
+      .replace("{0}", l10n.labelBranch)
+      .replace("{1}", "<b><i>" + escapeHtml(refName) + "</i></b>");
+    if (this.remotes.length > 0) {
+      // Offer to also delete the branch on the remote(s) it exists on.
+      showFormDialog(
+        confirmMsg,
+        [
+          {
+            type: "checkbox",
+            name: l10n.dialogDeleteForceDelete,
+            value: this.config.dialogDeleteBranchForceDelete,
+            remember: true
+          },
+          {
+            type: "checkbox",
+            name: l10n.dialogDeleteOnRemotes,
+            value: false,
+            remember: true
+          }
+        ],
+        l10n.deleteBranch,
+        (values) => {
+          this.sendDeleteBranch(refName, values[0] === "checked", values[1] === "checked");
+        },
+        null,
+        "deleteBranch"
+      );
+    } else {
+      showCheckboxDialog(
+        confirmMsg,
+        l10n.dialogDeleteForceDelete,
+        this.config.dialogDeleteBranchForceDelete,
+        l10n.deleteBranch,
+        (forceDelete) => {
+          this.sendDeleteBranch(refName, forceDelete, false);
+        },
+        null,
+        "deleteBranch"
+      );
+    }
+  }
+  private rebaseOnBranchAction(refName: string) {
+    showConfirmationDialog(
+      l10n.dialogRebaseConfirm
+        .replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>")
+        .replace("{1}", this.currentBranchLabel()),
+      () => {
+        sendMessage({ command: "rebaseOn", repo: this.currentRepo!, obj: refName });
+        showActionRunningDialog(l10n.rebasing);
+      },
+      null
+    );
+  }
+  private fastForwardBranchAction(refName: string) {
+    showConfirmationDialog(
+      l10n.dialogFastForwardConfirm.replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>"),
+      () => {
+        sendMessage({
+          command: "fastForwardBranch",
+          repo: this.currentRepo!,
+          branchName: refName
+        });
+      },
+      null
+    );
+  }
+  private pullRemoteBranchAction(refName: string) {
+    const parts = splitRemoteRef(refName);
+    if (parts === null) return;
+    showConfirmationDialog(
+      l10n.dialogPullConfirm
+        .replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>")
+        .replace("{1}", this.currentBranchLabel()),
+      () => {
+        sendMessage({
+          command: "pullBranch",
+          repo: this.currentRepo!,
+          remote: parts.remote,
+          branchName: parts.branchOnRemote
+        });
+        showActionRunningDialog(l10n.pulling);
+      },
+      null
+    );
+  }
+  private fetchIntoLocalBranchAction(refName: string, sourceElem: HTMLElement | null = null) {
+    const parts = splitRemoteRef(refName);
+    if (parts === null) return;
+    showFormDialog(
+      l10n.dialogFetchIntoLocalBranchTitle.replace(
+        "{0}",
+        "<b><i>" + escapeHtml(refName) + "</i></b>"
+      ),
+      [
+        {
+          type: "text-ref",
+          name: l10n.dialogFetchIntoLocalBranchName,
+          default: parts.branchOnRemote
+        },
+        {
+          type: "checkbox",
+          name: l10n.dialogFetchIntoLocalBranchForce,
+          value: false,
+          remember: true
+        }
+      ],
+      l10n.dialogFetchIntoLocalBranchSubmit,
+      (values) => {
+        sendMessage({
+          command: "fetchIntoLocalBranch",
+          repo: this.currentRepo!,
+          remote: parts.remote,
+          remoteBranch: parts.branchOnRemote,
+          localBranch: values[0],
+          force: values[1] === "checked"
+        });
+        showActionRunningDialog(l10n.fetchingIntoLocalBranch);
+      },
+      sourceElem,
+      "fetchIntoLocalBranch"
+    );
+  }
+  private deleteRemoteBranchAction(refName: string) {
+    const parts = splitRemoteRef(refName);
+    if (parts === null) return;
+    showConfirmationDialog(
+      l10n.dialogDeleteRemoteBranchConfirm.replace(
+        "{0}",
+        "<b><i>" + escapeHtml(refName) + "</i></b>"
+      ),
+      () => {
+        sendMessage({
+          command: "deleteRemoteBranch",
+          repo: this.currentRepo!,
+          remote: parts.remote,
+          branchName: parts.branchOnRemote
+        });
+        showActionRunningDialog(l10n.deletingRemoteBranch);
+      },
+      null
+    );
+  }
+  private createPullRequestAction(refName: string, isRemote: boolean) {
+    let remote = this.defaultPushRemote();
+    let branch = refName;
+    if (isRemote) {
+      // refName is "<remote>/<branch>"; split off the remote.
+      const r = this.remotes.find((rm) => refName === rm || refName.startsWith(rm + "/"));
+      if (r !== undefined) {
+        remote = r;
+        branch = refName.slice(r.length + 1);
+      }
+    }
+    sendMessage({
+      command: "createPullRequest",
+      repo: this.currentRepo!,
+      branchName: branch,
+      remote
+    });
+  }
+  /** Entry point for branch actions delegated by the Branches side-view: run
+   *  the exact same flow (dialogs included) as the in-graph context menu. */
+  public runRefAction(msg: GG.ResponseRunRefAction) {
+    if (msg.seq <= this.lastRefActionSeq) return; // duplicate delivery
+    this.pendingRefAction = msg;
+    this.tryRunPendingRefAction();
+  }
+  /** Run the pending delegated action once this view shows its repo with no
+   *  load in flight (a fresh panel / repo switch reloads branches+commits; the
+   *  remotes for that repo arrive before them, as requests are handled in
+   *  order). Re-tried after each load completes. */
+  private tryRunPendingRefAction() {
+    const pending = this.pendingRefAction;
+    if (pending === null || pending.repo !== this.currentRepo) return;
+    if (this.loadBranchesCallback !== null || this.loadCommitsCallback !== null) return;
+    this.pendingRefAction = null;
+    this.lastRefActionSeq = pending.seq;
+    this.dispatchRefAction(pending);
+  }
+  private dispatchRefAction(msg: GG.ResponseRunRefAction) {
+    const ref = msg.ref;
+    if (msg.isRemote) {
+      switch (msg.action) {
+        case "checkout":
+          this.checkoutBranchAction(ref, true);
+          break;
+        case "merge":
+          this.mergeBranchAction(ref);
+          break;
+        case "pull":
+          this.pullRemoteBranchAction(ref);
+          break;
+        case "fetchIntoLocal":
+          this.fetchIntoLocalBranchAction(ref);
+          break;
+        case "deleteRemote":
+          this.deleteRemoteBranchAction(ref);
+          break;
+        case "createPullRequest":
+          if (this.remotes.length > 0) this.createPullRequestAction(ref, true);
+          break;
+      }
+    } else {
+      // Mirror the in-graph menu's guards: these never apply to the checked-out
+      // branch (the menu wouldn't have offered them).
+      if (
+        ref === this.gitBranchHead &&
+        (msg.action === "checkout" ||
+          msg.action === "delete" ||
+          msg.action === "merge" ||
+          msg.action === "rebase" ||
+          msg.action === "fastForward")
+      ) {
+        return;
+      }
+      switch (msg.action) {
+        case "checkout":
+          this.checkoutBranchAction(ref, false);
+          break;
+        case "rename":
+          this.renameBranchAction(ref);
+          break;
+        case "delete":
+          this.deleteBranchAction(ref);
+          break;
+        case "merge":
+          this.mergeBranchAction(ref);
+          break;
+        case "rebase":
+          this.rebaseOnBranchAction(ref);
+          break;
+        case "fastForward":
+          this.fastForwardBranchAction(ref);
+          break;
+        case "push":
+          if (this.remotes.length > 0) this.pushBranchAction(ref);
+          break;
+        case "createArchive":
+          sendMessage({ command: "createArchive", repo: this.currentRepo!, ref });
+          break;
+        case "createPullRequest":
+          if (this.remotes.length > 0) this.createPullRequestAction(ref, false);
+          break;
       }
     }
   }
@@ -3453,6 +3565,9 @@ window.addEventListener("message", (event) => {
       break;
     case "setRepo":
       gitGraph.setRepo(msg.repo);
+      break;
+    case "runRefAction":
+      gitGraph.runRefAction(msg);
       break;
     case "mergeBranch":
       refreshGraphOrDisplayError(msg.status, l10n.unableToMergeBranch);
