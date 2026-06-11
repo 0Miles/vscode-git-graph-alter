@@ -53,7 +53,9 @@ const viewState: GG.GitGraphViewState = {
 };
 
 // A child (on main) with a single parent, so Revert offers a plain Yes/Cancel
-// confirmation while Merge offers an option-bearing form dialog.
+// confirmation while Merge offers an option-bearing form dialog. The parent
+// also carries a remote ref whose leaf name ("feature") matches a local
+// branch, so double-clicking it opens the checkout three-way select dialog.
 const commits: GitCommitNode[] = [
   {
     hash: "child1",
@@ -71,7 +73,7 @@ const commits: GitCommitNode[] = [
     email: "alice@example.com",
     date: 1700000000,
     message: "Parent",
-    refs: []
+    refs: [{ hash: "par1", name: "origin/feature", type: "remote" }]
   }
 ];
 
@@ -93,20 +95,22 @@ function clickMenuItem(startsWith: string) {
 }
 
 describe("'Remember my choice' checkbox visibility", () => {
+  let mock: ReturnType<typeof createVscodeMock>;
+
   beforeAll(async () => {
     vi.resetModules();
-    createVscodeMock();
+    mock = createVscodeMock();
     setupHtml(viewState);
     await import("@/webview/main");
     receive({
       command: "loadBranches",
-      branches: ["main"],
+      branches: ["main", "feature"],
       head: "main",
       hard: true,
       isRepo: true,
       filter: []
     });
-    receive({ command: "loadRemotes", remotes: [], pushDefault: null });
+    receive({ command: "loadRemotes", remotes: ["origin"], pushDefault: null });
     receive({
       command: "loadCommits",
       commits,
@@ -134,5 +138,33 @@ describe("'Remember my choice' checkbox visibility", () => {
     clickMenuItem("Revert");
 
     expect(document.getElementById("dialogRememberChoice")).toBeNull();
+  });
+
+  it("shows the checkbox on the checkout three-way select and persists the choice", () => {
+    document.getElementById("dialogDismiss")?.dispatchEvent(new MouseEvent("click"));
+
+    // Double-clicking origin/feature, whose leaf matches the local branch
+    // "feature", opens the existing/reset/new select dialog.
+    const ref = document.querySelector<HTMLElement>(".gitRef.remote");
+    expect(ref).not.toBeNull();
+    ref!.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+    const select = document.getElementById("dialogInput0") as HTMLSelectElement | null;
+    expect(select).not.toBeNull();
+    expect(select!.tagName).toBe("SELECT");
+    const remember = document.getElementById("dialogRememberChoice") as HTMLInputElement | null;
+    expect(remember).not.toBeNull();
+
+    // Tick "Remember my choice" and confirm with the default ("existing").
+    remember!.checked = true;
+    mock.clearMessages();
+    document
+      .getElementById("dialogAction")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    expect(mock.sentMessages.find((m) => m.command === "saveDialogMemory")).toMatchObject({
+      dialogKey: "checkoutRemoteExists",
+      values: { selection: "existing" }
+    });
   });
 });

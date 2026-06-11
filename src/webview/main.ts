@@ -2130,7 +2130,10 @@ class GitGraphView {
               promptNewLocalBranch();
             }
           },
-          null
+          null,
+          // Remembering "reset" is safe: that path keeps its own destructive
+          // confirmation above.
+          "checkoutRemoteExists"
         );
       } else {
         promptNewLocalBranch();
