@@ -170,7 +170,13 @@
         "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.showAll",
         "title": "%command.branches.showAll%",
-        "icon": "$(clear-all)"
+        "icon": "$(check-all)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.refresh",
+        "title": "%command.branches.refresh%",
+        "icon": "$(refresh)"
       },
       {
         "category": "Git Graph Alter",
@@ -315,24 +321,29 @@
           "group": "navigation@1"
         },
         {
+          "command": "git-graph-alter.branches.refresh",
+          "when": "view == git-graph-alter.branches",
+          "group": "navigation@2"
+        },
+        {
           "command": "git-graph-alter.branches.showRemoteBranches",
           "when": "view == git-graph-alter.branches && !git-graph-alter.branchView.showingRemote",
-          "group": "navigation@2"
+          "group": "1_visibility@1"
         },
         {
           "command": "git-graph-alter.branches.hideRemoteBranches",
           "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingRemote",
-          "group": "navigation@2"
+          "group": "1_visibility@1"
         },
         {
           "command": "git-graph-alter.branches.showInactive",
           "when": "view == git-graph-alter.branches && !git-graph-alter.branchView.showingInactive",
-          "group": "navigation@3"
+          "group": "1_visibility@2"
         },
         {
           "command": "git-graph-alter.branches.hideInactive",
           "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingInactive",
-          "group": "navigation@3"
+          "group": "1_visibility@2"
         },
         {
           "command": "git-graph-alter.branches.collapseAll",

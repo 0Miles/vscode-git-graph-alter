@@ -115,6 +115,7 @@
   "view.branches.welcome": "未選取存放庫。\n[開啟 Git Graph](command:git-graph-alter.view)",
   "command.branches.search": "搜尋 branch",
   "command.branches.showAll": "顯示所有 branch",
+  "command.branches.refresh": "重新整理",
   "command.branches.showRemoteBranches": "顯示遠端 branch",
   "command.branches.hideRemoteBranches": "隱藏遠端 branch",
   "command.branches.showInactive": "顯示不活躍 branch",
