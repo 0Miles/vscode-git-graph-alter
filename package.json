@@ -162,6 +162,12 @@
       },
       {
         "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.collapseAll",
+        "title": "%command.branches.collapseAll%",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.showAll",
         "title": "%command.branches.showAll%",
         "icon": "$(clear-all)"
@@ -327,6 +333,11 @@
           "command": "git-graph-alter.branches.hideInactive",
           "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingInactive",
           "group": "navigation@3"
+        },
+        {
+          "command": "git-graph-alter.branches.collapseAll",
+          "when": "view == git-graph-alter.branches",
+          "group": "navigation@9"
         }
       ],
       "view/item/context": [
@@ -478,6 +489,10 @@
         },
         {
           "command": "git-graph-alter.branches.deleteRemote",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.branches.collapseAll",
           "when": "false"
         }
       ]
