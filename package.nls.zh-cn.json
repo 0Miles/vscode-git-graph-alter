@@ -131,5 +131,6 @@
   "command.branches.createPullRequest": "创建 Pull Request…",
   "command.branches.pull": "拉取到当前分支…",
   "command.branches.fetchIntoLocal": "Fetch 到本地分支…",
-  "command.branches.deleteRemote": "删除远程分支…"
+  "command.branches.deleteRemote": "删除远程分支…",
+  "command.branches.collapseAll": "折叠全部分支"
 }
