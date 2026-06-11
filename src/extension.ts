@@ -25,7 +25,11 @@ import { config } from "./config";
 import { decodeDiffDocUri, DiffDocProvider } from "./diffDocProvider";
 import { AskpassManager } from "./extension/askpass/askpassManager";
 import { createBranchDataService } from "./extension/branchDataService";
-import { type BranchActionTarget, branchActionTarget, createBranchesView } from "./extension/branchesView";
+import {
+  type BranchActionTarget,
+  branchActionTarget,
+  createBranchesView
+} from "./extension/branchesView";
 import { createBranchFilterStore } from "./extension/branchFilterStore";
 import { createLogger } from "./extension/logger";
 import { registerMessageHandlers } from "./extension/messageHandler";
@@ -81,10 +85,18 @@ export function activate(context: vscode.ExtensionContext) {
   // control for it (the graph's checkbox was removed).
   const resolveShowRemote = (repo: string): boolean =>
     repoManager.getRepos()[repo]?.showRemoteBranches ?? config.showRemoteBranches();
+  // "Show inactive branches" is likewise a per-repo toggle, falling back to the
+  // global default. Branches idle beyond `inactiveBranchThresholdDays` are
+  // hidden unless this is on (or they're exempt — head/selected/always-show).
+  const resolveShowInactive = (repo: string): boolean =>
+    repoManager.getRepos()[repo]?.showInactiveBranches ?? config.showInactiveBranchesByDefault();
   const branchesView = createBranchesView({
     dataService: branchDataService,
     filterStore: branchFilterStore,
-    resolveShowRemote
+    resolveShowRemote,
+    resolveShowInactive,
+    resolveInactiveThresholdDays: config.inactiveBranchThresholdDays,
+    resolveExemptPatterns: config.inactiveBranchAlwaysShow
   });
   branchesView.setActiveRepo(extensionState.getLastActiveRepo());
   context.subscriptions.push(branchesView, branchFilterStore);
@@ -124,6 +136,19 @@ export function activate(context: vscode.ExtensionContext) {
     repoManager.setRepoState(repo, { ...state, showRemoteBranches: next });
     branchesView.refresh();
     currentBridge?.post({ command: "setShowRemoteBranches", value: next });
+  };
+
+  // Toggle "show inactive branches" for the active repo. Bound to both the Show
+  // and Hide commands (the title button swaps between them by state) and
+  // persisted per-repo. Side-view only — it doesn't change the graph's filter.
+  const toggleInactiveBranches = (): void => {
+    const repo = branchesView.getActiveRepo();
+    if (repo === null) return;
+    const state = repoManager.getRepos()[repo];
+    if (state === undefined) return;
+    const next = !(state.showInactiveBranches ?? config.showInactiveBranchesByDefault());
+    repoManager.setRepoState(repo, { ...state, showInactiveBranches: next });
+    branchesView.refresh();
   };
 
   void (async () => {
@@ -363,15 +388,32 @@ export function activate(context: vscode.ExtensionContext) {
       "git-graph-alter.branches.hideRemoteBranches",
       toggleRemoteBranches
     ),
+    // Likewise, the title button swaps between these by the showingInactive state.
+    vscode.commands.registerCommand(
+      "git-graph-alter.branches.showInactive",
+      toggleInactiveBranches
+    ),
+    vscode.commands.registerCommand(
+      "git-graph-alter.branches.hideInactive",
+      toggleInactiveBranches
+    ),
     vscode.commands.registerCommand("git-graph-alter.branches.checkout", (item: unknown) =>
       runBranchAction(item, "error.unableToCheckoutBranch", async (git, target) => {
         if (target.isRemote) {
           // remotes/origin/feat → create local `feat` tracking `origin/feat`.
           const stripped = target.branch.slice("remotes/".length);
           const localName = stripped.split("/").slice(1).join("/");
-          await checkoutBranch(git, { branchName: localName, remoteBranch: stripped });
+          await checkoutBranch(git, {
+            branchName: localName,
+            remoteBranch: stripped,
+            force: false
+          });
         } else {
-          await checkoutBranch(git, { branchName: target.branch, remoteBranch: null });
+          await checkoutBranch(git, {
+            branchName: target.branch,
+            remoteBranch: null,
+            force: false
+          });
         }
       })
     ),
@@ -435,7 +477,9 @@ export function activate(context: vscode.ExtensionContext) {
         // Refresh an open graph so the freshly-fetched refs show immediately.
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
-        void vscode.window.showErrorMessage(l10n.t("error.unableToFetch") + ": " + formatGitError(e));
+        void vscode.window.showErrorMessage(
+          l10n.t("error.unableToFetch") + ": " + formatGitError(e)
+        );
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.manageRemotes", async () => {
@@ -526,7 +570,9 @@ export function activate(context: vscode.ExtensionContext) {
         });
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
-        void vscode.window.showErrorMessage(l10n.t("error.unableToFetch") + ": " + formatGitError(e));
+        void vscode.window.showErrorMessage(
+          l10n.t("error.unableToFetch") + ": " + formatGitError(e)
+        );
       }
     }),
     vscode.commands.registerCommand("git-graph-alter.viewReflog", async () => {
@@ -534,10 +580,7 @@ export function activate(context: vscode.ExtensionContext) {
       // them. A command + QuickPick, since neo has no settings widget.
       const git = gitClient.getInstance();
       try {
-        const [reflog, dangling] = await Promise.all([
-          loadReflog(git),
-          loadDanglingCommits(git)
-        ]);
+        const [reflog, dangling] = await Promise.all([loadReflog(git), loadDanglingCommits(git)]);
         const entries = [...reflog, ...dangling];
         if (entries.length === 0) {
           void vscode.window.showInformationMessage(l10n.t("reflog.empty"));
@@ -767,6 +810,10 @@ export function activate(context: vscode.ExtensionContext) {
         gitClient.setGitPath(config.gitPath());
       } else if (e.affectsConfiguration("git-graph-alter.autoFetch")) {
         restartAutoFetch();
+      } else if (e.affectsConfiguration("git-graph-alter.branches")) {
+        // Threshold / always-show / default-visibility changes re-classify the
+        // side-view's inactive branches.
+        branchesView.refresh();
       }
     }),
     repoWatcher,

@@ -45,8 +45,7 @@ function getKeybinding(section: string, defaultKey: string): string | null {
 }
 
 export const config = {
-  autoCenterCommitDetailsView: (): boolean =>
-    getConfig("detailsPanel.autoScroll", true),
+  autoCenterCommitDetailsView: (): boolean => getConfig("detailsPanel.autoScroll", true),
   commitDetailsViewLocation: (): CommitDetailsViewLocation =>
     getConfig<string>("detailsPanel.position", "Inline") === "Docked to Bottom"
       ? "Docked to Bottom"
@@ -60,20 +59,20 @@ export const config = {
   },
   combineLocalAndRemoteBranchLabels: (): boolean =>
     getConfig("refLabels.combineLocalAndRemote", true),
-  dialogDeleteBranchForceDelete: (): boolean => getConfig("dialogDefaults.deleteBranchForce", false),
+  dialogDeleteBranchForceDelete: (): boolean =>
+    getConfig("dialogDefaults.deleteBranchForce", false),
   dialogCherryPickNoCommit: (): boolean => getConfig("dialogDefaults.cherryPickNoCommit", false),
   dialogAddTagType: (): AddTagType => getConfig("dialogDefaults.addTagType", "annotated"),
-  dialogCreateBranchCheckOut: (): boolean => getConfig("dialogDefaults.createBranchCheckOut", false),
+  dialogCreateBranchCheckOut: (): boolean =>
+    getConfig("dialogDefaults.createBranchCheckOut", false),
   dialogMergeNoFastForward: (): boolean => getConfig("dialogDefaults.mergeNoFastForward", true),
   dialogMergeSquash: (): boolean => getConfig("dialogDefaults.mergeSquash", false),
   squashMergeMessageFormat: (): SquashMessageFormat =>
     getConfig<string>("dialogDefaults.mergeSquashMessageFormat", "Default") === "Git SQUASH_MSG"
       ? "Git SQUASH_MSG"
       : "Default",
-  dialogResetMode: (): "soft" | "mixed" | "hard" =>
-    getConfig("dialogDefaults.resetMode", "mixed"),
-  commitOrder: (): CommitOrdering =>
-    getConfig("history.commitOrder", "date"),
+  dialogResetMode: (): "soft" | "mixed" | "hard" => getConfig("dialogDefaults.resetMode", "mixed"),
+  commitOrder: (): CommitOrdering => getConfig("history.commitOrder", "date"),
   contextMenuActionsVisibility: (): ContextMenuActionsVisibility =>
     mergeContextMenuActionsVisibility(getConfig("contextMenuActions", {})),
   customBranchGlobPatterns: (): { name: string; glob: string }[] => {
@@ -83,10 +82,7 @@ export const config = {
     );
   },
   customEmojiShortcodeMappings: (): { [code: string]: string } => {
-    const mappings = getConfig<{ shortcode: string; emoji: string }[]>(
-      "customEmojiShortcodes",
-      []
-    );
+    const mappings = getConfig<{ shortcode: string; emoji: string }[]>("customEmojiShortcodes", []);
     const result: { [code: string]: string } = {};
     for (const m of mappings) {
       if (m && typeof m.shortcode === "string" && typeof m.emoji === "string") {
@@ -113,12 +109,9 @@ export const config = {
   autoFetchEnabled: (): boolean => getConfig("autoFetch.enabled", false),
   // Clamped to the supported 1–60 minute range at the call site.
   autoFetchIntervalMinutes: (): number => getConfig("autoFetch.intervalMinutes", 10),
-  fetchAndPrune: (): boolean =>
-    getConfig("fetch.prune", false),
-  fetchAndPruneTags: (): boolean =>
-    getConfig("fetch.pruneTags", false),
-  fetchAvatars: (): boolean =>
-    getConfig("history.fetchAvatars", false),
+  fetchAndPrune: (): boolean => getConfig("fetch.prune", false),
+  fetchAndPruneTags: (): boolean => getConfig("fetch.pruneTags", false),
+  fetchAvatars: (): boolean => getConfig("history.fetchAvatars", false),
   fileTreeCompactFolders: (): boolean => getConfig("detailsPanel.compactFolders", true),
   fileViewType: (): FileViewType => getConfig("detailsPanel.fileLayout", "File Tree"),
   graphColours: (): string[] =>
@@ -136,12 +129,8 @@ export const config = {
         ) !== null
     ),
   graphStyle: (): GraphStyle => getConfig("graph.edgeStyle", "rounded"),
-  includeCommitsMentionedByReflogs: (): boolean =>
-    getConfig("history.includeReflogCommits",
-      false
-    ),
-  initialLoadCommits: (): number =>
-    getConfig("history.initialCommitCount", 300),
+  includeCommitsMentionedByReflogs: (): boolean => getConfig("history.includeReflogCommits", false),
+  initialLoadCommits: (): number => getConfig("history.initialCommitCount", 300),
   issueLinkingRegex: (): string => getConfig("issueLinks.pattern", ""),
   issueLinkingUrl: (): string => getConfig("issueLinks.url", ""),
   keybindings: (): KeybindingConfig => ({
@@ -150,60 +139,48 @@ export const config = {
     scrollToHead: getKeybinding("shortcuts.scrollToHead", "h"),
     scrollToStash: getKeybinding("shortcuts.scrollToStash", "s")
   }),
-  loadMoreAutomatically: (): boolean =>
-    getConfig("history.loadMoreOnScroll", false),
-  loadMoreCommits: (): number =>
-    getConfig("history.loadMoreCount", 75),
+  loadMoreAutomatically: (): boolean => getConfig("history.loadMoreOnScroll", false),
+  loadMoreCommits: (): number => getConfig("history.loadMoreCount", 75),
   maxDepthOfRepoSearch: (): number => getConfig("repoSearchDepth", 0),
   markdown: (): boolean => getConfig("renderMarkdown", true),
-  muteCommitsNotAncestorsOfHead: (): boolean =>
-    getConfig("dim.nonAncestorCommits", false),
+  muteCommitsNotAncestorsOfHead: (): boolean => getConfig("dim.nonAncestorCommits", false),
   muteMergeCommits: (): boolean => getConfig("dim.mergeCommits", true),
-  onLoadScrollToHead: (): boolean =>
-    getConfig("onOpen.scrollToHead", false),
-  openToTheRepoOfActiveEditor: (): boolean =>
-    getConfig("followActiveEditorRepo", false),
+  onLoadScrollToHead: (): boolean => getConfig("onOpen.scrollToHead", false),
+  openToTheRepoOfActiveEditor: (): boolean => getConfig("followActiveEditorRepo", false),
   followSourceControlSelection: (): boolean => getConfig("followSourceControlSelection", true),
-  onlyFollowFirstParent: (): boolean =>
-    getConfig("history.firstParentOnly", false),
+  onlyFollowFirstParent: (): boolean => getConfig("history.firstParentOnly", false),
   openNewTabEditorGroup: (): EditorGroup => getConfig("diffEditorGroup", "Active"),
   referenceInputSpaceSubstitution: (): RefSpaceSubstitution =>
     getConfig("refNameSpaceReplacement", "None"),
   retainContextWhenHidden: (): boolean => getConfig("keepWebviewAlive", true),
-  showCommitsOnlyReferencedByTags: (): boolean =>
-    getConfig("show.tagOnlyCommits",
-      true
-    ),
+  showCommitsOnlyReferencedByTags: (): boolean => getConfig("show.tagOnlyCommits", true),
   signCommits: (): boolean => getConfig("signing.commits", false),
   signTags: (): boolean => getConfig("signing.tags", false),
-  showRemoteBranches: (): boolean =>
-    getConfig("show.remoteBranches", true),
-  showRemoteHeads: (): boolean =>
-    getConfig("show.remoteHeads", true),
-  showSignatureStatus: (): boolean =>
-    getConfig("history.showSignatures",
-      false
-    ),
+  showRemoteBranches: (): boolean => getConfig("show.remoteBranches", true),
+  // Branches side-view: how many days of inactivity before a branch is hidden
+  // (0 disables the feature), the always-show name/glob exemptions, and the
+  // global default for the per-repo "show inactive" toggle.
+  inactiveBranchThresholdDays: (): number => getConfig("branches.inactiveAfterDays", 30),
+  inactiveBranchAlwaysShow: (): string[] =>
+    getConfig("branches.alwaysShow", ["main", "master", "develop", "dev", "trunk"]),
+  showInactiveBranchesByDefault: (): boolean => getConfig("branches.showInactiveByDefault", false),
+  showRemoteHeads: (): boolean => getConfig("show.remoteHeads", true),
+  showSignatureStatus: (): boolean => getConfig("history.showSignatures", false),
   showStashes: (): boolean => getConfig("show.stashes", true),
-  showCurrentBranchByDefault: (): boolean =>
-    getConfig("onOpen.selectCheckedOutBranch", false),
+  showCurrentBranchByDefault: (): boolean => getConfig("onOpen.selectCheckedOutBranch", false),
   // Where the open (hollow) circle for uncommitted changes is drawn —
   // at the uncommitted-changes node (default) or at the checked-out commit.
   uncommittedChangesAtHead: (): boolean =>
     getConfig<string>("graph.uncommittedMarker", "Open Circle at the Uncommitted Changes") ===
     "Open Circle at the Checked Out Commit",
   showSpecificBranches: (): string[] => {
-    const v = getConfig<unknown>("onOpen.branchSelection",
-      []
-    );
+    const v = getConfig<unknown>("onOpen.branchSelection", []);
     return Array.isArray(v) ? v.filter((b): b is string => typeof b === "string") : [];
   },
   showTags: (): boolean => getConfig("show.tags", true),
   showStatusBarItem: (): boolean => getConfig("statusBarButton", true),
-  showUncommittedChanges: (): boolean =>
-    getConfig("show.uncommittedChanges", true),
-  showUntrackedFiles: (): boolean =>
-    getConfig("show.untrackedFiles", true),
+  showUncommittedChanges: (): boolean => getConfig("show.uncommittedChanges", true),
+  showUntrackedFiles: (): boolean => getConfig("show.untrackedFiles", true),
   useMailmap: (): boolean => getConfig("history.useMailmap", false),
   // Resolvable at a Workspace Folder scope: pass the repo's Uri so a
   // per-folder `fileEncoding` override is honoured, else the global value.
