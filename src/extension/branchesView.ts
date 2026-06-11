@@ -2,9 +2,24 @@ import * as vscode from "vscode";
 
 import * as l10n from "@/l10n";
 
+import { classifyInactive, relativeAge } from "./branchActivity";
 import { BranchDataService } from "./branchDataService";
 import { BranchFilterStore } from "./branchFilterStore";
 import { type BranchTreeLeaf, type BranchTreeNode, buildBranchTree } from "./branchTree";
+
+/** Scheme of the opaque per-branch URIs given to inactive leaves so the
+ *  FileDecorationProvider below can dim them. */
+const INACTIVE_SCHEME = "gga-branch";
+
+/** An opaque URI carrying the branch ref, used only to attach the "inactive"
+ *  file decoration (dimmed label). */
+function inactiveBranchUri(ref: string): vscode.Uri {
+  return vscode.Uri.from({
+    scheme: INACTIVE_SCHEME,
+    authority: "inactive",
+    path: "/" + encodeURIComponent(ref)
+  });
+}
 
 /** A TreeItem backed by one node of the branch tree. Carries the node and its
  *  repo so commands invoked from the context menu have everything they need. */
@@ -42,11 +57,40 @@ class BranchItem extends vscode.TreeItem {
       );
       if (node.isHead) this.description = l10n.t("branchView.current");
       this.tooltip = node.branch;
+      if (node.isInactive) {
+        // Dimmed via the FileDecorationProvider keyed on this scheme; the age
+        // label hints how long the branch has been idle. (Inactive leaves are
+        // never the head, so this never clobbers the "current" description.)
+        this.resourceUri = inactiveBranchUri(node.branch);
+        if (node.lastActivitySec !== undefined) {
+          const age = relativeAge(node.lastActivitySec, Math.floor(Date.now() / 1000));
+          this.description = l10n.t("branchView.age." + age.unit, age.value);
+        }
+      }
       // No `command`: a left click selects (and filters); git operations are on
       // the right-click context menu.
     }
   }
 }
+
+/** Shared dependencies of the side-view: data, the filter store (selection
+ *  drives the graph; the current selection also exempts branches from inactive
+ *  hiding), and the per-repo/config state resolvers — re-read on every reload
+ *  so the title toggles and setting edits take effect immediately. */
+type BranchesProviderDeps = {
+  dataService: BranchDataService;
+  filterStore: BranchFilterStore;
+  /** The "show remote branches" state for a repo (per-repo override or the
+   *  global default). */
+  resolveShowRemote: (repo: string) => boolean;
+  /** The "show inactive branches" state for a repo (per-repo override or the
+   *  global default). */
+  resolveShowInactive: (repo: string) => boolean;
+  /** The inactivity threshold in days (`<= 0` disables the feature). */
+  resolveInactiveThresholdDays: () => number;
+  /** "Always show" name/glob patterns that exempt a branch from being hidden. */
+  resolveExemptPatterns: () => string[];
+};
 
 class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<BranchItem | undefined | void>();
@@ -58,10 +102,7 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   // Bumped by "Show All" to re-key leaf items and so clear the visual selection.
   private selectionGen = 0;
 
-  constructor(
-    private readonly dataService: BranchDataService,
-    private readonly resolveShowRemote: (repo: string) => boolean
-  ) {}
+  constructor(private readonly deps: BranchesProviderDeps) {}
 
   getRepo(): string | null {
     return this.repo;
@@ -81,11 +122,17 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
   private async reload(): Promise<void> {
     const id = ++this.fetchId;
     const repo = this.repo;
-    // Keep the title toggle's icon in sync with the active repo's state.
+    const showInactive = repo !== null && this.deps.resolveShowInactive(repo);
+    // Keep the title toggles' icons in sync with the active repo's state.
     void vscode.commands.executeCommand(
       "setContext",
       "git-graph-alter.branchView.showingRemote",
-      repo !== null && this.resolveShowRemote(repo)
+      repo !== null && this.deps.resolveShowRemote(repo)
+    );
+    void vscode.commands.executeCommand(
+      "setContext",
+      "git-graph-alter.branchView.showingInactive",
+      showInactive
     );
     if (repo === null) {
       this.roots = [];
@@ -93,12 +140,36 @@ class BranchesProvider implements vscode.TreeDataProvider<BranchItem> {
       return;
     }
     try {
-      const { branches, head, isRepo } = await this.dataService.listBranches(
+      const { branches, head, isRepo, branchDates } = await this.deps.dataService.listBranches(
         repo,
-        this.resolveShowRemote(repo)
+        this.deps.resolveShowRemote(repo)
       );
       if (id !== this.fetchId) return; // superseded by a newer fetch
-      this.roots = isRepo ? buildBranchTree(branches, head) : [];
+      if (!isRepo) {
+        this.roots = [];
+      } else {
+        // A branch is "inactive" when idle beyond the threshold and not exempt
+        // (head / selected / always-show). When hidden we drop them before
+        // building the tree (empty folders fall away with their leaves); when
+        // shown we tag them so the view dims them. The selection used for
+        // exemption is read here, so toggling to "hide" keeps a branch that was
+        // selected while inactive ones were shown.
+        const inactive = classifyInactive({
+          branches,
+          head,
+          dates: branchDates,
+          nowSec: Math.floor(Date.now() / 1000),
+          thresholdDays: this.deps.resolveInactiveThresholdDays(),
+          exemptPatterns: this.deps.resolveExemptPatterns(),
+          selected: this.deps.filterStore.get(repo)
+        });
+        this.roots = showInactive
+          ? buildBranchTree(branches, head, { inactive, dates: branchDates })
+          : buildBranchTree(
+              branches.filter((b) => !inactive.has(b)),
+              head
+            );
+      }
     } catch {
       if (id !== this.fetchId) return;
       this.roots = [];
@@ -169,19 +240,22 @@ export type BranchesView = ReturnType<typeof createBranchesView>;
  * selection drives the per-repo branch filter (empty selection = show all). The
  * view follows whichever repo is active and re-reads its branches on demand.
  */
-export function createBranchesView(deps: {
-  dataService: BranchDataService;
-  filterStore: BranchFilterStore;
-  /** Resolve the "show remote branches" state for a repo (per-repo override or
-   *  the global default). Re-read on every reload so the side-view's toggle
-   *  takes effect immediately. */
-  resolveShowRemote: (repo: string) => boolean;
-}) {
-  const provider = new BranchesProvider(deps.dataService, deps.resolveShowRemote);
+export function createBranchesView(deps: BranchesProviderDeps) {
+  const provider = new BranchesProvider(deps);
   const treeView = vscode.window.createTreeView<BranchItem>("git-graph-alter.branches", {
     treeDataProvider: provider,
     canSelectMany: true,
     showCollapseAll: true
+  });
+
+  // Dims inactive branch leaves (which carry an `INACTIVE_SCHEME` resourceUri);
+  // returns nothing for every other resource in the workbench.
+  const inactiveDecoration: vscode.FileDecoration = {
+    color: new vscode.ThemeColor("disabledForeground")
+  };
+  const decorationSub = vscode.window.registerFileDecorationProvider({
+    provideFileDecoration: (uri) =>
+      uri.scheme === INACTIVE_SCHEME ? inactiveDecoration : undefined
   });
 
   // Debounce so a rapid multi-select (Ctrl/Cmd-click several branches) coalesces
@@ -221,6 +295,7 @@ export function createBranchesView(deps: {
     dispose: (): void => {
       if (debounce !== undefined) clearTimeout(debounce);
       selectionSub.dispose();
+      decorationSub.dispose();
       treeView.dispose();
       provider.dispose();
     }
