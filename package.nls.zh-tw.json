@@ -120,8 +120,16 @@
   "command.branches.showInactive": "顯示不活躍 branch",
   "command.branches.hideInactive": "隱藏不活躍 branch",
   "command.branches.checkout": "Checkout",
-  "command.branches.merge": "合併到目前 branch",
+  "command.branches.merge": "合併到目前 branch…",
   "command.branches.rename": "重新命名 branch…",
   "command.branches.delete": "刪除 branch…",
-  "command.branches.copyName": "複製 branch 名稱"
+  "command.branches.copyName": "複製 branch 名稱",
+  "command.branches.rebase": "將目前 branch rebase 到此 branch…",
+  "command.branches.fastForward": "快進到 upstream",
+  "command.branches.push": "Push Branch…",
+  "command.branches.createArchive": "建立封存…",
+  "command.branches.createPullRequest": "建立 Pull request…",
+  "command.branches.pull": "Pull 到目前 branch…",
+  "command.branches.fetchIntoLocal": "Fetch 到本機 branch…",
+  "command.branches.deleteRemote": "刪除 remote branch…"
 }
