@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBranchTree,
+  buildGroupedBranchRoots,
   type BranchTreeFolder,
+  type BranchTreeGroup,
   type BranchTreeLeaf
 } from "@/extension/branchTree";
 
@@ -88,5 +90,50 @@ describe("buildBranchTree", () => {
     });
     const feature = folders(tree).find((f) => f.name === "feature")!;
     expect((feature.children[0] as BranchTreeLeaf).isInactive).toBe(true);
+  });
+});
+
+describe("buildGroupedBranchRoots", () => {
+  it("returns an empty array for no branches", () => {
+    expect(buildGroupedBranchRoots([], null)).toEqual([]);
+  });
+
+  it("stays flat (no group headings) when there are no remote branches", () => {
+    const roots = buildGroupedBranchRoots(["main", "feature/login"], "main");
+    expect(roots).toEqual(buildBranchTree(["main", "feature/login"], "main"));
+    expect(roots.some((n) => n.type === "group")).toBe(false);
+  });
+
+  it("splits into a remote group followed by a local group", () => {
+    const roots = buildGroupedBranchRoots(
+      ["main", "feature/login", "remotes/origin/main", "remotes/origin/feature/login"],
+      "main"
+    );
+    expect(roots.map((n) => n.type)).toEqual(["group", "group"]);
+    const [remote, local] = roots as BranchTreeGroup[];
+    expect(remote.kind).toBe("remote");
+    expect(local.kind).toBe("local");
+
+    // Remote children keep the per-remote folder layer (origin > …).
+    const origin = folders(remote.children).find((f) => f.name === "origin")!;
+    expect(origin).toBeDefined();
+    expect((origin.children[0] as BranchTreeLeaf).branch).toBe("remotes/origin/main");
+
+    // Local children are the usual leaf/folder mix, head marked.
+    const main = leaves(local.children).find((l) => l.name === "main")!;
+    expect(main.isHead).toBe(true);
+    expect(local.children.some((n) => n.type === "folder" && n.name === "feature")).toBe(true);
+  });
+
+  it("passes inactivity meta through to both groups", () => {
+    const roots = buildGroupedBranchRoots(["main", "stale", "remotes/origin/old"], "main", {
+      inactive: new Set(["stale", "remotes/origin/old"]),
+      dates: { stale: 50, "remotes/origin/old": 40 }
+    }) as BranchTreeGroup[];
+    const remoteLeaf = folders(roots[0].children)[0].children[0] as BranchTreeLeaf;
+    expect(remoteLeaf.isInactive).toBe(true);
+    expect(remoteLeaf.lastActivitySec).toBe(40);
+    const stale = leaves(roots[1].children).find((l) => l.name === "stale")!;
+    expect(stale.isInactive).toBe(true);
   });
 });

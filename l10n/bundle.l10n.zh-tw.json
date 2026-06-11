@@ -343,5 +343,7 @@
   "branchView.age.day": "{0} 天",
   "branchView.age.week": "{0} 週",
   "branchView.age.month": "{0} 個月",
-  "branchView.age.year": "{0} 年"
+  "branchView.age.year": "{0} 年",
+  "branchView.group.remote": "遠端",
+  "branchView.group.local": "本地"
 }
