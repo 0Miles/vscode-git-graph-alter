@@ -10,7 +10,7 @@
  * test project; the TreeItem rendering lives in `branchesView.ts`.
  */
 
-const REMOTE_PREFIX = "remotes/";
+export const REMOTE_PREFIX = "remotes/";
 
 export type BranchTreeLeaf = {
   type: "leaf";
@@ -23,6 +23,11 @@ export type BranchTreeLeaf = {
   isHead: boolean;
   /** True for a remote-tracking branch (`remotes/…`). */
   isRemote: boolean;
+  /** True when classified inactive (older than the threshold) and surfaced in
+   *  "show inactive" mode; the view renders these dimmed. */
+  isInactive: boolean;
+  /** Last commit time (unix seconds) when known, for the age label. */
+  lastActivitySec?: number;
 };
 
 export type BranchTreeFolder = {
@@ -60,7 +65,22 @@ function displaySegments(branch: string): string[] {
   return display.split("/");
 }
 
-export function buildBranchTree(branches: string[], head: string | null): BranchTreeNode[] {
+/** Extra per-branch metadata used to mark inactive leaves; omitted by callers
+ *  that don't surface inactivity (then every leaf is active with no age). The
+ *  fields come as a pair: a flagged leaf without its date would silently lose
+ *  the age label. */
+export type BranchTreeMeta = {
+  /** Refs to flag as inactive (rendered dimmed). */
+  inactive: ReadonlySet<string>;
+  /** ref → last commit time (unix seconds), for the age label. */
+  dates: Readonly<Record<string, number>>;
+};
+
+export function buildBranchTree(
+  branches: string[],
+  head: string | null,
+  meta?: BranchTreeMeta
+): BranchTreeNode[] {
   const root = newFolder();
 
   for (const branch of branches) {
@@ -80,7 +100,9 @@ export function buildBranchTree(branches: string[], head: string | null): Branch
       branch,
       name: segments[segments.length - 1],
       isHead: branch === head,
-      isRemote
+      isRemote,
+      isInactive: meta?.inactive?.has(branch) ?? false,
+      lastActivitySec: meta?.dates?.[branch]
     });
   }
 

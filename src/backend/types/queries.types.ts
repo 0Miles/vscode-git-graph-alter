@@ -37,6 +37,9 @@ type QueryPayloads = {
       head: string | null;
       hard: boolean;
       isRepo: boolean;
+      /** ref → last commit time (unix seconds); present only when the host
+       *  requested dates (the side-view does, the graph panel doesn't). */
+      branchDates?: Record<string, number>;
       /** The branch filter resolved by the host (the side-view's per-repo
        *  selection, or the configured default). Empty = show all. */
       filter: string[];

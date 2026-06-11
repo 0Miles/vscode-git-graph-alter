@@ -87,6 +87,9 @@ export type GitRepoState = {
   commitOrdering?: CommitOrdering | null;
   /** Per-repo "Show Remote Branches" override; null/undefined uses the global setting. */
   showRemoteBranches?: boolean | null;
+  /** Per-repo "Show Inactive Branches" override in the side-view; null/undefined
+   *  uses the global default. */
+  showInactiveBranches?: boolean | null;
   /** Custom display name for the repo in the Repo dropdown; empty/unset
    *  falls back to the derived folder name. */
   customName?: string | null;

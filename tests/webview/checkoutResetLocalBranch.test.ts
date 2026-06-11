@@ -77,7 +77,8 @@ describe("checking out a remote branch when a divergent local branch already exi
       branches: ["main", "feature"],
       head: "main",
       hard: true,
-      isRepo: true
+      isRepo: true,
+      filter: []
     });
     receive({ command: "loadRemotes", remotes: ["origin"], pushDefault: null });
     receive({
