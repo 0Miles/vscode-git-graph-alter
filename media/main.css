@@ -119,7 +119,11 @@ code {
   position: absolute;
   left: 8px;
   top: 0px;
-  z-index: -1;
+  /* Painted ABOVE the row backgrounds (so opaque theme list colours for
+     hover/selection never hide the graph lines), but click-transparent so the
+     rows underneath still receive pointer events. Matches upstream layering. */
+  z-index: 2;
+  pointer-events: none;
 }
 #commitGraph circle.current {
   fill: var(--vscode-editor-background);
@@ -162,18 +166,13 @@ code {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-/* Row state backgrounds take their hue from the theme's list tokens, but must
-   stay translucent: the commit graph SVG sits *behind* the table (z-index: -1),
-   so an opaque row background would hide the graph lines under it. */
+/* Native list hover colour; safe to use opaquely because the graph SVG is
+   painted above the row backgrounds (see #commitGraph). */
 #commitTable tr.commit:hover td,
 #commitTable tr.commit.contextMenuActive td,
 #commitTable tr.commit.dialogActive td,
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: color-mix(
-    in srgb,
-    var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.25)) 60%,
-    transparent
-  );
+  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15));
 }
 #commitTable tr.commit:hover td {
   cursor: pointer;
@@ -254,11 +253,9 @@ code {
   vertical-align: top;
 }
 #commitDetails td {
-  background-color: color-mix(
-    in srgb,
-    var(--vscode-list-inactiveSelectionBackground, rgba(128, 128, 128, 0.2)) 50%,
-    transparent
-  );
+  /* A neutral panel tint (as upstream), not a list state — the details panel
+     is a surface, and the translucent grey reads correctly in any theme. */
+  background-color: rgba(128, 128, 128, 0.1);
   position: relative;
   font-size: 13px;
   line-height: 18px;
@@ -274,19 +271,13 @@ code {
   height: 2px;
   background-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
 }
+/* The row whose Commit Details View is open is the selected row: use the
+   native list selection colours. Hovering it keeps the selection colour (as
+   native lists do) — this rule wins over the shared hover rule above because
+   it comes later at equal specificity. */
 #commitTable tr.commit.commitDetailsOpen td {
-  background-color: color-mix(
-    in srgb,
-    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.36)) 70%,
-    transparent
-  );
-}
-#commitTable tr.commit.commitDetailsOpen:hover td {
-  background-color: color-mix(
-    in srgb,
-    var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.41)) 85%,
-    transparent
-  );
+  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.25));
+  color: var(--vscode-list-activeSelectionForeground, var(--vscode-editor-foreground));
 }
 /* Docked-to-bottom Commit Details View: a fixed panel below the graph
    rather than a row inserted into the table. Its inner panels are positioned
@@ -704,6 +695,8 @@ body.tagLabelsRightAligned .gitRef.tag {
 #contextMenu {
   display: none;
   position: absolute;
+  /* Above the graph SVG (z-index: 2) and the docked CDV (z-index: 80). */
+  z-index: 300;
   background-color: var(--vscode-menu-background);
   box-shadow: 0 1px 4px 1px var(--vscode-widget-shadow);
   color: var(--vscode-menu-foreground);
