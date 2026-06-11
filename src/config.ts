@@ -115,14 +115,13 @@ export const config = {
   fileTreeCompactFolders: (): boolean => getConfig("detailsPanel.compactFolders", true),
   fileViewType: (): FileViewType => getConfig("detailsPanel.fileLayout", "File Tree"),
   graphColours: (): string[] =>
-    // Default palette mirrors VS Code's native SCM Graph (scmGraph.foreground1-5):
-    // a colourblind-safe set tuned for the modern dark themes.
     getConfig("graph.palette", [
-      "#FFB000",
-      "#DC267F",
-      "#994F00",
-      "#40B0A6",
-      "#B66DFF"
+      "#0085d9",
+      "#d9008f",
+      "#00d90a",
+      "#d98500",
+      "#a300d9",
+      "#ff0000"
     ]).filter(
       (v: string) =>
         v.match(

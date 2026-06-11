@@ -36,7 +36,9 @@ function commit(hash: string, parentHashes: string[]): GitCommitNode {
 }
 
 function circleCount(): number {
-  return document.querySelectorAll("#commitGraph circle").length;
+  // Count vertex nodes only — the HEAD node draws an extra decorative
+  // .currentHalo ring that is not a vertex.
+  return document.querySelectorAll("#commitGraph circle:not(.currentHalo)").length;
 }
 
 describe("graph layout termination", () => {

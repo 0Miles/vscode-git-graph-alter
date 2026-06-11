@@ -288,31 +288,35 @@ class Vertex {
   public setCurrent() {
     this.isCurrent = true;
   }
-  public draw(svg: SVGElement, config: Config, expandOffset: boolean, isSelected: boolean) {
+  public draw(svg: SVGElement, config: Config, expandOffset: boolean) {
     if (this.onBranch === null) return;
 
     let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     let colour = this.isCommitted
       ? config.graphColours[this.onBranch.getColour() % config.graphColours.length]
       : "#808080";
-    circle.setAttribute("cx", (this.x * config.grid.x + config.grid.offsetX).toString());
-    circle.setAttribute(
-      "cy",
-      (
-        this.y * config.grid.y +
-        config.grid.offsetY +
-        (expandOffset ? config.grid.expandY : 0)
-      ).toString()
-    );
+    const cx = (this.x * config.grid.x + config.grid.offsetX).toString();
+    const cy = (
+      this.y * config.grid.y +
+      config.grid.offsetY +
+      (expandOffset ? config.grid.expandY : 0)
+    ).toString();
+    circle.setAttribute("cx", cx);
+    circle.setAttribute("cy", cy);
     circle.setAttribute("r", "4");
-    // The selected row's vertex restyles its halo via CSS so it matches the
-    // selection background instead of punching an editor-background hole.
-    const selectedClass = isSelected ? " selectedRow" : "";
     if (this.isCurrent) {
-      circle.setAttribute("class", "current" + selectedClass);
+      // An outer ring hugging the coloured stroke, styled (via CSS) like the
+      // editor-background outline normal nodes get, so the HEAD node carries
+      // the same cut-out edge as every other node.
+      let halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      halo.setAttribute("cx", cx);
+      halo.setAttribute("cy", cy);
+      halo.setAttribute("r", "5.5");
+      halo.setAttribute("class", "currentHalo");
+      svg.appendChild(halo);
+      circle.setAttribute("class", "current");
       circle.setAttribute("stroke", colour);
     } else {
-      if (isSelected) circle.setAttribute("class", "selectedRow");
       circle.setAttribute("fill", colour);
     }
 
@@ -411,7 +415,7 @@ export class Graph {
     }
   }
 
-  public render(expandedCommit: ExpandedCommit | null, selectedCommitId: number = -1) {
+  public render(expandedCommit: ExpandedCommit | null) {
     let group = <SVGGElement>document.createElementNS("http://www.w3.org/2000/svg", "g"),
       i,
       width = this.getWidth();
@@ -421,12 +425,7 @@ export class Graph {
       this.branches[i].draw(group, this.config, expandedCommit !== null ? expandedCommit.id : -1);
     }
     for (i = 0; i < this.vertices.length; i++) {
-      this.vertices[i].draw(
-        group,
-        this.config,
-        expandedCommit !== null && i > expandedCommit.id,
-        i === selectedCommitId
-      );
+      this.vertices[i].draw(group, this.config, expandedCommit !== null && i > expandedCommit.id);
     }
 
     if (this.svgGroup !== null) this.svg.removeChild(this.svgGroup);
