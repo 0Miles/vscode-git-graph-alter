@@ -156,6 +156,12 @@
       },
       {
         "category": "Git Graph Alter",
+        "command": "git-graph-alter.branches.search",
+        "title": "%command.branches.search%",
+        "icon": "$(search)"
+      },
+      {
+        "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.showAll",
         "title": "%command.branches.showAll%",
         "icon": "$(clear-all)"
@@ -245,6 +251,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "git-graph-alter.branches.search",
+          "when": "view == git-graph-alter.branches",
+          "group": "navigation@0"
+        },
         {
           "command": "git-graph-alter.branches.showAll",
           "when": "view == git-graph-alter.branches",
