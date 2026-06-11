@@ -339,5 +339,9 @@
   "branchView.current": "current",
   "branchView.renamePrompt": "Enter a new name for branch '{0}':",
   "branchView.deleteConfirm": "Are you sure you want to delete the branch '{0}'?",
-  "branchView.deleteConfirmYes": "Delete Branch"
+  "branchView.deleteConfirmYes": "Delete Branch",
+  "branchView.age.day": "{0}d",
+  "branchView.age.week": "{0}w",
+  "branchView.age.month": "{0}mo",
+  "branchView.age.year": "{0}y"
 }
