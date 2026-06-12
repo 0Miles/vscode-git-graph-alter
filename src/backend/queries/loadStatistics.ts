@@ -22,9 +22,7 @@ export type Statistics = {
  *  from those fields — which avoids shifting the day across the offset. */
 export function parseStatistics(stdout: string): Omit<Statistics, "capped" | "limit"> {
   const byAuthorMap = new Map<string, number>();
-  const heatmap: number[][] = Array.from({ length: 7 }, () =>
-    Array.from({ length: 24 }, () => 0)
-  );
+  const heatmap: number[][] = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
   let total = 0;
 
   for (const line of stdout.split(/\r?\n/)) {

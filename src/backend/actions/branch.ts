@@ -114,4 +114,3 @@ export async function checkoutBranch(
     await git.checkoutBranch(input.branchName, input.remoteBranch);
   }
 }
-

@@ -21,7 +21,9 @@ describe("formatGitError", () => {
       "error: failed to push some refs to 'github.com:acme/repo.git'",
       "hint: Updates were rejected because the tip of your current branch is behind"
     ].join("\n");
-    expect(formatGitError(new Error(raw))).toBe("[rejected]        main -> main (non-fast-forward)");
+    expect(formatGitError(new Error(raw))).toBe(
+      "[rejected]        main -> main (non-fast-forward)"
+    );
   });
 
   it("strips the 'fatal:'/'error:' prefix from git's primary line", () => {
