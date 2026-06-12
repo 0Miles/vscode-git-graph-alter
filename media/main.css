@@ -872,10 +872,14 @@ body.tagLabelsRightAligned .gitRef.tag {
 #dialog > table.dialogForm.single select {
   width: 100%;
 }
-#dialog > table.dialogForm.single .dialogFormCheckbox {
+#dialog > table.dialogForm .dialogFormCheckbox {
   display: inline-block;
   text-align: left;
   width: 100%;
+}
+#dialog > table.dialogForm .dialogFormCheckbox input[type="checkbox"] {
+  margin-left: 0;
+  margin-right: 6px;
 }
 #dialog > table.dialogForm input[type="text"] {
   width: 100%;
@@ -913,9 +917,6 @@ body.tagLabelsRightAligned .gitRef.tag {
   border: solid var(--vscode-checkbox-foreground, var(--vscode-button-foreground, #fff));
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
-}
-#dialog > table.dialogForm.multi input[type="checkbox"] {
-  margin-left: 0;
 }
 #dialog > table.dialogForm input[type="text"],
 #dialog > table.dialogForm select {
