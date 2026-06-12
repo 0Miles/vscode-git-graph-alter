@@ -14,4 +14,7 @@
 !resources/webview-icon.svg
 !resources/webview-icon-dark.svg
 !resources/webview-icon-light.svg
-!resources/sidebar-icon.svg
+!resources/icons/**
+
+# Re-exclude source maps from the bundled output
+out/**/*.map
