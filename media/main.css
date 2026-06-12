@@ -675,6 +675,32 @@ body.tagLabelsRightAligned .gitRef.tag {
   border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.5));
   font-size: 13px;
 }
+/* Repo title block on the left: repo name over the checked-out branch.
+   margin-right:auto pushes the icon buttons to the right; min-width:0 lets
+   the block shrink so long names ellipsise instead of pushing them out. */
+#repoTitle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-right: auto;
+  min-width: 0;
+  line-height: 1.2;
+  user-select: none;
+}
+#repoTitleName {
+  font-size: 12px;
+  font-weight: 600;
+}
+#repoTitleBranch {
+  font-size: 10px;
+  opacity: 0.75;
+}
+#repoTitleName,
+#repoTitleBranch {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* Each button is a 20x20 positioned box so its inner <svg> can be offset
    within it (the svgs are absolutely positioned). */
 #findBtn,

@@ -271,6 +271,7 @@ class GitGraphView {
     this.clearExpandedCommit();
     this.currentBranches = null;
     this.applyShowRemoteBranchesForRepo();
+    this.updateRepoTitle();
     this.saveState();
     sendMessage({ command: "selectRepo", repo });
     this.refresh(true);
@@ -293,6 +294,27 @@ class GitGraphView {
     const override = this.gitRepos[this.currentRepo]?.showRemoteBranches;
     this.showRemoteBranches =
       typeof override === "boolean" ? override : this.config.showRemoteBranches;
+  }
+
+  /** Refresh the toolbar's title block: the repo's display name (custom name,
+   *  else its folder name) over the checked-out branch. The branch may lag one
+   *  load behind on a repo switch; the loadBranches response corrects it. */
+  private updateRepoTitle() {
+    const nameElem = document.getElementById("repoTitleName");
+    const branchElem = document.getElementById("repoTitleBranch");
+    if (nameElem === null || branchElem === null) return;
+    const repo: string | undefined = this.currentRepo;
+    if (repo === undefined) {
+      nameElem.textContent = "";
+      branchElem.textContent = "";
+      return;
+    }
+    const name = this.gitRepos[repo]?.customName || repo.substring(repo.lastIndexOf("/") + 1);
+    const branch = this.gitBranchHead ?? "";
+    nameElem.textContent = name;
+    nameElem.title = repo;
+    branchElem.textContent = branch;
+    branchElem.title = branch;
   }
 
   /** Apply a "Show Remote Branches" change driven by the Branches side-view's
@@ -348,6 +370,7 @@ class GitGraphView {
     this.clearExpandedCommit();
     this.currentBranches = null;
     this.applyShowRemoteBranchesForRepo();
+    this.updateRepoTitle();
     this.saveState();
     sendMessage({ command: "selectRepo", repo: this.currentRepo });
     this.refresh(true);
@@ -373,6 +396,8 @@ class GitGraphView {
       this.applyShowRemoteBranchesForRepo();
       this.refresh(true);
     }
+    // Unconditional: a repo's customName may have changed without a repo switch.
+    this.updateRepoTitle();
   }
 
   /** Reload commits after the branch selection changed: reset paging, close any
@@ -410,6 +435,7 @@ class GitGraphView {
 
     this.gitBranches = branchOptions;
     this.gitBranchHead = branchHead;
+    this.updateRepoTitle();
     // The branch filter is owned by the extension host (the Branches side-view);
     // apply whatever it resolved for this repo. An empty list means "show all".
     this.currentBranches = filter;

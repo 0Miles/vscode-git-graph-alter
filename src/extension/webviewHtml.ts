@@ -92,6 +92,10 @@ export function buildWebviewHtml(opts: {
   if (numRepos > 0) {
     body = `<body style="${colorVars}">
 		<div id="controls">
+      <div id="repoTitle">
+        <span id="repoTitleName"></span>
+        <span id="repoTitleBranch"></span>
+      </div>
       <div id="findBtn" class="iconBtn" title="${l10nStrings.find}"></div>
       <div id="terminalBtn" class="iconBtn" title="${l10nStrings.openTerminal}"></div>
       <div id="blinkHeadBtn" class="iconBtn" title="${l10nStrings.locateHead}"></div>
