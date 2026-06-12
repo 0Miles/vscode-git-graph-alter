@@ -2,7 +2,7 @@
   <img src="./resources/icon.png" height="128"/>
   <samp>
     <h1>Git Graph Alter for Visual Studio Code</h1>
-    <h3>An MIT fork of Git Graph. Visual history, branch actions, and devcontainer support.</h3>
+    <h3>An MIT fork of Git Graph. Visual commit history, branch and remote management, localization, and devcontainer support.</h3>
   </samp>
 </div>
 
@@ -32,15 +32,19 @@ This fork:
 - Keeps the MIT license
 - Adds devcontainer support
 - Adds internationalization support (English, zh-CN, zh-TW)
+- Adds Branches and Remotes side views
 - Improves codebase, tooling, and maintainability
 
 ## Features
 
-- **Graph view**: See branches, tags, and uncommitted changes in one graph
+- **Graph view**: See branches, tags, stashes, and uncommitted changes in one graph
 - **Commit details**: Click a commit to see message, files, and diffs
-- **Branch actions**: Create, checkout, rename, delete, and merge
+- **Branch actions**: Create, checkout, rename, delete, merge, rebase, and push
 - **Tag actions**: Create, delete, and push tags
 - **Commit actions**: Checkout, cherry-pick, revert, and reset
+- **Branches view**: A side view with search, multi-select, remote/local grouping, and an inactive-branch filter
+- **Remotes view**: Add, edit, rename, and remove remotes from the side bar
+- **Source Control integration**: The graph follows the repository selected in the Source Control view
 - **Avatar support**: Optional avatars from GitHub, GitLab, or Gravatar
 - **Multi-repo**: Work with multiple repositories in one workspace
 - **Devcontainer ready**: Works in remote and container environments
