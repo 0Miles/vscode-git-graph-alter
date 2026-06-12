@@ -1,6 +1,6 @@
 {
   "displayName": "Git Graph Alter",
-  "description": "Git Graph 的纯净 MIT branch。可视化历史记录、 branch 操作和开发容器支持。",
+  "description": "Git Graph 的 MIT 授权 fork。可视化提交历史、分支与远程管理、多语言界面与开发容器支持。",
   "command.view": "查看 Git 图形 (git log)",
   "command.clearAvatarCache": "清除头像缓存",
   "command.fetch": "从 remote fetch",
@@ -21,7 +21,6 @@
   "config.commitOrder": "指定 Git 图形视图中 commit 的显示顺序。各排序方式的细节请参阅 git log --help。",
   "config.commits.showSignatureStatus": "在 Git 图形视图中显示已签名 commit 的签名验证状态（勾 / 问号 / 叉）。验证签名相对较慢。默认值：false",
   "config.contextMenuActionsVisibility": "自定义 Git 图形视图右键选单上各动作的可见性。每个动作默认显示；设为 false 可隐藏。",
-  "config.contextMenuActionsVisibility.commitDetailsViewFile": "Commit 详情视图中档案右键选单各动作的可见性。",
   "config.customEmojiShortcodeMappings": "自订表情短代码对应表，用于将 commit 讯息中的表情短代码（例如 :rocket:）替换为表情符号。此设定优先于内建对应。",
   "config.customBranchGlobPatterns": "在 branch 下拉中显示为可选项的自订 glob 模式；选取后仅显示名称符合该 glob 的 branch。",
   "config.customBranchGlobPatterns.name": "在 branch 下拉中显示的 tag。",
@@ -109,7 +108,6 @@
   "config.dialog.merge.squashMessageFormat.default": "使用 Git Graph 产生的 squash commit 讯息（例如 “Merge branch 'x'”）",
   "config.dialog.merge.squashMessageFormat.gitSquashMsg": "使用 Git 产生的详细 squash commit 讯息（储存在 .git/SQUASH_MSG 的 squash commit 清单）",
   "config.dialog.resetCurrentBranch.mode": "Reset 当前 branch 到 commit 对话框中默认选中的 reset 模式（soft、mixed 或 hard）。",
-  "config.deprecatedRenamed": "此设置已重命名并分组。为保持向后兼容仍会读取它——请迁移到新的分组设置。",
   "config.followSourceControlSelection": "启用后，Git Graph 会跟随在源代码管理视图中选取的存储库，打开或切换图表到该存储库。当选取多个存储库时，图表控制列会显示存储库下拉框供你选择要显示哪一个。默认：启用",
   "view.branches": "分支",
   "view.branches.welcome": "未选取存储库。\n[打开 Git Graph](command:git-graph-alter.view)",

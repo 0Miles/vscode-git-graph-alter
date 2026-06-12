@@ -9,10 +9,14 @@
   ],
   "keywords": [
     "branch",
+    "devcontainer",
     "git",
     "git graph",
+    "git graph alter",
     "git history",
-    "git log"
+    "git log",
+    "remote",
+    "tag"
   ],
   "homepage": "https://github.com/0Miles/vscode-git-graph-alter",
   "bugs": {
@@ -25,12 +29,8 @@
   },
   "contributors": [
     {
-      "name": "Michael Hutchison",
-      "url": "https://github.com/mhutchie"
-    },
-    {
-      "name": "Asis Pattisahusiwa",
-      "url": "https://github.com/asispts"
+      "name": "Miles",
+      "url": "https://github.com/0Miles"
     }
   ],
   "repository": {
