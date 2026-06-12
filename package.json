@@ -410,6 +410,11 @@
           "group": "1_visibility@1"
         },
         {
+          "command": "git-graph-alter.viewReflog",
+          "when": "view == git-graph-alter.branches",
+          "group": "2_tools@1"
+        },
+        {
           "command": "git-graph-alter.remotes.add",
           "when": "view == git-graph-alter.remotes",
           "group": "navigation@0"
