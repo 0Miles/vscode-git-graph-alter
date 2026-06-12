@@ -870,7 +870,7 @@ export function activate(context: vscode.ExtensionContext) {
       // Quick access to this extension's settings.
       void vscode.commands.executeCommand(
         "workbench.action.openSettings",
-        "@ext:your-publisher.vscode-git-graph-alter"
+        "@ext:0miles.vscode-git-graph-alter"
       );
     }),
     vscode.commands.registerCommand("git-graph-alter.setGitUserDetails", async () => {
