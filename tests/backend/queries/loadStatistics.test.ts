@@ -38,9 +38,7 @@ describe("parseStatistics", () => {
   });
 
   it("skips anonymous (empty-name) commits", () => {
-    const s = parseStatistics(
-      "\x002020-01-01T10:00:00+00:00\nReal\x002020-01-01T11:00:00+00:00"
-    );
+    const s = parseStatistics("\x002020-01-01T10:00:00+00:00\nReal\x002020-01-01T11:00:00+00:00");
     expect(s.total).toBe(1);
     expect(s.byAuthor).toEqual([{ name: "Real", count: 1, percent: 100 }]);
   });

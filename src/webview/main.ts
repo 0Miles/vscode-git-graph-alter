@@ -1993,10 +1993,7 @@ class GitGraphView {
       const leaf = remote !== undefined ? refName.slice(remote.length + 1) : refName;
       const promptNewLocalBranch = () => {
         showRefInputDialog(
-          l10n.dialogCreateBranchTitle.replace(
-            "{0}",
-            "<b><i>" + escapeHtml(refName) + "</i></b>"
-          ),
+          l10n.dialogCreateBranchTitle.replace("{0}", "<b><i>" + escapeHtml(refName) + "</i></b>"),
           leaf,
           l10n.checkoutBranch,
           (newBranch) => {

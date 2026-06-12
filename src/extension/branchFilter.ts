@@ -19,7 +19,10 @@ export function branchFilterEquals(a: readonly string[], b: readonly string[]): 
 /** Drop selected refs that no longer exist (e.g. a deleted branch, or remote
  *  branches once "show remote branches" is turned off) so the graph's `git log`
  *  never references a missing ref. Preserves the original order of survivors. */
-export function pruneBranchFilter(filter: readonly string[], available: readonly string[]): string[] {
+export function pruneBranchFilter(
+  filter: readonly string[],
+  available: readonly string[]
+): string[] {
   const set = new Set(available);
   return filter.filter((branch) => set.has(branch));
 }

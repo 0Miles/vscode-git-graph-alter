@@ -37,12 +37,14 @@ describe("computeDefaultBranchFilter", () => {
     expect(computeDefaultBranchFilter(["main"], "main", opts([], false))).toEqual([]);
   });
   it("includes configured specific branches that exist", () => {
-    expect(computeDefaultBranchFilter(["main", "dev"], "main", opts(["dev", "ghost"], false))).toEqual(
-      ["dev"]
-    );
+    expect(
+      computeDefaultBranchFilter(["main", "dev"], "main", opts(["dev", "ghost"], false))
+    ).toEqual(["dev"]);
   });
   it("adds the checked-out branch when enabled, without duplicates", () => {
-    expect(computeDefaultBranchFilter(["main", "dev"], "main", opts(["main"], true))).toEqual(["main"]);
+    expect(computeDefaultBranchFilter(["main", "dev"], "main", opts(["main"], true))).toEqual([
+      "main"
+    ]);
     expect(computeDefaultBranchFilter(["main", "dev"], "dev", opts(["main"], true))).toEqual([
       "main",
       "dev"
