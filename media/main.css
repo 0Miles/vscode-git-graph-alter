@@ -675,24 +675,26 @@ body.tagLabelsRightAligned .gitRef.tag {
   border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.5));
   font-size: 13px;
 }
-/* Repo title block on the left: repo name over the checked-out branch.
-   margin-right:auto pushes the icon buttons to the right; min-width:0 lets
-   the block shrink so long names ellipsise instead of pushing them out. */
+/* Repo title block on the left: repo name and the checked-out branch on one
+   line, vertically centred in the bar. margin-right:auto pushes the icon
+   buttons to the right; min-width:0 lets the block shrink so long names
+   ellipsise instead of pushing them out. */
 #repoTitle {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 6px;
   margin-right: auto;
+  padding-left: 8px;
   min-width: 0;
   line-height: 1.2;
   user-select: none;
 }
 #repoTitleName {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 #repoTitleBranch {
-  font-size: 10px;
+  font-size: 11px;
   opacity: 0.75;
 }
 #repoTitleName,
