@@ -32,6 +32,12 @@ export class RepoFileWatcher {
       this.fsWatcher.dispose();
       this.fsWatcher = null;
     }
+    // A pending debounce would otherwise fire repoChangeCallback after the
+    // owning panel is disposed.
+    if (this.refreshTimeout !== null) {
+      clearTimeout(this.refreshTimeout);
+      this.refreshTimeout = null;
+    }
   }
 
   public mute() {
