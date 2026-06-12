@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 
 suite("GitGraphPanel", () => {
   suiteSetup(async () => {
-    const ext = vscode.extensions.getExtension("your-publisher.vscode-git-graph-alter");
+    const ext = vscode.extensions.getExtension("0miles.vscode-git-graph-alter");
     await ext?.activate();
   });
 

@@ -6,16 +6,10 @@
   </samp>
 </div>
 
-<!--
-  Badges use the `your-org` / `your-publisher` placeholders.
-  Replace them with your GitHub owner and Marketplace publisher id before publishing.
--->
-
-[![](https://img.shields.io/github/license/your-org/vscode-git-graph-alter)](https://github.com/your-org/vscode-git-graph-alter?tab=MIT-1-ov-file)
-[![GitHub release](https://img.shields.io/github/v/release/your-org/vscode-git-graph-alter)](https://github.com/your-org/vscode-git-graph-alter/releases)
-[![vscode downloads](https://img.shields.io/visual-studio-marketplace/d/your-publisher.vscode-git-graph-alter?label=download)](https://marketplace.visualstudio.com/items?itemName=your-publisher.vscode-git-graph-alter)
-[![vscode installs](https://img.shields.io/visual-studio-marketplace/i/your-publisher.vscode-git-graph-alter?label=install)](https://marketplace.visualstudio.com/items?itemName=your-publisher.vscode-git-graph-alter)
-[![open-vsx downloads](https://img.shields.io/open-vsx/dt/your-publisher/vscode-git-graph-alter?label=open-vsx)](https://open-vsx.org/extension/your-publisher/vscode-git-graph-alter)
+[![](https://img.shields.io/github/license/0Miles/vscode-git-graph-alter)](https://github.com/0Miles/vscode-git-graph-alter?tab=MIT-1-ov-file)
+[![GitHub release](https://img.shields.io/github/v/release/0Miles/vscode-git-graph-alter)](https://github.com/0Miles/vscode-git-graph-alter/releases)
+[![vscode downloads](https://img.shields.io/visual-studio-marketplace/d/0miles.vscode-git-graph-alter?label=download)](https://marketplace.visualstudio.com/items?itemName=0miles.vscode-git-graph-alter)
+[![vscode installs](https://img.shields.io/visual-studio-marketplace/i/0miles.vscode-git-graph-alter?label=install)](https://marketplace.visualstudio.com/items?itemName=0miles.vscode-git-graph-alter)
 
 ![demo](resources/demo.gif)
 
@@ -75,12 +69,12 @@ See `contributes.configuration` in `package.json` for the full list of settings.
 
 Search for **Git Graph Alter** (`vscode-git-graph-alter`) in Extensions, or install from:
 
-- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=your-publisher.vscode-git-graph-alter)
-- [Open VSX Registry](https://open-vsx.org/extension/your-publisher/vscode-git-graph-alter)
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=0miles.vscode-git-graph-alter)
+- [GitHub Releases](https://github.com/0Miles/vscode-git-graph-alter/releases) (`.vsix` manual install)
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
 > Not affiliated with or endorsed by the original Git Graph project or (neo) Git Graph.
-</content>
+> </content>
