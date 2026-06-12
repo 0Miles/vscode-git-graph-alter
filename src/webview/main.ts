@@ -3484,7 +3484,7 @@ let gitGraph = new GitGraphView(
     showRemoteBranches: viewState.showRemoteBranches,
     showTags: viewState.showTags
   },
-  vscode.getState()
+  vscode.getState() ?? null
 );
 
 /* Conflict prediction (merge dialogs) */

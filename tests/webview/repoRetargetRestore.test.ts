@@ -135,3 +135,23 @@ describe("rebooting normally (saved state matches lastActiveRepo)", () => {
     expect(document.getElementById("commitTable")!.textContent).toContain("Old repo commit");
   });
 });
+
+// The real vscode.getState() yields undefined (not null) when nothing was ever
+// saved — a fresh boot must survive that, not die before requesting any data
+// (which left the view stuck on the loading screen forever).
+describe("booting fresh with no saved state (getState() is undefined)", () => {
+  let mock: ReturnType<typeof createVscodeMock>;
+
+  beforeAll(async () => {
+    vi.resetModules();
+    mock = createVscodeMock();
+    setupHtml(buildViewState(REPO_B));
+    await import("@/webview/main");
+  });
+
+  it("boots on lastActiveRepo and requests its data", () => {
+    const selects = mock.sentMessages.filter((m) => m.command === "selectRepo");
+    expect(selects.length).toBeGreaterThan(0);
+    expect(selects.every((m) => m.repo === REPO_B)).toBe(true);
+  });
+});

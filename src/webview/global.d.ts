@@ -3,7 +3,9 @@ import * as GG from "@/types";
 
 declare global {
   function acquireVsCodeApi(): {
-    getState(): WebViewState | null;
+    // The real VS Code API yields undefined when no state was saved; tests'
+    // mock yields null. Treat both as "no saved state".
+    getState(): WebViewState | null | undefined;
     postMessage(message: GG.RequestMessage): void;
     setState(state: WebViewState): void;
   };

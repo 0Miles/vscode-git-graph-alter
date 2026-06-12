@@ -10,7 +10,10 @@ function jsonRoundTrip<T>(value: T): T {
 
 export function createVscodeMock(initialState: WebViewState | null = null) {
   const sent: GG.RequestMessage[] = [];
-  let state: WebViewState | null = initialState === null ? null : jsonRoundTrip(initialState);
+  // The real getState() yields undefined (not null) when nothing was saved —
+  // model that exactly, so a boot path that only handles null fails here too.
+  let state: WebViewState | undefined =
+    initialState === null ? undefined : jsonRoundTrip(initialState);
 
   const mock = {
     postMessage: (msg: GG.RequestMessage) => sent.push(msg),
