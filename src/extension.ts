@@ -1,3 +1,4 @@
+import type { SimpleGit } from "simple-git";
 import * as vscode from "vscode";
 
 import { AvatarManager } from "./avatarManager";
@@ -28,6 +29,11 @@ import { createBranchFilterStore } from "./extension/branchFilterStore";
 import { REMOTE_PREFIX } from "./extension/branchTree";
 import { createLogger } from "./extension/logger";
 import { registerMessageHandlers } from "./extension/messageHandler";
+import {
+  createRemotesView,
+  remoteActionTarget,
+  type RemoteActionTarget
+} from "./extension/remotesView";
 import { createRepoManager } from "./extension/repoManager";
 import { createScmRepoTracker } from "./extension/scmRepoTracker";
 import { showStatistics } from "./extension/statisticsPanel";
@@ -110,6 +116,13 @@ export function activate(context: vscode.ExtensionContext) {
   });
   branchesView.setActiveRepo(extensionState.getLastActiveRepo());
   context.subscriptions.push(branchesView, branchFilterStore);
+
+  // Remotes side-view: a flat list of the active repo's remotes, sharing the
+  // Branches view's data service and repo-following behaviour. Mutations are
+  // registered as commands below.
+  const remotesView = createRemotesView(branchDataService);
+  remotesView.setActiveRepo(extensionState.getLastActiveRepo());
+  context.subscriptions.push(remotesView);
 
   // Mirror the graph's context-menu visibility settings onto when-clause
   // context keys, so the side-view's branch menu shows the same items.
@@ -230,6 +243,7 @@ export function activate(context: vscode.ExtensionContext) {
     // initial `loadRepos` handshake — avoids racing the webview boot.
     if (repoToOpen) extensionState.setLastActiveRepo(repoToOpen);
     branchesView.setActiveRepo(repoToOpen ?? extensionState.getLastActiveRepo());
+    remotesView.setActiveRepo(repoToOpen ?? extensionState.getLastActiveRepo());
 
     const hadPanel = currentPanel !== undefined;
     if (currentPanel) {
@@ -253,6 +267,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (panel.visible) {
           bridge.post({ command: "refresh" });
           branchesView.refresh();
+          remotesView.refresh();
         }
       });
       bridge = webviewBridgeFactory(panel.webview, repoFileWatcher);
@@ -268,6 +283,7 @@ export function activate(context: vscode.ExtensionContext) {
         branchFilterStore,
         onSelectRepo: (repo) => {
           branchesView.setActiveRepo(repo);
+          remotesView.setActiveRepo(repo);
           // The webview is alive and (re)loading this repo: deliver any waiting
           // side-view action now (the webview holds it until the load lands).
           flushPendingRefAction(repo);
@@ -328,6 +344,26 @@ export function activate(context: vscode.ExtensionContext) {
     currentBridge?.post(msg);
   };
 
+  // Run a Remotes side-view action against its repo's git instance, then
+  // refresh everything that may show remote state: both side-views (remote
+  // renames/removals change remote-tracking refs) and an open graph.
+  const runRemoteAction = async (
+    item: unknown,
+    errorKey: string,
+    action: (git: SimpleGit, target: RemoteActionTarget) => Promise<void>
+  ): Promise<void> => {
+    const target = remoteActionTarget(item);
+    if (target === null) return;
+    try {
+      await action(branchDataService.getGitInstance(target.repo), target);
+      remotesView.refresh();
+      branchesView.refresh();
+      currentBridge?.post({ command: "refresh" });
+    } catch (e: unknown) {
+      void vscode.window.showErrorMessage(l10n.t(errorKey) + ": " + formatGitError(e));
+    }
+  };
+
   // Follow the repo focused in the native Source Control view (`Repository.ui.selected`, which the
   // git API drives from the single focused repo). Open the graph on it, or switch an already-open
   // graph to it in place, revealing the graph panel so it gains focus. The initial selection is
@@ -338,6 +374,7 @@ export function activate(context: vscode.ExtensionContext) {
       const selected = toKnownRepos(selectedPaths);
       if (selected.length === 0) return;
       branchesView.setActiveRepo(selected[0]);
+      remotesView.setActiveRepo(selected[0]);
       if (!currentPanel) {
         void openGraphView(selected[0]);
         return;
@@ -497,6 +534,87 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     }),
+    // --- Remotes side-view commands ---
+    vscode.commands.registerCommand("git-graph-alter.remotes.refresh", () => remotesView.refresh()),
+    vscode.commands.registerCommand("git-graph-alter.remotes.add", async () => {
+      const repo = remotesView.getActiveRepo();
+      if (repo === null) return;
+      const name = (
+        await vscode.window.showInputBox({
+          prompt: l10n.t("remotes.namePrompt"),
+          ignoreFocusOut: true
+        })
+      )?.trim();
+      if (!name) return;
+      const url = (
+        await vscode.window.showInputBox({
+          prompt: l10n.t("remotes.urlPrompt"),
+          ignoreFocusOut: true
+        })
+      )?.trim();
+      if (!url) return;
+      try {
+        await addRemote(branchDataService.getGitInstance(repo), { name, url });
+        remotesView.refresh();
+        branchesView.refresh();
+        currentBridge?.post({ command: "refresh" });
+      } catch (e: unknown) {
+        void vscode.window.showErrorMessage(
+          l10n.t("error.unableToManageRemote") + ": " + formatGitError(e)
+        );
+      }
+    }),
+    vscode.commands.registerCommand("git-graph-alter.remotes.editUrl", (item: unknown) =>
+      runRemoteAction(item, "error.unableToManageRemote", async (git, target) => {
+        const url = (
+          await vscode.window.showInputBox({
+            prompt: l10n.t("remotes.urlPrompt"),
+            value: target.fetchUrl,
+            ignoreFocusOut: true
+          })
+        )?.trim();
+        if (!url || url === target.fetchUrl) return; // cancelled / unchanged
+        await setRemoteUrl(git, { name: target.name, url });
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.remotes.rename", (item: unknown) =>
+      runRemoteAction(item, "error.unableToManageRemote", async (git, target) => {
+        const newName = (
+          await vscode.window.showInputBox({
+            prompt: l10n.t("remotes.renamePrompt"),
+            value: target.name,
+            ignoreFocusOut: true
+          })
+        )?.trim();
+        if (!newName || newName === target.name) return; // cancelled / unchanged
+        await renameRemote(git, { oldName: target.name, newName });
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.remotes.remove", (item: unknown) =>
+      runRemoteAction(item, "error.unableToManageRemote", async (git, target) => {
+        const yes = l10n.t("remotes.removeConfirmYes");
+        const confirm = await vscode.window.showWarningMessage(
+          l10n.t("remotes.removeConfirm", target.name),
+          { modal: true },
+          yes
+        );
+        if (confirm !== yes) return; // cancelled
+        await removeRemote(git, { name: target.name });
+      })
+    ),
+    vscode.commands.registerCommand("git-graph-alter.remotes.fetchOne", (item: unknown) =>
+      runRemoteAction(item, "error.unableToFetch", (git, target) =>
+        fetchRemote(git, {
+          remote: target.name,
+          prune: config.fetchAndPrune(),
+          pruneTags: config.fetchAndPruneTags()
+        })
+      )
+    ),
+    vscode.commands.registerCommand("git-graph-alter.remotes.copyUrl", (item: unknown) => {
+      const target = remoteActionTarget(item);
+      if (target !== null) void vscode.env.clipboard.writeText(target.fetchUrl);
+    }),
     vscode.commands.registerCommand("git-graph-alter.clearAvatarCache", () => {
       avatarManager.clearCache();
     }),
@@ -572,6 +690,8 @@ export function activate(context: vscode.ExtensionContext) {
             await removeRemote(git, { name: choice });
           }
         }
+        remotesView.refresh();
+        branchesView.refresh();
         currentBridge?.post({ command: "refresh" });
       } catch (e: unknown) {
         void vscode.window.showErrorMessage(

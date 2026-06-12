@@ -133,5 +133,15 @@
   "command.branches.pull": "Pull into Current Branch…",
   "command.branches.fetchIntoLocal": "Fetch into Local Branch…",
   "command.branches.deleteRemote": "Delete Remote Branch…",
-  "command.branches.collapseAll": "Collapse Branches"
+  "command.branches.collapseAll": "Collapse Branches",
+  "view.remotes": "Remotes",
+  "view.remotes.welcomeNoRepo": "No repository selected.\n[Open Git Graph](command:git-graph-alter.view)",
+  "view.remotes.welcomeEmpty": "This repository has no remotes.\n[Add Remote](command:git-graph-alter.remotes.add)",
+  "command.remotes.add": "Add Remote…",
+  "command.remotes.refresh": "Refresh",
+  "command.remotes.fetchOne": "Fetch from Remote",
+  "command.remotes.editUrl": "Edit URL…",
+  "command.remotes.rename": "Rename Remote…",
+  "command.remotes.remove": "Remove Remote…",
+  "command.remotes.copyUrl": "Copy Remote URL"
 }

@@ -272,6 +272,43 @@
         "category": "Git Graph Alter",
         "command": "git-graph-alter.branches.deleteRemote",
         "title": "%command.branches.deleteRemote%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.add",
+        "title": "%command.remotes.add%",
+        "icon": "$(add)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.refresh",
+        "title": "%command.remotes.refresh%",
+        "icon": "$(refresh)"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.editUrl",
+        "title": "%command.remotes.editUrl%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.rename",
+        "title": "%command.remotes.rename%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.remove",
+        "title": "%command.remotes.remove%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.fetchOne",
+        "title": "%command.remotes.fetchOne%"
+      },
+      {
+        "category": "Git Graph Alter",
+        "command": "git-graph-alter.remotes.copyUrl",
+        "title": "%command.remotes.copyUrl%"
       }
     ],
     "views": {
@@ -280,6 +317,12 @@
           "id": "git-graph-alter.branches",
           "name": "%view.branches%",
           "contextualTitle": "%view.branches%"
+        },
+        {
+          "id": "git-graph-alter.remotes",
+          "name": "%view.remotes%",
+          "contextualTitle": "%view.remotes%",
+          "visibility": "collapsed"
         }
       ]
     },
@@ -287,6 +330,16 @@
       {
         "view": "git-graph-alter.branches",
         "contents": "%view.branches.welcome%"
+      },
+      {
+        "view": "git-graph-alter.remotes",
+        "contents": "%view.remotes.welcomeNoRepo%",
+        "when": "!git-graph-alter.remotesView.hasRepo"
+      },
+      {
+        "view": "git-graph-alter.remotes",
+        "contents": "%view.remotes.welcomeEmpty%",
+        "when": "git-graph-alter.remotesView.hasRepo"
       }
     ],
     "menus": {
@@ -355,9 +408,44 @@
           "command": "git-graph-alter.branches.hideInactive",
           "when": "view == git-graph-alter.branches && git-graph-alter.branchView.showingInactive",
           "group": "1_visibility@1"
+        },
+        {
+          "command": "git-graph-alter.remotes.add",
+          "when": "view == git-graph-alter.remotes",
+          "group": "navigation@0"
+        },
+        {
+          "command": "git-graph-alter.remotes.refresh",
+          "when": "view == git-graph-alter.remotes",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [
+        {
+          "command": "git-graph-alter.remotes.fetchOne",
+          "when": "view == git-graph-alter.remotes && viewItem == remote",
+          "group": "1_fetch@1"
+        },
+        {
+          "command": "git-graph-alter.remotes.editUrl",
+          "when": "view == git-graph-alter.remotes && viewItem == remote",
+          "group": "2_modify@1"
+        },
+        {
+          "command": "git-graph-alter.remotes.rename",
+          "when": "view == git-graph-alter.remotes && viewItem == remote",
+          "group": "2_modify@2"
+        },
+        {
+          "command": "git-graph-alter.remotes.remove",
+          "when": "view == git-graph-alter.remotes && viewItem == remote",
+          "group": "2_modify@3"
+        },
+        {
+          "command": "git-graph-alter.remotes.copyUrl",
+          "when": "view == git-graph-alter.remotes && viewItem == remote",
+          "group": "3_copy@1"
+        },
         {
           "command": "git-graph-alter.branches.checkout",
           "when": "view == git-graph-alter.branches && viewItem == branch-local && git-graph-alter.cmv.branch.checkout",
@@ -440,6 +528,34 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "git-graph-alter.remotes.add",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.refresh",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.fetchOne",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.editUrl",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.rename",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.remove",
+          "when": "false"
+        },
+        {
+          "command": "git-graph-alter.remotes.copyUrl",
+          "when": "false"
+        },
         {
           "command": "git-graph-alter.branches.showRemoteBranches",
           "when": "false"

@@ -133,5 +133,15 @@
   "command.branches.pull": "拉取到当前分支…",
   "command.branches.fetchIntoLocal": "Fetch 到本地分支…",
   "command.branches.deleteRemote": "删除远程分支…",
-  "command.branches.collapseAll": "折叠全部分支"
+  "command.branches.collapseAll": "折叠全部分支",
+  "view.remotes": "远程",
+  "view.remotes.welcomeNoRepo": "未选取存储库。\n[打开 Git Graph](command:git-graph-alter.view)",
+  "view.remotes.welcomeEmpty": "此存储库尚未设置 remote。\n[添加 remote](command:git-graph-alter.remotes.add)",
+  "command.remotes.add": "添加 remote…",
+  "command.remotes.refresh": "刷新",
+  "command.remotes.fetchOne": "从此 remote fetch",
+  "command.remotes.editUrl": "编辑 URL…",
+  "command.remotes.rename": "重命名 remote…",
+  "command.remotes.remove": "移除 remote…",
+  "command.remotes.copyUrl": "复制 remote URL"
 }

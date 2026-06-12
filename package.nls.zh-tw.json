@@ -133,5 +133,15 @@
   "command.branches.pull": "Pull 到目前 branch…",
   "command.branches.fetchIntoLocal": "Fetch 到本機 branch…",
   "command.branches.deleteRemote": "刪除 remote branch…",
-  "command.branches.collapseAll": "折疊全部 branch"
+  "command.branches.collapseAll": "折疊全部 branch",
+  "view.remotes": "遠端",
+  "view.remotes.welcomeNoRepo": "未選取存放庫。\n[開啟 Git Graph](command:git-graph-alter.view)",
+  "view.remotes.welcomeEmpty": "此存放庫尚未設定 remote。\n[新增 remote](command:git-graph-alter.remotes.add)",
+  "command.remotes.add": "新增 remote…",
+  "command.remotes.refresh": "重新整理",
+  "command.remotes.fetchOne": "從此 remote fetch",
+  "command.remotes.editUrl": "編輯 URL…",
+  "command.remotes.rename": "重新命名 remote…",
+  "command.remotes.remove": "移除 remote…",
+  "command.remotes.copyUrl": "複製 remote URL"
 }
