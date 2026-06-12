@@ -12,7 +12,6 @@
   "ui.showAll": "显示全部",
   "ui.filterPlaceholder": "筛选{0}...",
   "ui.noResultsFound": "未找到结果。",
-  "ui.graph": "Branch 图",
   "ui.description": "描述",
   "ui.date": "日期",
   "ui.author": "Author",

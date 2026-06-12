@@ -833,7 +833,7 @@ class GitGraphView {
     const hiddenDate = this.columnVisibility.date ? "" : " hidden";
     const hiddenAuthor = this.columnVisibility.author ? "" : " hidden";
     const hiddenCommit = this.columnVisibility.commit ? "" : " hidden";
-    let html = `<tr id="tableColHeaders"><th id="tableHeaderGraphCol" class="tableColHeader">${l10n.graph}</th><th class="tableColHeader">${l10n.description}</th><th class="tableColHeader${hiddenDate}" data-col="date">${l10n.date}</th><th class="tableColHeader${hiddenAuthor}" data-col="author">${l10n.author}</th><th class="tableColHeader${hiddenCommit}" data-col="commit">${l10n.commit}</th></tr>`,
+    let html = `<tr id="tableColHeaders"><th id="tableHeaderGraphCol" class="tableColHeader"></th><th class="tableColHeader">${l10n.description}</th><th class="tableColHeader${hiddenDate}" data-col="date">${l10n.date}</th><th class="tableColHeader${hiddenAuthor}" data-col="author">${l10n.author}</th><th class="tableColHeader${hiddenCommit}" data-col="commit">${l10n.commit}</th></tr>`,
       i,
       currentHash = this.commits.length > 0 && this.commits[0].hash === "*" ? "*" : this.commitHead;
     // Only mute by ancestry when HEAD is actually within the loaded commits;

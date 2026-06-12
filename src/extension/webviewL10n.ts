@@ -26,7 +26,6 @@ export function getWebviewLocalizedStrings() {
     showAll: l10n.t("ui.showAll"),
     filterPlaceholder: l10n.t("ui.filterPlaceholder"),
     noResultsFound: l10n.t("ui.noResultsFound"),
-    graph: l10n.t("ui.graph"),
     description: l10n.t("ui.description"),
     date: l10n.t("ui.date"),
     author: l10n.t("ui.author"),
