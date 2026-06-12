@@ -684,7 +684,7 @@ body.tagLabelsRightAligned .gitRef.tag {
   align-items: center;
   gap: 6px;
   margin-right: auto;
-  padding-left: 8px;
+  padding-left: 4px;
   min-width: 0;
   line-height: 1.2;
   user-select: none;
