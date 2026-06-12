@@ -4037,6 +4037,21 @@ function showFormDialog(
     message + '<br><table class="dialogForm ' + (multiElementForm ? "multi" : "single") + '">';
   for (let i = 0; i < inputs.length; i++) {
     let input = inputs[i];
+    if (input.type === "checkbox") {
+      // Checkboxes always sit to the left of their own label (the native
+      // VS Code direction), spanning the label column in multi-input forms.
+      html +=
+        "<tr><td" +
+        (multiElementForm ? ' colspan="2"' : "") +
+        '><span class="dialogFormCheckbox"><label><input id="dialogInput' +
+        i +
+        '" type="checkbox"' +
+        (input.value ? " checked" : "") +
+        "/>" +
+        input.name +
+        "</label></span></td></tr>";
+      continue;
+    }
     html += "<tr>" + (multiElementForm ? "<td>" + input.name + "</td>" : "") + "<td>";
     if (input.type === "select") {
       html += '<select id="dialogInput' + i + '">';
@@ -4051,15 +4066,6 @@ function showFormDialog(
           "</option>";
       }
       html += "</select>";
-    } else if (input.type === "checkbox") {
-      html +=
-        '<span class="dialogFormCheckbox"><label><input id="dialogInput' +
-        i +
-        '" type="checkbox"' +
-        (input.value ? " checked" : "") +
-        "/>" +
-        (multiElementForm ? "" : input.name) +
-        "</label></span>";
     } else {
       html +=
         '<input id="dialogInput' +
