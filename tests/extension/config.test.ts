@@ -5,17 +5,12 @@ import * as vscode from "vscode";
 import { config } from "@/config";
 
 // Guards the settings regroup/rename: every renamed accessor must still return
-// its default (never undefined), and getRenamedConfig must honour the old flat
-// key while letting the new grouped key win.
-suite("config renamed settings", () => {
+// its default (never undefined), and each accessor must be wired to the grouped
+// key registered in package.json.
+suite("config settings", () => {
   const cfg = () => vscode.workspace.getConfiguration("git-graph-alter");
   const G = vscode.ConfigurationTarget.Global;
-  const touched = [
-    "showRemoteBranches",
-    "repository.showRemoteBranches",
-    "graphStyle",
-    "graph.style"
-  ];
+  const touched = ["show.remoteBranches", "graph.edgeStyle"];
 
   teardown(async () => {
     for (const k of touched) {
@@ -36,16 +31,10 @@ suite("config renamed settings", () => {
     assert.ok(Array.isArray(config.graphColours()) && config.graphColours().length > 0);
   });
 
-  test("reads the old flat key for backward compatibility", async () => {
-    await cfg().update("showRemoteBranches", false, G);
+  test("accessors read the grouped keys registered in package.json", async () => {
+    await cfg().update("show.remoteBranches", false, G);
     assert.strictEqual(config.showRemoteBranches(), false);
-    await cfg().update("graphStyle", "angular", G);
+    await cfg().update("graph.edgeStyle", "angular", G);
     assert.strictEqual(config.graphStyle(), "angular");
-  });
-
-  test("new grouped key wins over the old flat key", async () => {
-    await cfg().update("showRemoteBranches", false, G);
-    await cfg().update("repository.showRemoteBranches", true, G);
-    assert.strictEqual(config.showRemoteBranches(), true);
   });
 });
