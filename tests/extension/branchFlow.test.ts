@@ -70,8 +70,12 @@ suite("branch loading flow (integration)", () => {
       Array.isArray(res!.branches) && res!.branches.length > 0,
       `expected branches, got ${JSON.stringify(res!.branches)}`
     );
+    // for-each-ref rather than `git branch`: the latter adds a synthetic
+    // "(HEAD detached at ...)" entry on CI's detached PR checkouts.
     const localBranches = cp
-      .execFileSync("git", ["branch", "--format=%(refname:short)"], { cwd: repoPath })
+      .execFileSync("git", ["for-each-ref", "refs/heads", "--format=%(refname:short)"], {
+        cwd: repoPath
+      })
       .toString()
       .split("\n")
       .filter((b) => b !== "");
