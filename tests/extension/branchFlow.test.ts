@@ -10,9 +10,10 @@ import type { WebviewBridge } from "@/extension/webviewBridge";
 import type { RequestMessage, ResponseMessage } from "@/types";
 
 // End-to-end exercise of the extension-side branch flow against the real repo
-// (the test workspace is this repo, which has multiple branches). Drives the
-// real registerMessageHandlers with a real git client + real config through a
-// fake bridge, mimicking the webview's selectRepo -> loadBranches handshake.
+// (the test workspace is this repo). Drives the real registerMessageHandlers
+// with a real git client + real config through a fake bridge, mimicking the
+// webview's selectRepo -> loadBranches handshake. Expectations are derived
+// from git itself: CI checkouts only have the branch being built, never main.
 const noop = () => {};
 
 suite("branch loading flow (integration)", () => {
@@ -69,10 +70,14 @@ suite("branch loading flow (integration)", () => {
       Array.isArray(res!.branches) && res!.branches.length > 0,
       `expected branches, got ${JSON.stringify(res!.branches)}`
     );
-    assert.ok(
-      res!.branches.includes("main") || res!.head === "main",
-      "should include the main branch"
-    );
+    const localBranches = cp
+      .execFileSync("git", ["branch", "--format=%(refname:short)"], { cwd: repoPath })
+      .toString()
+      .split("\n")
+      .filter((b) => b !== "");
+    for (const branch of localBranches) {
+      assert.ok(res!.branches.includes(branch), `should include the local branch ${branch}`);
+    }
   });
 
   test("selectRepo then commitDetails posts non-null details for HEAD", async () => {
