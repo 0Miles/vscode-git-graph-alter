@@ -105,7 +105,7 @@ export class AvatarManager {
   }
 
   private async getRemoteSource(avatarRequest: AvatarRequestItem) {
-    if (typeof this.remoteSourceCache[avatarRequest.repo] === "string") {
+    if (typeof this.remoteSourceCache[avatarRequest.repo] === "object") {
       // If the repo exists in the cache of remote sources
       return this.remoteSourceCache[avatarRequest.repo];
     } else {
@@ -162,8 +162,16 @@ export class AvatarManager {
                 if (img !== null) this.saveAvatar(avatarRequest.email, img, false);
                 return;
               }
-            } else if (res.statusCode === 403) {
-              // Rate limit reached, try again after timeout
+            } else if (res.statusCode === 403 || res.statusCode === 429) {
+              // Rate limited. GitHub signals this as 403 (primary limit, paired
+              // with x-ratelimit-remaining: 0 and handled above) or 429
+              // (secondary/abuse limit, paired with a Retry-After header). Defer
+              // and retry — never fall through to Gravatar, whose identicon would
+              // otherwise be cached as a wrong avatar for days.
+              if (this.githubTimeout < t) {
+                const retryAfter = parseInt(<string>res.headers["retry-after"]);
+                this.githubTimeout = t + (isNaN(retryAfter) ? 60000 : retryAfter * 1000);
+              }
               this.queue.addItem(avatarRequest, this.githubTimeout, false);
               return;
             } else if (
@@ -228,8 +236,13 @@ export class AvatarManager {
                 if (img !== null) this.saveAvatar(avatarRequest.email, img, false);
                 return;
               }
-            } else if (res.statusCode === 429) {
-              // Rate limit reached, try again after timeout
+            } else if (res.statusCode === 429 || res.statusCode === 403) {
+              // Rate limited (429 with RateLimit-Reset handled above, or 403).
+              // Defer and retry rather than caching a Gravatar identicon.
+              if (this.gitLabTimeout < t) {
+                const retryAfter = parseInt(<string>res.headers["retry-after"]);
+                this.gitLabTimeout = t + (isNaN(retryAfter) ? 60000 : retryAfter * 1000);
+              }
               this.queue.addItem(avatarRequest, this.gitLabTimeout, false);
               return;
             } else if (res.statusCode! >= 500) {
