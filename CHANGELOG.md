@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/0Miles/vscode-git-graph-alter/compare/v0.1.0...v0.2.0) (2026-06-15)
+
+
+### Features
+
+* make the commit date display format a configurable setting ([3e22a11](https://github.com/0Miles/vscode-git-graph-alter/commit/3e22a115e095fdb8c49f40d5616a5d4434b8e01e))
+
+
+### Bug Fixes
+
+* clarify reset-mode dialog labels in zh-tw/zh-cn ([c993f61](https://github.com/0Miles/vscode-git-graph-alter/commit/c993f610d8b1cebc7da6b192bb671e6de0351e30))
+* stop caching wrong Gravatar identicons on GitHub rate limit ([6132f16](https://github.com/0Miles/vscode-git-graph-alter/commit/6132f1618da457c96f36938a7edafca114d01d72))
+
 ## 0.1.0 (2026-06-12)
 
 
