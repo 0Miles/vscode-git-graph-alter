@@ -93,6 +93,7 @@ export const config = {
     return result;
   },
   dateFormat: (): DateFormat => getConfig("dates.format", "Date & Time"),
+  dateCustomFormat: (): string => getConfig("dates.customFormat", "DD MMM YYYY"),
   defaultColumnVisibility: (): { date: boolean; author: boolean; commit: boolean } => {
     const v = getConfig<{ date?: boolean; author?: boolean; commit?: boolean }>(
       "columnVisibility",

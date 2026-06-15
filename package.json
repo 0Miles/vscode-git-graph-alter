@@ -989,6 +989,11 @@
           "default": "Date & Time",
           "description": "%config.dateFormat%"
         },
+        "git-graph-alter.dates.customFormat": {
+          "type": "string",
+          "default": "DD MMM YYYY",
+          "markdownDescription": "%config.dateCustomFormat%"
+        },
         "git-graph-alter.dates.type": {
           "type": "string",
           "enum": [

@@ -31,6 +31,7 @@
   "config.commitOrder.authorDate": "依 author 日期逆時間順序顯示 commit （git log --author-date-order）",
   "config.commitOrder.topo": "依拓撲順序顯示 commit，避免平行 branch 交錯（git log --topo-order）",
   "config.dateFormat": "指定 Git 圖形日期欄中使用的日期格式。",
+  "config.dateCustomFormat": "當 `#git-graph-alter.dates.format#` 設為「Date & Time」或「Date Only」時所使用的日期樣板。可用代號：`YYYY`（年）、`YY`（兩位數年）、`MMM`（英文月份縮寫，例如「Nov」）、`MM`（兩位數月份）、`M`（月份）、`DD`（兩位數日期）、`D`（日期）。「Date & Time」會自動在後方附加時間。預設值 `DD MMM YYYY` 會顯示為例如「19 Nov 2026 11:24」。",
   "config.dateFormat.dateTime": "顯示日期和時間，例如 \"2019年3月19日 21:34\"",
   "config.dateFormat.dateOnly": "僅顯示日期，例如 \"2019年3月19日\"",
   "config.dateFormat.relative": "顯示相對時間，例如 \"5 分鐘前\"",

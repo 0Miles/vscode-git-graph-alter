@@ -254,8 +254,6 @@ export function getWebviewLocalizedStrings() {
     fetching: l10n.t("status.fetching"),
 
     // Time
-    timeNeedFormatMonth: l10n.t("time.needFormatMonth"),
-    timeDateFormat: l10n.t("time.dateformat"),
     timeSecond: l10n.t("time.second"),
     timeMinute: l10n.t("time.minute"),
     timeHour: l10n.t("time.hour"),
@@ -271,20 +269,6 @@ export function getWebviewLocalizedStrings() {
     timeWeeks: l10n.t("time.weeks"),
     timeMonths: l10n.t("time.months"),
     timeYears: l10n.t("time.years"),
-
-    // Months
-    monthJan: l10n.t("month.jan"),
-    monthFeb: l10n.t("month.feb"),
-    monthMar: l10n.t("month.mar"),
-    monthApr: l10n.t("month.apr"),
-    monthMay: l10n.t("month.may"),
-    monthJun: l10n.t("month.jun"),
-    monthJul: l10n.t("month.jul"),
-    monthAug: l10n.t("month.aug"),
-    monthSep: l10n.t("month.sep"),
-    monthOct: l10n.t("month.oct"),
-    monthNov: l10n.t("month.nov"),
-    monthDec: l10n.t("month.dec"),
 
     detailCommit: l10n.t("detail.commit"),
     detailParents: l10n.t("detail.parents"),

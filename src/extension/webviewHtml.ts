@@ -48,6 +48,7 @@ export function buildWebviewHtml(opts: {
     customBranchGlobPatterns: config.customBranchGlobPatterns(),
     customEmojiShortcodeMappings: config.customEmojiShortcodeMappings(),
     dateFormat: config.dateFormat(),
+    dateCustomFormat: config.dateCustomFormat(),
     defaultColumnVisibility: config.defaultColumnVisibility(),
     enhancedAccessibility: config.enhancedAccessibility(),
     fetchAvatars: config.fetchAvatars() && extensionState.isAvatarStorageAvailable(),

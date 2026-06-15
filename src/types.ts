@@ -126,6 +126,7 @@ export type GitGraphViewState = {
   customBranchGlobPatterns: { name: string; glob: string }[];
   customEmojiShortcodeMappings: { [code: string]: string };
   dateFormat: DateFormat;
+  dateCustomFormat: string;
   defaultColumnVisibility: { date: boolean; author: boolean; commit: boolean };
   enhancedAccessibility: boolean;
   fetchAvatars: boolean;

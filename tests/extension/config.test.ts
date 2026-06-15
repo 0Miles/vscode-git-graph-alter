@@ -26,6 +26,7 @@ suite("config settings", () => {
     assert.strictEqual(config.graphStyle(), "rounded");
     assert.strictEqual(config.dateType(), "Author Date");
     assert.strictEqual(config.dateFormat(), "Date & Time");
+    assert.strictEqual(config.dateCustomFormat(), "DD MMM YYYY");
     assert.strictEqual(config.initialLoadCommits(), 300);
     assert.deepStrictEqual(config.showSpecificBranches(), []);
     assert.ok(Array.isArray(config.graphColours()) && config.graphColours().length > 0);

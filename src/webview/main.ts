@@ -12,7 +12,7 @@ import type {
 
 import { applyDialogMemory, extractDialogMemory } from "./dialogMemory";
 import { Graph } from "./graph";
-import { getMonth, pad2 } from "./utils/date";
+import { formatDate, pad2 } from "./utils/date";
 import { addListenerToClass, blinkHeadRow, insertAfter } from "./utils/dom";
 import { replaceEmojiShortcodes } from "./utils/emoji";
 import {
@@ -3768,15 +3768,7 @@ function getCommitDate(dateVal: number) {
   let date = new Date(dateVal * 1000),
     value;
 
-  let dateStr = l10n.timeDateFormat
-    .replace("DD", String(date.getDate()))
-    .replace(
-      "MM",
-      l10n.timeNeedFormatMonth === "true"
-        ? getMonth()[date.getMonth()]
-        : String(date.getMonth() + 1)
-    )
-    .replace("YYYY", String(date.getFullYear()));
+  let dateStr = formatDate(date, viewState.dateCustomFormat);
   let timeStr = pad2(date.getHours()) + ":" + pad2(date.getMinutes());
   let isoDate = date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate());
   let isoTime =

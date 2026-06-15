@@ -31,6 +31,7 @@
   "config.commitOrder.authorDate": "Show commits in reverse-chronological order by author date (git log --author-date-order)",
   "config.commitOrder.topo": "Show commits in topological order, avoiding intermixing of parallel branches (git log --topo-order)",
   "config.dateFormat": "Specifies the date format to be used in the date column of Git Graph.",
+  "config.dateCustomFormat": "The date pattern used when `#git-graph-alter.dates.format#` is set to \"Date & Time\" or \"Date Only\". Tokens: `YYYY` (year), `YY` (2-digit year), `MMM` (English month name, e.g. \"Nov\"), `MM` (2-digit month), `M` (month), `DD` (2-digit day), `D` (day). The time is appended automatically for \"Date & Time\". Default `DD MMM YYYY` renders, for example, \"19 Nov 2026 11:24\".",
   "config.dateFormat.dateTime": "Show the date and time, for example \"19 Mar 2019 21:34\"",
   "config.dateFormat.dateOnly": "Show the date only, for example \"19 Mar 2019\"",
   "config.dateFormat.relative": "Show relative times, for example \"5 minutes ago\"",

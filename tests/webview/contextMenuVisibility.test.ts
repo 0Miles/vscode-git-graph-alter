@@ -31,6 +31,7 @@ const viewState: GG.GitGraphViewState = {
   }),
   customEmojiShortcodeMappings: {},
   dateFormat: "Date & Time",
+  dateCustomFormat: "DD MMM YYYY",
   defaultColumnVisibility: { date: true, author: true, commit: true },
   enhancedAccessibility: false,
   fetchAvatars: false,

@@ -28,6 +28,7 @@ const defaultViewState: GG.GitGraphViewState = {
   contextMenuActionsVisibility: DEFAULT_CONTEXT_MENU_ACTIONS_VISIBILITY,
   customEmojiShortcodeMappings: {},
   dateFormat: "Date & Time",
+  dateCustomFormat: "DD MMM YYYY",
   defaultColumnVisibility: { date: true, author: true, commit: true },
   enhancedAccessibility: false,
   fetchAvatars: false,
