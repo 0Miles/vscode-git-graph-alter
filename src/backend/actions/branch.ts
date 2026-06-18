@@ -61,7 +61,21 @@ export async function deleteRemoteBranch(
   git: SimpleGit,
   input: ActionPayload<"deleteRemoteBranch">
 ): Promise<void> {
-  await git.raw(["push", input.remote, "--delete", input.branchName]);
+  try {
+    await git.raw(["push", input.remote, "--delete", input.branchName]);
+  } catch (e: unknown) {
+    // The branch is already gone on the remote (e.g. deleted by a merged-PR
+    // auto-delete or another client), but a stale local remote-tracking ref
+    // still shows it in the graph — and `push --delete` fails with "remote ref
+    // does not exist". The user's intent is to make the label disappear, so
+    // prune that tracking ref instead of surfacing the error.
+    const message = e instanceof Error ? e.message : String(e);
+    if (/remote ref does not exist/i.test(message)) {
+      await git.raw(["branch", "-d", "-r", `${input.remote}/${input.branchName}`]);
+      return;
+    }
+    throw e;
+  }
 }
 
 export async function fetchIntoLocalBranch(
