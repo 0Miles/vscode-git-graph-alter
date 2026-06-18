@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { deleteTag } from "@/backend/actions/tag";
 
-import { makeRepo } from "@tests/backend/helpers";
+import { bareGit, makeRepo } from "@tests/backend/helpers";
 
 let repo: string;
 let commitHash: string;
@@ -47,12 +47,12 @@ describe("deleteTag", () => {
       const h = cp.execFileSync("git", ["rev-parse", "HEAD"], { cwd: r }).toString().trim();
       cp.execFileSync("git", ["tag", "v2.0", h], { cwd: r });
       cp.execFileSync("git", ["push", "origin", "v2.0"], { cwd: r });
-      expect(cp.execFileSync("git", ["tag"], { cwd: remote }).toString()).toContain("v2.0");
+      expect(bareGit(["tag"], remote)).toContain("v2.0");
 
       await deleteTag(simpleGit(r), { tagName: "v2.0", deleteOnRemote: "origin" });
 
       expect(cp.execFileSync("git", ["tag"], { cwd: r }).toString()).not.toContain("v2.0");
-      expect(cp.execFileSync("git", ["tag"], { cwd: remote }).toString()).not.toContain("v2.0");
+      expect(bareGit(["tag"], remote)).not.toContain("v2.0");
     } finally {
       fs.rmSync(r, { recursive: true, force: true });
       fs.rmSync(remote, { recursive: true, force: true });

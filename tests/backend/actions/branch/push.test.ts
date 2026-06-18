@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { pushBranch } from "@/backend/actions/branch";
 
-import { git, makeRepo } from "@tests/backend/helpers";
+import { bareGit, git, makeRepo } from "@tests/backend/helpers";
 
 let repo: string;
 let remote: string;
@@ -37,10 +37,7 @@ describe("pushBranch", () => {
       .execFileSync("git", ["rev-parse", "main"], { cwd: repo })
       .toString()
       .trim();
-    const remoteHash = cp
-      .execFileSync("git", ["rev-parse", "main"], { cwd: remote })
-      .toString()
-      .trim();
+    const remoteHash = bareGit(["rev-parse", "main"], remote).trim();
     expect(remoteHash).toBe(localHash);
   });
 
@@ -64,10 +61,7 @@ describe("pushBranch", () => {
       forceMode: "force"
     });
 
-    const remoteHash = cp
-      .execFileSync("git", ["rev-parse", "main"], { cwd: remote })
-      .toString()
-      .trim();
+    const remoteHash = bareGit(["rev-parse", "main"], remote).trim();
     expect(remoteHash).toBe(amendedHash);
   });
 
