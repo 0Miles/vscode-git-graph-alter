@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/0Miles/vscode-git-graph-alter/compare/v0.2.0...v0.2.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* prune stale tracking ref when deleting an already-gone remote branch ([f229f01](https://github.com/0Miles/vscode-git-graph-alter/commit/f229f01d8811681796ed870069cf20042fb23e8a))
+
 ## [0.2.0](https://github.com/0Miles/vscode-git-graph-alter/compare/v0.1.0...v0.2.0) (2026-06-15)
 
 
