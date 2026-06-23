@@ -1,6 +1,6 @@
 {
   "displayName": "Git Graph Alter",
-  "description": "Git Graph 的 MIT 授權 fork。視覺化提交歷史、分支與遠端管理、多語系介面與開發容器支援。",
+  "description": "一款專注於 Git 側邊欄整合和多倉庫工作流程的可視化 Git 擴充程序",
   "command.view": "檢視 Git 圖形 (git log)",
   "command.clearAvatarCache": "清除頭像快取",
   "command.fetch": "從 remote fetch",

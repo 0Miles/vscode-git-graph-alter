@@ -1,6 +1,6 @@
 {
   "displayName": "Git Graph Alter",
-  "description": "An MIT fork of Git Graph. Visual commit history, branch and remote management, localization, and devcontainer support.",
+  "description": "A visual Git extension focused on Git sidebar integration and multi-repository workflows",
   "command.view": "View Git Graph (git log)",
   "command.clearAvatarCache": "Clear Avatar Cache",
   "command.fetch": "Fetch from Remote(s)",
