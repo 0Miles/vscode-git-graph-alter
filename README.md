@@ -16,8 +16,6 @@
 [![vscode downloads](https://img.shields.io/visual-studio-marketplace/d/0miles.vscode-git-graph-alter?label=download)](https://marketplace.visualstudio.com/items?itemName=0miles.vscode-git-graph-alter)
 [![vscode installs](https://img.shields.io/visual-studio-marketplace/i/0miles.vscode-git-graph-alter?label=install)](https://marketplace.visualstudio.com/items?itemName=0miles.vscode-git-graph-alter)
 
-![demo](resources/demo.gif)
-
 ## What Git Graph Alter is
 
 Git Graph Alter is a Source Control extension for Visual Studio Code. Its focus is bringing the Git
